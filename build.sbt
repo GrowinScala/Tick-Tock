@@ -15,7 +15,7 @@ libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2
 libraryDependencies += "com.h2database" % "h2" % "1.4.197"
 
 libraryDependencies += "org.flywaydb" % "flyway-core" % "5.2.1"
-libraryDependencies += "org.quartz-scheduler" % "quartz" % "2.2.3"
-libraryDependencies += "com.typesafe.slick" %% "slick" % "3.2.3"
+libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.7.0-akka-2.5.x"
+libraryDependencies += "com.typesafe.slick" %% "slick-hikaricp" % "3.2.3"
 libraryDependencies += "org.yaml" % "snakeyaml" % "1.8"
 libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.13"

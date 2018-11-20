@@ -2,3 +2,6 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
+GET     /           controllers.JSONController.index
+
+POST    /schedule   controllers.JSONController.schedule

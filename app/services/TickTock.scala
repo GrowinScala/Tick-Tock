@@ -1,97 +1,52 @@
 package services
 
-import java.io.{FileInputStream, InputStream}
+import java.text.SimpleDateFormat
+import java.util.{Date, Calendar}
 
-import org.flywaydb.core._
-import org.yaml.snakeyaml.Yaml
-import org.yaml.snakeyaml.constructor.Constructor
-
-// import slick.jdbc.JdbcBackend.Database
 import slick.driver.MySQLDriver.api._
-import scala.concurrent._
-import scala.concurrent.duration._
 
-object TickTock {
+import DBConnector._
 
-  case class ScheduledTask(
-                            idScheduling: Int,
-                            idFile: Int,
-                            startDate: String,
-                            endDate: String,
-                            period: String,
-                            occurences: Int,
-                            exception: String,
-                            status: String
-                          )
+object TickTock{
 
-  /*case class Test(
-                 field1: String,
-                 field2: String
-                 )*/
-
-  class ScheduledTaskTable(tag: Tag) extends Table[ScheduledTask](tag, "scheduledtask"){
-    def idScheduling = column[Int]("idScheduling")
-    def idFile = column[Int]("idFile")
-    def startDate = column[String]("startDate")
-    def endDate = column[String]("endDate")
-    def period = column[String]("period")
-    def occurences = column[Int]("occurences")
-    def exception = column[String]("exception")
-    def status = column[String]("status")
-
-    def * = (idScheduling, idFile, startDate, endDate, period, occurences, exception, status) <> (ScheduledTask.tupled, ScheduledTask.unapply)
+  object SchedulingType extends Enumeration {
+    type SchedulingType = Value
+    val RunOnce, Periodic = Value
   }
 
-  /*class TestTable(tag: Tag) extends Table[Test](tag, "test"){
-    def field1 = column[String]("field1")
-    def field2 = column[String]("field2")
+  def scheduleOnce(fileName: String): Unit ={
+    new ScheduleJob(fileName, SchedulingType.RunOnce).run
+  }
 
-    def * = (field1, field2) <> (Test.tupled, Test.unapply)
-  }*/
+  def scheduleOnce(fileName: String, datetime: String): Unit = {
+    val format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    val date: Date = format.parse(datetime)
+    new ScheduleJob(fileName, SchedulingType.RunOnce, date).run
+  }
 
-  lazy val scheduledTaskTable = TableQuery[ScheduledTaskTable]
-  /*lazy val testTable = TableQuery[TestTable]*/
+  def retrieveDataFromDB = {
+    exec(selectAllFromTasksTable.result).foreach(t => scheduleOnce(t.fileName, t.startDateAndTime))
+  }
 
-  val createTableAction = scheduledTaskTable.schema.create
-  /*val createTestAction = testTable.schema.create*/
-
-  val selectScheduledTasksAction = scheduledTaskTable.result
-
-  val db = Database.forConfig("dbinfo")
-
-  def exec[T](action: DBIO[T]): T = Await.result(db.run(action), 2 seconds)
+  def getCurrentDateTimeString: String = {
+    val now = Calendar.getInstance().getTime()
+    val format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    format.format(now)
+  }
 
   def main(args: Array[String]): Unit = {
 
-    val flyway: Flyway = Flyway.configure().dataSource(
-      "jdbc:mysql://localhost:3306/ticktock?serverTimezone=Portugal",
+    /*val flyway: Flyway = Flyway.configure().dataSource(
+      "jdbc:mysql://127.0.0.1:3306/ticktock?serverTimezone=Portugal",
       "root",
       "growin"
     ).load()
 
     flyway.baseline()
-    flyway.migrate()
+    flyway.migrate()*/
 
-    //val yaml = new Yaml()
-    //val inputStream: InputStream = new FileInputStream("dbinfo.yml")
-    //val e: DBInfo = yaml.load(inputStream).asInstanceOf[DBInfo]
-    //println(e.url)
-
-
-
-    //val yaml: Yaml = new Yaml()
-    //val inputStream: InputStream = this.getClass().getClassLoader().getResourceAsStream("dbinfo.yml")
-    //val obj: DBInfo = yaml.load(inputStream).asInstanceOf[DBInfo]
-
-
-    /*exec(createTestAction)*/
-    println(exec(selectScheduledTasksAction))
+    retrieveDataFromDB
 
   }
-
-
-
-
-  //val db = DatabaseConfig.forConfig("../../dbinfo.yml")
 
 }
