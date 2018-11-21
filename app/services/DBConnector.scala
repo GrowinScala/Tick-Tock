@@ -57,12 +57,13 @@ object DBConnector {
   def insertFilesTableAction(file: File): Unit = {
     exec(filesTable += File(file.fileName, file.uploadDate))
   }
+
   def insertTasksTableAction(task: Task): Unit = {
     if(existsCorrespondingFileName(task.fileName)) exec(tasksTable += Task(0, task.fileName, task.startDateAndTime))
     else println("Could not insert Task with name " + task.fileName + " due to not finding a corresponding File.")
   }
 
-  lazy val db = Database.forConfig("dbinfo")
+  val db = Database.forConfig("dbinfo")
 
   def exec[T](action: DBIO[T]): T = Await.result(db.run(action), 2 seconds)
 }

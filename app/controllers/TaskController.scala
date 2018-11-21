@@ -5,6 +5,8 @@ import play.api.libs.json._
 import play.api.mvc._
 import services.TickTock
 import play.api.libs.functional.syntax._
+import services.DBConnector
+import services.DBConnector.Task
 
 class TaskController @Inject()(cc: ControllerComponents) extends AbstractController(cc){
 
@@ -28,7 +30,10 @@ class TaskController @Inject()(cc: ControllerComponents) extends AbstractControl
 
   def schedule: Action[JsValue] = Action(parse.json) { request =>
     val json = request.body
-    TickTock.scheduleOnce((json \ "task").as[String], (json \ "startDateAndTime").as[String])
+    val task = (json \ "task").as[String]
+    val startDateAndTime = (json \ "startDateAndTime").as[String]
+    DBConnector.insertTasksTableAction(Task(0, task, startDateAndTime))
+    TickTock.scheduleOnce(task, startDateAndTime)
     Ok(Json.obj("result" -> json))
   }
 
