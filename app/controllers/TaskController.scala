@@ -32,7 +32,7 @@ class TaskController @Inject()(cc: ControllerComponents) extends AbstractControl
     val json = request.body
     val task = (json \ "task").as[String]
     val startDateAndTime = (json \ "startDateAndTime").as[String]
-    DBConnector.insertTasksTableAction(Task(0, task, startDateAndTime))
+    DBConnector.insertTasksTableAction(Task(0, DBConnector.selectFileIdFromName(task).head, startDateAndTime))
     TickTock.scheduleOnce(task, startDateAndTime)
     Ok(Json.obj("result" -> json))
   }

@@ -7,32 +7,36 @@ import scala.concurrent.duration._
 object DBConnector {
 
   case class File(
+                 fileId: Int,
                  fileName: String,
+                 filePath: String,
                  uploadDate: String
                  )
 
   case class Task(
                  taskId: Int,
-                 fileName: String,
+                 fileId: Int,
                  startDateAndTime: String
                  )
 
   class FilesTable(tag: Tag) extends Table[File](tag, "files"){
-    def fileName = column[String]("fileName", O.PrimaryKey, O.Length(100))
+    def fileId = column[Int]("FileId", O.PrimaryKey)
+    def fileName = column[String]("fileName", O.Unique, O.Length(30))
+    def filePath = column[String]("filePath", O.Length(100))
     def uploadDate = column[String]("uploadDate", O.Length(20))
 
-    def * = (fileName, uploadDate) <> (File.tupled, File.unapply)
+    def * = (fileId, fileName, filePath, uploadDate) <> (File.tupled, File.unapply)
   }
 
   class TasksTable(tag: Tag) extends Table[Task](tag, "tasks"){
     def taskId = column[Int]("taskId", O.PrimaryKey, O.AutoInc)
-    def fileName = column[String]("fileName", O.Length(100))
+    def fileId = column[Int]("fileId", O.Length(100))
     def startDateAndTime = column[String]("startDateAndTime", O.Length(100))
 
-    def fileNameFK =
-      foreignKey("fileName", fileName, filesTable)(_.fileName, onUpdate=ForeignKeyAction.Restrict, onDelete=ForeignKeyAction.Cascade)
+    def fileIdFK =
+      foreignKey("fileId", fileId, filesTable)(_.fileId, onUpdate=ForeignKeyAction.Restrict, onDelete=ForeignKeyAction.Cascade)
 
-    def * = (taskId, fileName, startDateAndTime) <> (Task.tupled, Task.unapply)
+    def * = (taskId, fileId, startDateAndTime) <> (Task.tupled, Task.unapply)
   }
 
   lazy val filesTable = TableQuery[FilesTable]
@@ -50,17 +54,26 @@ object DBConnector {
   val selectAllFromFilesTable = filesTable
   val selectAllFromTasksTable = tasksTable
 
-  def existsCorrespondingFileName(fileName: String): Boolean = {
-    exec(filesTable.filter(_.fileName === fileName).result) != Vector()
+  def selectFileIdFromName(fileName: String) = {
+    exec(filesTable.filter(_.fileName === fileName).map(_.fileId).result)
+  }
+
+  def selectNameFromFileId(fileId: Int) = {
+    exec(filesTable.filter(_.fileId === fileId).map(_.fileName).result)
+  }
+
+  def existsCorrespondingFileId(fileId: Int): Boolean = {
+    val res = exec(filesTable.filter(_.fileId === fileId).result)
+    res != Vector()
   }
 
   def insertFilesTableAction(file: File): Unit = {
-    exec(filesTable += File(file.fileName, file.uploadDate))
+    exec(filesTable += File(file.fileId, file.fileName, file.filePath, file.uploadDate))
   }
 
   def insertTasksTableAction(task: Task): Unit = {
-    if(existsCorrespondingFileName(task.fileName)) exec(tasksTable += Task(0, task.fileName, task.startDateAndTime))
-    else println("Could not insert Task with name " + task.fileName + " due to not finding a corresponding File.")
+    if(existsCorrespondingFileId(task.fileId)) exec(tasksTable += Task(0, task.fileId, task.startDateAndTime))
+    else println("Could not insert Task with id " + task.fileId + " due to not finding a corresponding File.")
   }
 
   val db = Database.forConfig("dbinfo")

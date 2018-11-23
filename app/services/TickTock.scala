@@ -1,11 +1,12 @@
 package services
 
 import java.text.SimpleDateFormat
-import java.util.{Date, Calendar}
+import java.util.{Calendar, Date}
 
 import slick.driver.MySQLDriver.api._
-
 import DBConnector._
+import services.ExecutionManager.storagePath
+import scala.sys.process._
 
 object TickTock{
 
@@ -25,7 +26,8 @@ object TickTock{
   }
 
   def retrieveDataFromDB = {
-    exec(selectAllFromTasksTable.result).foreach(t => scheduleOnce(t.fileName, t.startDateAndTime))
+    println("retrieving data from DB")
+    exec(selectAllFromTasksTable.result).foreach(t => scheduleOnce(selectNameFromFileId(t.fileId).head, t.startDateAndTime))
   }
 
   def getCurrentDateTimeString: String = {

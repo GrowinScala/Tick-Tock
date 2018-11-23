@@ -19,3 +19,6 @@ libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.7.0-a
 libraryDependencies += "com.typesafe.slick" %% "slick-hikaricp" % "3.2.3"
 libraryDependencies += "org.yaml" % "snakeyaml" % "1.8"
 libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.13"
+
+//mainClass in (Compile, run) := Some("services.TickTock")
+//mainClass in run := Some("services.TickTock.main")
