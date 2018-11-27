@@ -1,4 +1,4 @@
-package services.task
+package services
 
 class TaskService {
 

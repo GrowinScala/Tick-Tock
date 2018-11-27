@@ -1,11 +1,8 @@
-package services.task
+package mappings
 
-import services.DBConnector.{Task, filesTable}
-import slick.model.ForeignKeyAction
-
+import services.DBConnector.filesTable
 import slick.driver.MySQLDriver.api._
-import scala.concurrent._
-import scala.concurrent.duration._
+import slick.model.ForeignKeyAction
 
 class TaskMappings {
 

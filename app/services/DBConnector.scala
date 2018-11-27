@@ -1,6 +1,10 @@
 package services
 
+import java.util.Date
+import java.sql.{Timestamp}
+
 import slick.driver.MySQLDriver.api._
+
 import scala.concurrent._
 import scala.concurrent.duration._
 
@@ -10,20 +14,20 @@ object DBConnector {
                  fileId: Int,
                  fileName: String,
                  filePath: String,
-                 uploadDate: String
+                 uploadDate: Date
                  )
 
   case class Task(
                  taskId: Int,
                  fileId: Int,
-                 startDateAndTime: String
+                 startDateAndTime: Date
                  )
 
   class FilesTable(tag: Tag) extends Table[File](tag, "files"){
     def fileId = column[Int]("FileId", O.PrimaryKey)
     def fileName = column[String]("fileName", O.Unique, O.Length(30))
     def filePath = column[String]("filePath", O.Length(100))
-    def uploadDate = column[String]("uploadDate", O.Length(20))
+    def uploadDate = column[Date]("uploadDate")
 
     def * = (fileId, fileName, filePath, uploadDate) <> (File.tupled, File.unapply)
   }
@@ -31,13 +35,22 @@ object DBConnector {
   class TasksTable(tag: Tag) extends Table[Task](tag, "tasks"){
     def taskId = column[Int]("taskId", O.PrimaryKey, O.AutoInc)
     def fileId = column[Int]("fileId", O.Length(100))
-    def startDateAndTime = column[String]("startDateAndTime", O.Length(100))
+    def startDateAndTime = column[Date]("startDateAndTime")
 
     def fileIdFK =
       foreignKey("fileId", fileId, filesTable)(_.fileId, onUpdate=ForeignKeyAction.Restrict, onDelete=ForeignKeyAction.Cascade)
 
     def * = (taskId, fileId, startDateAndTime) <> (Task.tupled, Task.unapply)
   }
+
+  implicit val columnType: BaseColumnType[Date] =
+    MappedColumnType.base[Date, Timestamp](dateToTimestamp, timestampToDate)
+
+  private def dateToTimestamp(date: Date): Timestamp =
+    new Timestamp(date.getTime)
+
+  private def timestampToDate(timestamp: Timestamp): Date =
+    new Date(timestamp.getTime)
 
   lazy val filesTable = TableQuery[FilesTable]
   lazy val tasksTable = TableQuery[TasksTable]
