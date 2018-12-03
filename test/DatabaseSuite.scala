@@ -5,7 +5,6 @@ import org.scalatest.junit.JUnitRunner
 
 //@RunWith(classof[JUnitRunner])
 class DatabaseSuite extends FunSuite {
-  import services.DBConnector
   /*test("DBConnector: create and drop table"){
 
   }

@@ -1,21 +1,21 @@
-package services
+package executionengine
 
 import java.text.SimpleDateFormat
 import java.util.{Date, TimeZone}
-import scala.concurrent.duration._
+
 import akka.actor.{Actor, ActorSystem, Props}
-import services.TickTock.SchedulingType._
+import api.services.SchedulingType._
+
+import scala.concurrent.duration._
 
 
-class ScheduleJob(fileName: String, schedulingType: SchedulingType, datetime: Date, interval: FiniteDuration) extends App {
+class ExecutionJob(fileName: String, schedulingType: SchedulingType, datetime: Date , interval: FiniteDuration) {
 
-
-  def this(fileName: String, schedulingType: SchedulingType){
+  def this(fileName: String, schedulingType: SchedulingType) = {
     this(fileName, schedulingType, null, 0 seconds)
   }
 
-
-  def this(fileName: String, schedulingType: SchedulingType, datetime: Date){
+  def this(fileName: String, schedulingType: SchedulingType, datetime: Date) = {
     this(fileName, schedulingType, datetime, 0 seconds)
   }
 

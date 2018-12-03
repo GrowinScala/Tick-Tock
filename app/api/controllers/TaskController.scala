@@ -2,18 +2,21 @@ package controllers
 
 import java.util.Date
 
+import api.dtos.TaskDTO
 import javax.inject.Inject
 import play.api.libs.json._
 import play.api.mvc._
-import services.TickTock
+import api.services.TickTock
 import play.api.libs.functional.syntax._
-import services.DBConnector
-import services.DBConnector.Task
-import validators.Validator._
+import api.validators.Validator._
+import api.services.TaskService._
+import database.mappings.TaskMappings._
+import database.repositories.TaskRepository._
+import database.repositories.FileRepository._
 
 class TaskController @Inject()(cc: ControllerComponents) extends AbstractController(cc){
 
-  object ScheduledTask {
+  /*object ScheduledTask {
 
     implicit val scheduledTaskReads: Reads[ScheduledTask] = (
       (JsPath \ "startDateAndTime").read[Date] and
@@ -33,7 +36,7 @@ class TaskController @Inject()(cc: ControllerComponents) extends AbstractControl
     }
   }
 
-  case class ScheduledTask(startDateAndTime: Date, task: String)
+  case class ScheduledTask(startDateAndTime: Date, task: String)*/
 
   def index = Action {
     Ok("It works!")
@@ -47,8 +50,8 @@ class TaskController @Inject()(cc: ControllerComponents) extends AbstractControl
     if(index != -1) {
       val date = dateFormatsList(index).parse(startDateAndTime)
       //if (isValidFilePath(task)) {
-        DBConnector.insertTasksTableAction(Task(0, DBConnector.selectFileIdFromName(task).head, date))
-        TickTock.scheduleOnce(task, date)
+        insertTasksTableAction(TaskRow(0, selectFileIdFromName(task), date))
+        scheduleOnce(task, date)
         Ok
       //}
       //else BadRequest("File path is incorrect.")

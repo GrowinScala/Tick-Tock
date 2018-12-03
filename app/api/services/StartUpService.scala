@@ -1,7 +1,7 @@
-/*package services
+/*package api.services
 
 import javax.inject.Singleton
-import services.TickTock._
+import api.services.TickTock._
 
 @Singleton
 class StartUpService {

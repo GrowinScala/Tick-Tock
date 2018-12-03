@@ -1,5 +1,0 @@
-package mappings
-
-class FileMappings {
-
-}

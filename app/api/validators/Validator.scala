@@ -1,4 +1,4 @@
-package validators
+package api.validators
 
 import java.nio.file.{FileSystems, Files}
 import java.text.{DateFormat, SimpleDateFormat}
@@ -13,7 +13,9 @@ object Validator {
     new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
   )
 
-  def isValidLength(string: String): Boolean = ???
+  def isValidLength(string: String, maxLength: Int): Boolean = {
+    string.length <= maxLength
+  }
 
   def isValidDate(date: String): Int = {
 
