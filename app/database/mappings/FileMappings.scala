@@ -13,7 +13,7 @@ object FileMappings {
   case class FileRow(
                    fileId: Int,
                    fileName: String,
-                   filePath: String,
+                   storageName: String,
                    uploadDate: Date
                  )
 
@@ -23,10 +23,10 @@ object FileMappings {
   class FilesTable(tag: Tag) extends Table[FileRow](tag, "files"){
     def fileId = column[Int]("FileId", O.PrimaryKey, O.AutoInc)
     def fileName = column[String]("fileName", O.Unique, O.Length(30))
-    def filePath = column[String]("filePath", O.Length(100))
+    def storageName = column[String]("storageName", O.Length(100))
     def uploadDate = column[Date]("uploadDate")
 
-    def * = (fileId, fileName, filePath, uploadDate) <> (FileRow.tupled, FileRow.unapply)
+    def * = (fileId, fileName, storageName, uploadDate) <> (FileRow.tupled, FileRow.unapply)
   }
 
   //---------------------------------------------------------
@@ -53,11 +53,11 @@ object FileMappings {
   def selectById(id: Int): Query[FilesTable, FileRow, Seq] = {
     filesTable.filter(_.fileId === id)
   }
-  def selectByName(name: String): Query[FilesTable, FileRow, Seq] = {
+  def selectByFileName(name: String): Query[FilesTable, FileRow, Seq] = {
     filesTable.filter(_.fileName === name)
   }
-  def selectByPath(path: String): Query[FilesTable, FileRow, Seq] = {
-    filesTable.filter(_.filePath === path)
+  def selectByStorageName(name: String): Query[FilesTable, FileRow, Seq] = {
+    filesTable.filter(_.storageName === name)
   }
   def insertFile(file: FileRow) = {
     filesTable += file
@@ -65,20 +65,20 @@ object FileMappings {
   def updateById(id: Int, file: FileRow)= {
     filesTable.filter(_.fileId === id).update(file)
   }
-  def updateByName(name: String, file: FileRow) = {
+  def updateByFileName(name: String, file: FileRow) = {
     filesTable.filter(_.fileName === name).update(file)
   }
-  def updateByPath(path: String, file: FileRow) = {
-    filesTable.filter(_.filePath === path).update(file)
+  def updateByStorageName(name: String, file: FileRow) = {
+    filesTable.filter(_.storageName === name).update(file)
   }
   def deleteById(id: Int) = {
     filesTable.filter(_.fileId === id).delete
   }
-  def deleteByName(name: String) = {
+  def deleteByFileName(name: String) = {
     filesTable.filter(_.fileName === name).delete
   }
-  def deleteByPath(path: String) = {
-    filesTable.filter(_.filePath === path).delete
+  def deleteByStorageName(name: String) = {
+    filesTable.filter(_.storageName === name).delete
   }
 
 }

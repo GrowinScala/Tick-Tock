@@ -13,17 +13,7 @@ object TickTock{
 
   def main(args: Array[String]): Unit = {
 
-    /*val flyway: Flyway = Flyway.configure().dataSource(
-      "jdbc:mysql://127.0.0.1:3306/ticktock?serverTimezone=Portugal",
-      "root",
-      "growin"
-    ).load()
-
-    flyway.baseline()
-    flyway.migrate()*/
-
     retrieveDataFromDB
-
   }
 
 }

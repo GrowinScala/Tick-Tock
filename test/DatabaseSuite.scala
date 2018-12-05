@@ -2,6 +2,8 @@ import org.scalatest.FunSuite
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import slick.jdbc.H2Profile.api._
+import database.repositories.FileRepository._
+import database.repositories.TaskRepository._
 
 @RunWith(classOf[JUnitRunner])
 class DatabaseSuite extends FunSuite {

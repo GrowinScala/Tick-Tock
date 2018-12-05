@@ -3,12 +3,8 @@ package database.repositories
 import api.dtos.TaskDTO
 import database.mappings.TaskMappings.TaskRow
 import slick.jdbc.MySQLProfile.api._
-import slick.dbio.DBIO
 import database.mappings.TaskMappings._
 import database.repositories.FileRepository._
-
-import scala.concurrent.duration._
-import scala.concurrent._
 
 
 object TaskRepository extends Repository{

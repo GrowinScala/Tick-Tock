@@ -26,11 +26,11 @@ object FileRepository extends Repository{
   }
 
   def existsCorrespondingFileName(fileName: String): Boolean = {
-    exec(selectByName(fileName).result) != Vector()
+    exec(selectByFileName(fileName).result) != Vector()
   }
 
   def selectFileIdFromName(fileName: String): Int = {
-    exec(selectByName(fileName).map(_.fileId).result.head)
+    exec(selectByFileName(fileName).map(_.fileId).result.head)
   }
 
   def selectNameFromFileId(fileId: Int): String = {
@@ -38,11 +38,11 @@ object FileRepository extends Repository{
   }
 
   def selectFilePathFromFileName(fileName: String): String = {
-    exec(selectByName(fileName).map(_.filePath).result.head)
+    exec(selectByFileName(fileName).map(_.storageName).result.head)
   }
 
   def selectFileNameFromFilePath(filePath: String): String = {
-    exec(selectByPath(filePath).map(_.fileName).result.head)
+    exec(selectByStorageName(filePath).map(_.fileName).result.head)
   }
 
   def insertFilesTableAction(file: FileRow): Unit = {
