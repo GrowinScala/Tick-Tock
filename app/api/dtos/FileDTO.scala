@@ -4,6 +4,10 @@ import java.util.Date
 
 class FileDTO(
                fileName: String,
-               filePath: String,
+               storageName: String,
                uploadDate: Date
              )
+
+object FileDTO {
+
+}

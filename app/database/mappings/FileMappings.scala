@@ -3,7 +3,7 @@ package database.mappings
 import java.sql.Timestamp
 import java.util.Date
 
-import slick.driver.MySQLDriver.api._
+import slick.jdbc.MySQLProfile.api._
 
 object FileMappings {
 

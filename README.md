@@ -1,57 +1,31 @@
-# play-scala-starter-example
+# Tick-Tock
 
-[<img src="https://img.shields.io/travis/playframework/play-scala-starter-example.svg"/>](https://travis-ci.org/playframework/play-scala-starter-example)
+Tick-Tock is a scheduling application for executable files in the form of a web app. It receives .jar files and scheduling details and runs the uploaded files at the designated dates and times. It is being developed in [Scala](https://www.scala-lang.org/) with the [Play Framework](http://www.playframework.com).
 
-This is a starter application that shows how Play works.  Please see the documentation at <https://www.playframework.com/documentation/latest/Home> for more details.
+## Features (in development)
 
-## Running
+- File execution scheduling for a specific date and time.
+- .jar file uploading for later scheduling.
+- Periodic scheduling with different settings. (Daily, Weekly, etc.)
+- Task scheduling with different criteria instead of specific dates. (e.g. Run daily but only on weekdays)
+- Highly personalizable, being able to define exception dates, limit of occurences to perform highly detailed tasks.
+- Supports multiple timezones.
 
-Run this using [sbt](http://www.scala-sbt.org/).  If you downloaded this project from <http://www.playframework.com/download> then you'll find a prepackaged version of sbt in the project directory:
 
-```bash
-sbt run
+## Running/Testing
+
+To run the project, run the command ```sbt run``` and go to <http://localhost:9000>. You should see a message saying "It works!".
+
+To test other endpoints, you can try sending a POST request to <http://localhost:9000/schedule> with a JSON body looking like this:
+
 ```
+{
+	"startDateAndTime": "05/12/2018 10:42:00",
+	"taskName": "EmailSender"
+}
+```
+This will schedule the EmailSender file (which is already available within the project) to run on the 5th of December at 10:42 AM. Keep in mind you need a [MySQL](https://www.mysql.com/) database set up for this to work properly.
 
-And then go to <http://localhost:9000> to see the running web application.
+I reccomend using [Postman](https://www.getpostman.com/) to test HTTP requests with ease.
 
-There are several demonstration files available in this template.
 
-## Controllers
-
-- `HomeController.scala`:
-
-  Shows how to handle simple HTTP requests.
-
-- `AsyncController.scala`:
-
-  Shows how to do asynchronous programming when handling a request.
-
-- `CountController.scala`:
-
-  Shows how to inject a component into a controller and use the component when
-  handling requests.
-
-## Components
-
-- `Module.scala`:
-
-  Shows how to use Guice to bind all the components needed by your application.
-
-- `Counter.scala`:
-
-  An example of a component that contains state, in this case a simple counter.
-
-- `ApplicationTimer.scala`:
-
-  An example of a component that starts when the application starts and stops
-  when the application stops.
-
-## Filters
-
-- `Filters.scala`:
-
-  Creates the list of HTTP filters used by your application.
-
-- `ExampleFilter.scala`:
-
-  A simple filter that adds a header to every response.

@@ -9,14 +9,14 @@ import api.services.SchedulingType._
 import scala.concurrent.duration._
 
 
-class ExecutionJob(fileName: String, schedulingType: SchedulingType, datetime: Date , interval: FiniteDuration) {
+class ExecutionJob(filePath: String, schedulingType: SchedulingType, datetime: Date , interval: FiniteDuration) {
 
-  def this(fileName: String, schedulingType: SchedulingType) = {
-    this(fileName, schedulingType, null, 0 seconds)
+  def this(filePath: String, schedulingType: SchedulingType) = {
+    this(filePath, schedulingType, null, 0 seconds)
   }
 
-  def this(fileName: String, schedulingType: SchedulingType, datetime: Date) = {
-    this(fileName, schedulingType, datetime, 0 seconds)
+  def this(filePath: String, schedulingType: SchedulingType, datetime: Date) = {
+    this(filePath, schedulingType, datetime, 0 seconds)
   }
 
   class ExecutionActor extends Actor {
@@ -25,9 +25,9 @@ class ExecutionJob(fileName: String, schedulingType: SchedulingType, datetime: D
       case 0 =>
         val sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss")
         if(datetime == null)
-          println(getSpecificCurrentTime + " Error running file " + fileName + " scheduled at " + dateToStringFormat(datetime, "yyyy-MM-dd HH:mm:ss") + ".")
+          println(getSpecificCurrentTime + " Error running file " + filePath + " scheduled at " + dateToStringFormat(datetime, "yyyy-MM-dd HH:mm:ss") + ".")
         else
-          println(getSpecificCurrentTime + " Ran file " + fileName + " scheduled at " + dateToStringFormat(datetime, "yyyy-MM-dd HH:mm:ss") + ".")
+          println(getSpecificCurrentTime + " Ran file " + filePath + " scheduled at " + dateToStringFormat(datetime, "yyyy-MM-dd HH:mm:ss") + ".")
       case _ => println("Program didn't run fine.")
     }
   }
@@ -41,12 +41,12 @@ class ExecutionJob(fileName: String, schedulingType: SchedulingType, datetime: D
           val system = ActorSystem("SimpleSystem")
           val schedulerActor = system.actorOf(Props(new ExecutionActor), "Actor")
           implicit val ec = system.dispatcher
-          system.scheduler.scheduleOnce(delay.millis)(schedulerActor ! ExecutionManager.run(fileName))
+          system.scheduler.scheduleOnce(delay.millis)(schedulerActor ! ExecutionManager.run(filePath))
         case Periodic =>
           val system = ActorSystem("SchedulerSystem")
           val schedulerActor = system.actorOf(Props(new ExecutionActor), "Actor")
           implicit val ec = system.dispatcher
-          system.scheduler.schedule(delay.millis, interval)(schedulerActor ! ExecutionManager.run(fileName))
+          system.scheduler.schedule(delay.millis, interval)(schedulerActor ! ExecutionManager.run(filePath))
       }
     }
 

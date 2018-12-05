@@ -3,7 +3,7 @@ package database.mappings
 import java.sql.Timestamp
 import java.util.Date
 
-import slick.driver.MySQLDriver.api._
+import slick.jdbc.MySQLProfile.api._
 
 import database.mappings.FileMappings._
 
@@ -85,16 +85,5 @@ object TaskMappings {
   def deleteByStartDateAndTime(startDateAndTime: Date) = {
     tasksTable.filter(_.startDateAndTime === startDateAndTime).delete
   }
-  def deleteByName(name: String) = {
-    filesTable.filter(_.fileName === name).delete
-  }
-  def deleteByPath(path: String) = {
-    filesTable.filter(_.filePath === path).delete
-  }
-
-  /*def insertInTasksTable(task: TaskRow): Unit = {
-    if(existsCorrespondingFileId(task.fileId)) exec(tasksTable += TaskRow(0, task.fileId, task.startDateAndTime))
-    else println("Could not insert Task with id " + task.fileId + " due to not finding a corresponding File.")
-  }*/
 
 }

@@ -1,8 +1,7 @@
 package database.repositories
 
-import database.mappings.FileMappings.FileRow
 import slick.dbio.DBIO
-import slick.driver.MySQLDriver.api._
+import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent._
 import scala.concurrent.duration._
