@@ -4,6 +4,10 @@ import org.scalatest.junit.JUnitRunner
 import slick.jdbc.H2Profile.api._
 import database.repositories.FileRepository._
 import database.repositories.TaskRepository._
+import slick.dbio.DBIO
+
+import scala.concurrent._
+import scala.concurrent.duration._
 
 @RunWith(classOf[JUnitRunner])
 class DatabaseSuite extends FunSuite {
@@ -11,8 +15,11 @@ class DatabaseSuite extends FunSuite {
   val db = Database.forURL("jdbc:h2:mem:test1;DB_CLOSE_DELAY=-1",
     driver="org.h2.Driver")
 
-  test("Database - FilesTable: create and drop table."){
+  def testExec[T](action: DBIO[T]): T = Await.result(db.run(action), 2 seconds)
 
+  test("Database - FilesTable: create and drop table."){
+    createFilesTable
+    assert()
   }
 
   test("Database - FilesTable: insert and delete all from table."){
