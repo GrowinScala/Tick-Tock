@@ -7,7 +7,7 @@ import database.mappings.TaskMappings._
 import database.repositories.FileRepository._
 
 
-object TaskRepository extends Repository{
+object TaskRepository extends BaseRepository{
 
   def selectAllTasks: Seq[TaskRow] = {
     exec(selectAllFromTasksTable.result)

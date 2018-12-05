@@ -17,6 +17,9 @@ class DatabaseSuite extends FunSuite {
 
   def testExec[T](action: DBIO[T]): T = Await.result(db.run(action), 2 seconds)
 
+  //TODO: Repositories as classes with db as parameter.
+
+
   test("Database - FilesTable: create and drop table."){
 
   }

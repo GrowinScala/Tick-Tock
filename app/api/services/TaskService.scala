@@ -11,12 +11,12 @@ import executionengine.ExecutionJob
 
 object TaskService {
 
-  def scheduleOnce(filePath: String): Unit ={
-    new ExecutionJob(filePath, SchedulingType.RunOnce).run
+  def scheduleOnce(storageName: String): Unit ={
+    new ExecutionJob(storageName, SchedulingType.RunOnce).run
   }
 
-  def scheduleOnce(filePath: String, datetime: Date): Unit = {
-    new ExecutionJob(filePath, SchedulingType.RunOnce, datetime).run
+  def scheduleOnce(storageName: String, datetime: Date): Unit = {
+    new ExecutionJob(storageName, SchedulingType.RunOnce, datetime).run
   }
 
   def getCurrentDateTimestamp: Timestamp = {

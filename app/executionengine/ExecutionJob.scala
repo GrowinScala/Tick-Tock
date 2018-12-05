@@ -30,6 +30,7 @@ class ExecutionJob(filePath: String, schedulingType: SchedulingType, datetime: D
           println(getSpecificCurrentTime + " Ran file " + filePath + " scheduled at " + dateToStringFormat(datetime, "yyyy-MM-dd HH:mm:ss") + ".")
       case _ => println("Program didn't run fine.")
     }
+    //TODO: Error handling.
   }
 
   def run: Unit ={

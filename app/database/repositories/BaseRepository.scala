@@ -6,7 +6,7 @@ import slick.jdbc.MySQLProfile.api._
 import scala.concurrent._
 import scala.concurrent.duration._
 
-trait Repository {
+trait BaseRepository {
 
   val db = Database.forConfig("dbinfo")
 

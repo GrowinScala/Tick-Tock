@@ -29,6 +29,7 @@ class TaskController @Inject()(cc: ControllerComponents) extends AbstractControl
     * @return HTTP Response with an OK, meaning all went well.
     *         HTTP Response with a BadRequest, meaning something went wrong and returns the errors.
     */
+  //TODO: .async
   def schedule: Action[JsValue] = Action(parse.json) { request =>
 
     val jsonResult = request.body.validate[TaskDTO]
@@ -38,7 +39,7 @@ class TaskController @Inject()(cc: ControllerComponents) extends AbstractControl
         val startDateAndTime = s.get.startDateAndTime
         insertTasksTableAction(TaskDTO(startDateAndTime, taskName))
         scheduleOnce(selectFilePathFromFileName(taskName), startDateAndTime)
-        Ok("JSON accepted.")
+        NoContent
       case e: JsError =>
         BadRequest("Errors: " + JsError.toJson(e).toString())
     }

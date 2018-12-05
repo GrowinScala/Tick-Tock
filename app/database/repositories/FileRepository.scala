@@ -3,7 +3,7 @@ package database.repositories
 import database.mappings.FileMappings._
 import slick.jdbc.MySQLProfile.api._
 
-object FileRepository extends Repository{
+object FileRepository extends BaseRepository{
 
   def selectAllFiles: Seq[FileRow] = {
     exec(selectAllFromFilesTable.result)

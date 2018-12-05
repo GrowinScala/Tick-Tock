@@ -44,6 +44,7 @@ object TaskDTO {
     val date = getValidDate(startDateAndTime)
     if(date.isDefined) new TaskDTO(date.get, taskName)
     else throw new IllegalArgumentException("Invalid date format.")
+    //TODO: JsError/JsonValidationError
   }
 
   /**
