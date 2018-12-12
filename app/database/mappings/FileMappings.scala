@@ -3,6 +3,7 @@ package database.mappings
 import java.sql.Timestamp
 import java.util.Date
 
+import play.api.libs.json.{Json, OFormat}
 import slick.jdbc.MySQLProfile.api._
 
 object FileMappings {
@@ -16,6 +17,8 @@ object FileMappings {
                    storageName: String,
                    uploadDate: Date
                  )
+
+  implicit val taskRowFormat: OFormat[FileRow] = Json.format[FileRow]
 
   //---------------------------------------------------------
   //# TABLE MAPPINGS
