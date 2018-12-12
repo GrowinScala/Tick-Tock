@@ -10,5 +10,5 @@ trait BaseRepository {
 
   val db = Database.forConfig("dbinfo")
 
-  def exec[T](action: DBIO[T]): T = Await.result(db.run(action), 2 seconds)
+  def exec[T](action: DBIO[T]): Future[T] = db.run(action)
 }

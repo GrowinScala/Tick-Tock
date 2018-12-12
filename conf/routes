@@ -2,6 +2,8 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-GET     /           controllers.TaskController.index
+GET     /                 controllers.TaskController.index
+GET     /scheduledTasks   controllers.TaskController.getSchedule
+GET     /schedule/:id     controllers.TaskController.getScheduleById(id: Int)
 
-POST    /schedule   controllers.TaskController.schedule
+POST    /schedule         controllers.TaskController.schedule

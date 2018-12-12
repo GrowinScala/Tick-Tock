@@ -3,13 +3,15 @@ package database.repositories
 import database.mappings.FileMappings._
 import slick.jdbc.MySQLProfile.api._
 
+import scala.concurrent.Future
+
 object FileRepository extends BaseRepository{
 
-  def selectAllFiles: Seq[FileRow] = {
+  def selectAllFiles: Future[Seq[FileRow]] = {
     exec(selectAllFromFilesTable.result)
   }
 
-  def deleteAllFiles: Int  = {
+  def deleteAllFiles: Future[Int]  = {
     exec(deleteAllFromFilesTable)
   }
 
@@ -29,19 +31,19 @@ object FileRepository extends BaseRepository{
     exec(selectByFileName(fileName).result) != Vector()
   }
 
-  def selectFileIdFromName(fileName: String): Int = {
+  def selectFileIdFromName(fileName: String): Future[Int] = {
     exec(selectByFileName(fileName).map(_.fileId).result.head)
   }
 
-  def selectNameFromFileId(fileId: Int): String = {
+  def selectNameFromFileId(fileId: Int): Future[String] = {
     exec(selectById(fileId).map(_.fileName).result.head)
   }
 
-  def selectFilePathFromFileName(fileName: String): String = {
+  def selectFilePathFromFileName(fileName: String): Future[String] = {
     exec(selectByFileName(fileName).map(_.storageName).result.head)
   }
 
-  def selectFileNameFromFilePath(filePath: String): String = {
+  def selectFileNameFromFilePath(filePath: String): Future[String] = {
     exec(selectByStorageName(filePath).map(_.fileName).result.head)
   }
 
