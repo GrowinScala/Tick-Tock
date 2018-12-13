@@ -14,15 +14,12 @@ object TickTock{
 
   def main(args: Array[String]): Unit = {
 
-    createFilesTable
-    createTasksTable
+//    createFilesTable
+//    createTasksTable
 
     insertFilesTableAction(FileRow(0, "EmailSender","EmailSender", getCurrentDateTimestamp))
 
-
-
 //    retrieveDataFromDB
-
   }
 
 }

@@ -35,4 +35,17 @@ class FileController @Inject()(cc: ControllerComponents)(implicit exec: Executio
    }
   }
 
+  /**
+    *
+    * @param id
+    * @return
+    */
+  def deleteFile(id: Int): Action[AnyContent] = Action.async {
+    deleteFileById(id). map { i =>
+      if(i == 1) {
+        Ok("File with id = " + id + " as been deleted.")
+      } else BadRequest("File with id "+ id+ " does not exist.")
+    }
+  }
+
 }

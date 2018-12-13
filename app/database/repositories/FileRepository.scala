@@ -19,6 +19,10 @@ object FileRepository extends BaseRepository{
     exec(deleteAllFromFilesTable)
   }
 
+  def deleteFileById(id: Int): Future[Int] = {
+    exec(deleteById(id))
+  }
+
   def createFilesTable: Unit = {
     exec(createFilesTableAction)
   }
