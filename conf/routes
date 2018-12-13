@@ -5,7 +5,8 @@
 GET     /                 controllers.TaskController.index
 GET     /scheduledTasks   controllers.TaskController.getSchedule
 GET     /schedule/:id     controllers.TaskController.getScheduleById(id: Int)
-GET     /getFiles         controllers.FileController.getAllFiles
+GET     /files            controllers.FileController.getAllFiles
+GET     /files/:id        controllers.FileController.getFileById(id: Int)
 
 POST    /schedule         controllers.TaskController.schedule
 

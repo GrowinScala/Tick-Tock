@@ -11,6 +11,10 @@ object FileRepository extends BaseRepository{
     exec(selectAllFromFilesTable.result)
   }
 
+  def selectFileById(id: Int): Future[Seq[FileRow]] = {
+    exec(selectById(id).result)
+  }
+
   def deleteAllFiles: Future[Int]  = {
     exec(deleteAllFromFilesTable)
   }
