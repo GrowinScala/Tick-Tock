@@ -24,9 +24,10 @@ class FileController @Inject()(cc: ControllerComponents)(implicit exec: Executio
   }
 
   /**
+    * Method that returns the file with the given id
     *
-    * @param id
-    * @return
+    * @param id - identifier of the file we are looking for
+    * @return the file corresponding to the id given
     */
   def getFileById(id: Int): Action[AnyContent] = Action.async {
    selectFileById(id).map { seq =>
@@ -36,9 +37,10 @@ class FileController @Inject()(cc: ControllerComponents)(implicit exec: Executio
   }
 
   /**
+    * Method that deletes the file with the given id
     *
-    * @param id
-    * @return
+    * @param id - identifier of the file to be deleted
+    * @return HTTP response Ok if the file was deleted and BadRequest if not
     */
   def deleteFile(id: Int): Action[AnyContent] = Action.async {
     deleteFileById(id). map { i =>
