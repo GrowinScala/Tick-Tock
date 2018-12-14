@@ -46,20 +46,6 @@ class TaskController @Inject()(cc: ControllerComponents) extends AbstractControl
       case Left(errorList) =>
         Future.successful(BadRequest(JsArray(errorList.map(e => Json.toJsObject(e)).toIndexedSeq)))
     }
-
-    /*val jsonResult = request.body.validate[TaskDTO]
-    jsonResult match {
-      case s: JsSuccess[TaskDTO] =>
-        val taskName = s.get.taskName
-        val startDateAndTime = s.get.startDateAndTime
-        taskRepo.insertInTasksTable(TaskDTO(startDateAndTime, taskName))
-        scheduleTask(fileRepo.selectStorageNameFromFileName(taskName), startDateAndTime)
-        Future.successful(NoContent)
-      case e: JsError =>
-        Future.successful(BadRequest("Errors: " + JsError.toJson(e).toString()))
-    }*/
-
-
   }
 
 }
