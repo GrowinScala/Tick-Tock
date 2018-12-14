@@ -18,6 +18,7 @@ libraryDependencies += "org.flywaydb" % "flyway-core" % "5.2.1"
 libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.7.0-akka-2.5.x"
 libraryDependencies += "com.typesafe.slick" %% "slick-hikaricp" % "3.2.3"
 libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.13"
+libraryDependencies += "commons-io" % "commons-io" % "2.6"
 
 //mainClass in (Compile, run) := Some("api.services.TickTock")
 //mainClass in run := Some("api.services.TickTock.main")

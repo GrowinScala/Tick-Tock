@@ -4,12 +4,12 @@ import java.text.SimpleDateFormat
 import java.util.{Date, TimeZone}
 
 import akka.japi
-import api.validators.ValidationError
+import api.validators.Error
 import database.repositories.FileRepository
 import slick.jdbc.MySQLProfile.api._
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
-import api.validators.ValidationError._
+import api.validators.Error._
 
 import scala.util.Try
 
@@ -20,7 +20,7 @@ import scala.util.Try
   */
 case class TaskDTO(
                     startDateAndTime: Date,
-                    taskName: String
+                    fileName: String
                   )
 
 /**
@@ -45,14 +45,12 @@ object TaskDTO {
   /**
     * Method that constructs the TaskDTO giving strings as dates and making the date format validation and conversion from string to date.
     * @param startDateAndTime Date and time of when the task is executed in a String format.
-    * @param taskName Name of the file that is executed.
+    * @param fileName Name of the file that is executed.
     * @return the taskDTO if the date received is valid. Throws an IllegalArgumentException if it's invalid.
     */
-  def construct(startDateAndTime: String, taskName: String): TaskDTO = {
+  def construct(startDateAndTime: String, fileName: String): TaskDTO = {
     val date = getValidDate(startDateAndTime)
-    if(date.isDefined) new TaskDTO(date.get, taskName)
-    else throw new IllegalArgumentException("Invalid date format.")
-    //TODO: JsError/JsonValidationError
+    TaskDTO(date.get, fileName)
   }
 
   /**
@@ -61,7 +59,7 @@ object TaskDTO {
     */
   implicit val taskReads: Reads[TaskDTO] = (
     (JsPath \ "startDateAndTime").read[String] and
-      (JsPath \ "taskName").read[String]
+      (JsPath \ "fileName").read[String]
     ) (TaskDTO.construct _)
 
   /**
@@ -71,7 +69,7 @@ object TaskDTO {
     def writes(st: TaskDTO): JsValue = {
       Json.obj(
         "startDateAndTime" -> st.startDateAndTime,
-        "taskName" -> st.taskName,
+        "fileName" -> st.fileName,
       )
     }
   }
@@ -95,7 +93,7 @@ object TaskDTO {
     * @param date The Date to be checked
     * @return Returns a ValidationError if its not valid. None otherwise.
     */
-  def isValidDateValue(date: Date): Option[ValidationError] = {
+  def isValidDateValue(date: Date): Option[Error] = {
     val now = new Date()
     val currentDate = now.getTime
     val givenDate = date.getTime
@@ -108,7 +106,7 @@ object TaskDTO {
     * @param fileName The fileName to be checked.
     * @return Returns a ValidationError if its not valid. None otherwise.
     */
-  def isValidFileName(fileName: String): Option[ValidationError] = {
+  def isValidFileName(fileName: String): Option[Error] = {
     if(fileRepo.existsCorrespondingFileName(fileName)) None
     else Some(fileNameNotFound)
   }

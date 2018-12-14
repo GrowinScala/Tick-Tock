@@ -43,7 +43,7 @@ class ExecutionJob(storageName: String, schedulingType: SchedulingType, datetime
           println(getSpecificCurrentTime + " Error running file " + storageName + " scheduled at " + dateToStringFormat(datetime.get, "yyyy-MM-dd HH:mm:ss") + ".")
         else
           println(getSpecificCurrentTime + " Ran file " + storageName + " scheduled at " + dateToStringFormat(datetime.get, "yyyy-MM-dd HH:mm:ss") + ".")
-      case _ => println("Program didn't run fine.")
+      case _ => println("Failed to run file: " + storageName)
     }
     //TODO: Error handling / handle Option[Date] better when its None.
   }

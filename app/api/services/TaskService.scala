@@ -26,12 +26,4 @@ object TaskService {
   def scheduleTask(storageName: String, datetime: Date): Unit = {
     new ExecutionJob(storageName, SchedulingType.RunOnce, Some(datetime)).start
   }
-
-  /**
-    * Auxiliary method that returns the current date in the Timestamp format.
-    */
-  def getCurrentDateTimestamp: Timestamp = {
-    val now = Calendar.getInstance().getTime
-    new Timestamp(now.getTime)
-  }
 }

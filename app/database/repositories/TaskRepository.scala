@@ -63,7 +63,7 @@ class TaskRepository(db: Database){
     * @param task TaskDTO to be inserted.
     */
   def insertInTasksTable(task: TaskDTO): Unit = {
-    if(fileRepo.existsCorrespondingFileName(task.taskName)) exec(insertTask(TaskRow(0, fileRepo.selectFileIdFromName(task.taskName), task.startDateAndTime)))
-    else println("Could not insert Task with name " + task.taskName + "due to not finding a corresponding File.")
+    if(fileRepo.existsCorrespondingFileName(task.fileName)) exec(insertTask(TaskRow(0, fileRepo.selectFileIdFromName(task.fileName), task.startDateAndTime)))
+    else println("Could not insert Task with name " + task.fileName + "due to not finding a corresponding File.")
   }
 }

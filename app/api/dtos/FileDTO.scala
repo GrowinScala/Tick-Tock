@@ -8,7 +8,7 @@ import java.util.Date
   * @param storageName Name of the .jar file in the file storage.
   * @param uploadDate Date of when the file was uploaded.
   */
-class FileDTO(
+case class FileDTO(
                fileName: String,
                storageName: String,
                uploadDate: Date

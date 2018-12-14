@@ -2,6 +2,11 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-GET     /           controllers.TaskController.index
+GET     /           api.controllers.TaskController.index
 
-POST    /schedule   controllers.TaskController.schedule
+POST    /task       api.controllers.TaskController.schedule
+
+POST    /file       api.controllers.FileController.upload
+
+
+

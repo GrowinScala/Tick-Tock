@@ -1,6 +1,6 @@
 import akka.http.scaladsl.model.Uri.Host
 import akka.http.scaladsl.model.headers
-import controllers.TaskController
+import api.controllers.TaskController
 import org.scalatest.FunSuite
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import org.scalatestplus.play.{BaseOneAppPerSuite, FakeApplicationFactory, PlaySpec}

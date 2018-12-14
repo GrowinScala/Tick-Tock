@@ -1,4 +1,4 @@
-package controllers
+package api.controllers
 
 import api.dtos.TaskDTO
 import javax.inject.{Inject, Singleton}
@@ -16,6 +16,7 @@ import scala.concurrent.Future
   * This controller handles the HTTP requests that are related to task scheduling.
   * @param cc standard controller components
   */
+@Singleton
 class TaskController @Inject()(cc: ControllerComponents) extends AbstractController(cc){
 
   val db = Database.forConfig("dbinfo")
@@ -38,12 +39,12 @@ class TaskController @Inject()(cc: ControllerComponents) extends AbstractControl
     */
   def schedule: Action[JsValue] = Action(parse.json).async { request =>
     taskParsingErrors(request.body) match {
-      case Left(task) =>
-        taskRepo.insertInTasksTable(TaskDTO(task.startDateAndTime, task.taskName))
-        scheduleTask(fileRepo.selectStorageNameFromFileName(task.taskName), task.startDateAndTime)
+      case Right(task) =>
+        taskRepo.insertInTasksTable(TaskDTO(task.startDateAndTime, task.fileName))
+        scheduleTask(fileRepo.selectStorageNameFromFileName(task.fileName), task.startDateAndTime)
         Future.successful(NoContent)
-      case Right(jsArray) =>
-        Future.successful(BadRequest(jsArray))
+      case Left(errorList) =>
+        Future.successful(BadRequest(JsArray(errorList.map(e => Json.toJsObject(e)).toIndexedSeq)))
     }
 
     /*val jsonResult = request.body.validate[TaskDTO]

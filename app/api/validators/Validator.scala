@@ -7,7 +7,7 @@ import java.util.Date
 import api.dtos.TaskDTO
 import play.api.libs.json._
 import api.dtos.TaskDTO._
-import api.validators.ValidationError._
+import api.validators.Error._
 
 /**
   * Object that handles the validation for the received JSON's on the HTTP request controller classes.
@@ -26,20 +26,33 @@ object Validator {
     * @param jsValue JsValue that holds the JSON body.
     * @return Returns the TaskDTO if everything went well or a JsArray with errors.
     */
-  def taskParsingErrors(jsValue: JsValue): Either[TaskDTO, JsArray] = {
+  def taskParsingErrors(jsValue: JsValue): Either[List[Error], TaskDTO] = {
     jsValue.validate[TaskDTO] match {
       case JsSuccess(task, _) => // Parsing successful
         // Checking the values
         val errorList = List(
           ("startDateAndTime", isValidDateValue(task.startDateAndTime)),
-          ("taskName", isValidFileName(task.taskName))
+          ("taskName", isValidFileName(task.fileName))
         ).filter(item => item._2.isDefined).map(_._2.get)
 
-        if(errorList.isEmpty) Left(task)
-        else Right(JsArray(errorList.map(s => Json.toJsObject(s)).toIndexedSeq))
+        if(errorList.isEmpty) Right(task)
+        else Left(errorList)
 
-      case JsError(e) =>
-        Right(JsArray(e.map(s => JsString(s._1.toString.replace("/", ""))).toIndexedSeq))
+      case JsError(e) => // Parsing failed
+        val errorList: List[Error] = Nil
+        e.map(s => s._1.toString.replace("/", "")).map(elem => {
+          val jsString = JsString(elem)
+          jsString match {
+            case JsString("startDateAndTime") =>
+              Error.invalidDateValue :: errorList
+            case JsString("fileName") =>
+              Error.invalidFileName :: errorList
+            case JsString(_) =>
+              Error.invalidJsonStructure :: errorList
+          }
+        })
+        Left(errorList)
+      //Left((e.map(s => JsString(s._1.toString.replace("/", ""))).toIndexedSeq))
     }
 
   }

@@ -2,16 +2,16 @@ package api.validators
 
 import play.api.libs.json.{Json, OFormat}
 
-case class ValidationError(
+case class Error(
                 message: String,
                 reason: String,
                 locationType: Option[String],
                 location: Option[String]
                 )
 
-object ValidationError {
+object Error {
 
-  implicit val errorsFormat: OFormat[ValidationError] = Json.format[ValidationError]
+  implicit val errorsFormat: OFormat[Error] = Json.format[Error]
 
   //reasons
   lazy val invalid: String = "invalid"
@@ -24,24 +24,40 @@ object ValidationError {
   lazy val header = Some("header")
   lazy val param = Some("param")
 
-  lazy val fileNameNotFound = ValidationError(
-    message = s"taskName doesn't exist.",
-    reason = ValidationError.notFound,
-    locationType = Some("taskName"),
+  lazy val invalidJsonStructure = Error(
+    message = """Json must only contain the String fields "startDateAndTime" and "fileName" in that order""",
+    reason = Error.invalid,
+    locationType = None,
+    location = header
+  )
+
+  lazy val fileNameNotFound = Error(
+    message = s"fileName doesn't exist.",
+    reason = Error.notFound,
+    locationType = Some("fileName"),
     location = param
   )
 
-  lazy val invalidDateFormat = ValidationError(
+  lazy val invalidFileName = Error(
+    message = s"fileName is invalid",
+    reason = Error.invalid,
+    locationType = Some("fileName"),
+    location = param
+  )
+
+  lazy val invalidDateFormat = Error(
     message = s"startDateAndTime has the wrong format.",
-    reason = ValidationError.invalid,
+    reason = Error.invalid,
     locationType = Some("startDateAndTime"),
     location = param
   )
 
-  lazy val invalidDateValue = ValidationError(
+  lazy val invalidDateValue = Error(
     message = s"startDateAndTime is a date and time that is in the past.",
-    reason = ValidationError.invalid,
+    reason = Error.invalid,
     locationType = Some("startDateAndTime"),
     location = param
   )
+
+
 }

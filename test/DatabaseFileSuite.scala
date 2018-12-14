@@ -1,8 +1,9 @@
-import database.repositories.{FileRepository, TaskRepository}
+import database.repositories.FileRepository
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FunSuite, Inside}
 import org.scalatestplus.play.PlaySpec
 import slick.jdbc.H2Profile.api._
 import database.mappings.FileMappings._
+import api.services.FileService._
 import api.services.TaskService._
 import slick.jdbc.meta.MTable
 

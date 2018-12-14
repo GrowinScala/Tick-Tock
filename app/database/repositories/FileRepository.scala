@@ -1,5 +1,6 @@
 package database.repositories
 
+import api.dtos.FileDTO
 import database.mappings.FileMappings._
 import slick.dbio.DBIO
 import slick.jdbc.MySQLProfile.api._
@@ -97,6 +98,10 @@ class FileRepository(db: Database){
     */
   def insertInFilesTable(file: FileRow): Unit = {
     exec(insertFile(file))
+  }
+
+  def insertInFilesTable(file: FileDTO): Unit = {
+    exec(insertFile(FileRow(0, file.storageName, file.fileName, file.uploadDate)))
   }
 
 }

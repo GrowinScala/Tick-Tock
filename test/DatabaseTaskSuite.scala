@@ -4,7 +4,7 @@ import org.scalatest._
 import org.scalatestplus.play.PlaySpec
 import slick.jdbc.H2Profile.api._
 import database.mappings.FileMappings._
-import api.services.TaskService._
+import api.services.FileService._
 import database.mappings.TaskMappings.TaskRow
 
 class DatabaseTaskSuite extends PlaySpec with BeforeAndAfterAll with BeforeAndAfterEach{
