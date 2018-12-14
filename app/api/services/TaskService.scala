@@ -16,7 +16,7 @@ object TaskService {
   }
 
   def scheduleOnce(storageName: String, datetime: Date): Unit = {
-    new ExecutionJob(storageName, SchedulingType.RunOnce, datetime).run
+    new ExecutionJob(storageName, SchedulingType.RunOnce, Some(datetime)).run
   }
 
   def getCurrentDateTimestamp: Timestamp = {

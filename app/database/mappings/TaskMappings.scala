@@ -7,8 +7,6 @@ import slick.jdbc.MySQLProfile.api._
 import database.mappings.FileMappings._
 import play.api.libs.json.{Json, OFormat}
 
-import scala.concurrent.Await
-
 object TaskMappings {
 
   //---------------------------------------------------------

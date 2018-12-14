@@ -71,4 +71,12 @@ class TaskController @Inject()(cc: ControllerComponents)(implicit exec: Executio
     }
   }
 
+  def updateTask(id: Int): Action[JsValue] = Action(parse.json).async { request: Request[JsValue] =>
+    val jsonResult = request.body.validate[TaskDTO]
+    jsonResult.fold(
+      errors => Future.successful(BadRequest("Error updating scheduled task: \n" + errors)),
+      task => Future.successful(Ok("Something"))
+    )
+  }
+
 }

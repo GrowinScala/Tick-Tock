@@ -9,35 +9,27 @@ import api.services.SchedulingType._
 import scala.concurrent.duration._
 
 
-class ExecutionJob(filePath: String, schedulingType: SchedulingType, datetime: Date , interval: FiniteDuration) {
-
-  def this(filePath: String, schedulingType: SchedulingType) = {
-    this(filePath, schedulingType, null, 0 seconds)
-  }
-
-  def this(filePath: String, schedulingType: SchedulingType, datetime: Date) = {
-    this(filePath, schedulingType, datetime, 0 seconds)
-  }
+class ExecutionJob(filePath: String, schedulingType: SchedulingType, datetime: Option[Date] = None , interval: Option[FiniteDuration] = None) {
 
   class ExecutionActor extends Actor {
 
-    def receive= {
+    def receive= { //TODO - if both dateTime and interval are optional, maybe we can't do this this way? (datetime.get)
       case 0 =>
         val sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss")
-        if(datetime == null)
-          println(getSpecificCurrentTime + " Error running file " + filePath + " scheduled at " + dateToStringFormat(datetime, "yyyy-MM-dd HH:mm:ss") + ".")
+        if(datetime == null) //TODO - hmmmm...
+          println(getSpecificCurrentTime + " Error running file " + filePath + " scheduled at " + dateToStringFormat(datetime.get, "yyyy-MM-dd HH:mm:ss") + ".")
         else
-          println(getSpecificCurrentTime + " Ran file " + filePath + " scheduled at " + dateToStringFormat(datetime, "yyyy-MM-dd HH:mm:ss") + ".")
+          println(getSpecificCurrentTime + " Ran file " + filePath + " scheduled at " + dateToStringFormat(datetime.get, "yyyy-MM-dd HH:mm:ss") + ".")
       case _ => println("Program didn't run fine.")
     }
     //TODO: Error handling.
   }
 
   def run: Unit ={
-    val delay = calculateDelay(datetime)
+    val delay = calculateDelay(datetime.get)
     if(delay < 0) return
     else {
-      schedulingType match {
+      schedulingType match { //TODO - This code?
         case RunOnce =>
           val system = ActorSystem("SimpleSystem")
           val schedulerActor = system.actorOf(Props(new ExecutionActor), "Actor")
@@ -47,7 +39,7 @@ class ExecutionJob(filePath: String, schedulingType: SchedulingType, datetime: D
           val system = ActorSystem("SchedulerSystem")
           val schedulerActor = system.actorOf(Props(new ExecutionActor), "Actor")
           implicit val ec = system.dispatcher
-          system.scheduler.schedule(delay.millis, interval)(schedulerActor ! ExecutionManager.run(filePath))
+          system.scheduler.schedule(delay.millis, interval.get)(schedulerActor ! ExecutionManager.run(filePath))
       }
     }
 
@@ -58,7 +50,7 @@ class ExecutionJob(filePath: String, schedulingType: SchedulingType, datetime: D
     sdf.format(date)
   }
 
-  def calculateDelay(datetime: Date): Long = {
+  def calculateDelay(datetime: Date): Long = { //TODO - too many variables with the same name...
     if(datetime == null) 0
     else {
       val now = new Date()
