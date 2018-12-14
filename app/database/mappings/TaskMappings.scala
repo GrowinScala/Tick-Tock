@@ -18,6 +18,7 @@ object TaskMappings {
                       startDateAndTime: Date
                     )
 
+  //TODO - separate TaskRow
   implicit val taskRowFormat: OFormat[TaskRow] = Json.format[TaskRow]
 
   //---------------------------------------------------------
@@ -74,7 +75,7 @@ object TaskMappings {
     tasksTable += task
   }
 
-  def updateByTaskId(id: Int, task: TaskRow) = {
+  def updateTaskByTaskId(id: Int, task: TaskRow) = {
     tasksTable.filter(_.taskId === id).update(task)
   }
 

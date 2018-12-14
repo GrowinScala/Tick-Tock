@@ -64,7 +64,7 @@ class TaskController @Inject()(cc: ControllerComponents)(implicit exec: Executio
     * @param id - identifier of the task we are looking for
     * @return the task corresponding to the given id
     */
-  def getScheduleById(id: Int): Action[AnyContent] = Action.async {
+  def getScheduleById(id: Int): Action[AnyContent] = Action.async { //TODO - Error handling ID
     selectTaskById(id).map { seq =>
       val result = JsArray(seq.map(tr => Json.toJsObject(tr)))
       Ok(result)
@@ -73,7 +73,7 @@ class TaskController @Inject()(cc: ControllerComponents)(implicit exec: Executio
 
   def updateTask(id: Int): Action[JsValue] = Action(parse.json).async { request: Request[JsValue] =>
     val jsonResult = request.body.validate[TaskDTO]
-    jsonResult.fold(
+    jsonResult.fold( //TODO - create new DTO, rename taskDTO to CreateTaskDTO
       errors => Future.successful(BadRequest("Error updating scheduled task: \n" + errors)),
       task => Future.successful(Ok("Something"))
     )

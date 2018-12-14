@@ -31,12 +31,12 @@ object FileRepository extends BaseRepository{
     exec(dropFilesTableAction)
   }
 
-  def existsCorrespondingFileId(fileId: Int): Boolean = {
-    exec(selectById(fileId).result) != Vector()
+  def existsCorrespondingFileId(fileId: Int): Future[Boolean] = {
+    exec(selectById(fileId).exists.result)
   }
 
-  def existsCorrespondingFileName(fileName: String): Boolean = {
-    exec(selectByFileName(fileName).result) != Vector()
+  def existsCorrespondingFileName(fileName: String): Future[Boolean] = {
+    exec(selectByFileName(fileName).exists.result)
   }
 
   def selectFileIdFromName(fileName: String): Future[Int] = {
