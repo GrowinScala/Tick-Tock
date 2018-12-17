@@ -28,13 +28,13 @@ object Validator {
     * @param jsValue JsValue that holds the JSON body.
     * @return Returns the TaskDTO if everything went well or a JsArray with errors.
     */
-  def taskParsingErrors(jsValue: JsValue)(implicit ec: ExecutionContext): Either[List[Error], TaskDTO] = {
+  def taskParsingErrors(jsValue: JsValue): Either[List[Error], TaskDTO] = {
     jsValue.validate[TaskDTO] match {
       case JsSuccess(task, _) => // Parsing successful
         // Checking the values
         val errorList = List(
           ("startDateAndTime", isValidDateValue(task.startDateAndTime)),
-          ("taskName", isValidFileName(task.fileName))
+          ("taskName", isValidFileName(task.fileName)) //TODO - Validation should not go to database
         ).filter(item => item._2.isDefined).map(_._2.get)
 
         if(errorList.isEmpty) Right(task)

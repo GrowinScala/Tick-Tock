@@ -80,7 +80,7 @@ class TaskRepository(dtbase: Database) extends BaseRepository {
     *
     * @param task TaskDTO to be inserted.
     */
-  def insertTasksTableAction(task: TaskDTO)(implicit ec: ExecutionContext): Unit = {
+  def insertInTasksTable(task: TaskDTO)(implicit ec: ExecutionContext): Unit = {
     fileRepo.existsCorrespondingFileName(task.fileName).map { exists =>
       if (exists) fileRepo.selectFileIdFromName(task.fileName).map(id => exec(insertTask(TaskRow(0, id, task.startDateAndTime))))
       else println("Could not insert Task with name " + task.fileName + "due to not finding a corresponding File.")
