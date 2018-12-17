@@ -6,16 +6,14 @@ import database.mappings.FileMappings._
 import api.services.FileService._
 import api.services.TaskService._
 import slick.jdbc.meta.MTable
+import database.utils.DatabaseUtils._
 
 import scala.concurrent._
 import scala.concurrent.duration._
 
 class DatabaseFileSuite extends PlaySpec with BeforeAndAfterAll with BeforeAndAfterEach{
 
-  val db = Database.forURL("jdbc:h2:mem:play;MODE=MYSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=FALSE",
-    driver="org.h2.Driver")
-
-  val fileRepo = new FileRepository(db)
+  val fileRepo = new FileRepository(TEST_DB)
 
   override def beforeEach(): Unit = {
     fileRepo.createFilesTable

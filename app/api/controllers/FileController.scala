@@ -11,16 +11,15 @@ import javax.inject.{Inject, Singleton}
 import org.apache.commons.io.FilenameUtils
 import slick.jdbc.MySQLProfile.api._
 import play.api.mvc.{AbstractController, ControllerComponents}
-import play.mvc.{Http, Result}
+import database.utils.DatabaseUtils._
 
 @Singleton
 class FileController @Inject()(cc: ControllerComponents) extends AbstractController(cc){
 
   final val MAX_FILE_SIZE = 1024*1024*300 // 300MB
 
-  val db = Database.forConfig("dbinfo")
-  val fileRepo = new FileRepository(db)
-  val taskRepo = new TaskRepository(db)
+  val fileRepo = new FileRepository(DEFAULT_DB)
+  val taskRepo = new TaskRepository(DEFAULT_DB)
 
   def index = Action {
     Ok("It works!")

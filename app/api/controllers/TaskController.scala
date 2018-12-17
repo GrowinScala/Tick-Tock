@@ -8,6 +8,7 @@ import api.services.TaskService._
 import database.repositories.{FileRepository, TaskRepository}
 import slick.jdbc.MySQLProfile.api._
 import api.validators.Validator._
+import database.utils.DatabaseUtils._
 
 import scala.concurrent.Future
 
@@ -19,9 +20,8 @@ import scala.concurrent.Future
 @Singleton
 class TaskController @Inject()(cc: ControllerComponents) extends AbstractController(cc){
 
-  val db = Database.forConfig("dbinfo")
-  val fileRepo = new FileRepository(db)
-  val taskRepo = new TaskRepository(db)
+  val fileRepo = new FileRepository(DEFAULT_DB)
+  val taskRepo = new TaskRepository(DEFAULT_DB)
 
   /**
     * Method that runs when a GET request is made on localhost:9000/

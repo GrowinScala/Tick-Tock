@@ -6,14 +6,12 @@ import slick.jdbc.H2Profile.api._
 import database.mappings.FileMappings._
 import api.services.FileService._
 import database.mappings.TaskMappings.TaskRow
+import database.utils.DatabaseUtils._
 
 class DatabaseTaskSuite extends PlaySpec with BeforeAndAfterAll with BeforeAndAfterEach{
 
-  val db = Database.forURL("jdbc:h2:mem:play;MODE=MYSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=FALSE",
-    driver="org.h2.Driver")
-
-  val fileRepo = new FileRepository(db)
-  val taskRepo = new TaskRepository(db)
+  val fileRepo = new FileRepository(TEST_DB)
+  val taskRepo = new TaskRepository(TEST_DB)
 
   override def beforeAll() = {
     fileRepo.createFilesTable
