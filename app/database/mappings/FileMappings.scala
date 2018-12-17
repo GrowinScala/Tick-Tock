@@ -6,6 +6,12 @@ import java.util.Date
 import play.api.libs.json.{Json, OFormat}
 import slick.jdbc.MySQLProfile.api._
 
+
+/**
+  * Object that contains the representation of the File table Row,
+  * the slick mappings for the table
+  * and query extensions for that table.
+  */
 object FileMappings {
 
   //---------------------------------------------------------

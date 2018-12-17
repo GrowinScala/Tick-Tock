@@ -2,17 +2,16 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-GET     /                      controllers.TaskController.index
-GET     /scheduledTasks        controllers.TaskController.getSchedule
-GET     /schedule/:id          controllers.TaskController.getScheduleById(id: Int)
-PATCH   /scheduledTasks/:id    controllers.TaskController.updateTask(id: Int)
+GET     /                      api.controllers.TaskController.index
+GET     /task                  api.controllers.TaskController.getSchedule
+GET     /task/:id              api.controllers.TaskController.getScheduleById(id: Int)
+PATCH   /task/:id              api.controllers.TaskController.updateTask(id: Int)
+POST    /task                  api.controllers.TaskController.schedule
 
-GET     /files                 controllers.FileController.getAllFiles
-GET     /files/:id             controllers.FileController.getFileById(id: Int)
-DELETE  /files/:id             controllers.FileController.deleteFile(id: Int)
+GET     /files                 api.controllers.FileController.getAllFiles
+GET     /files/:id             api.controllers.FileController.getFileById(id: Int)
+DELETE  /files/:id             api.controllers.FileController.deleteFile(id: Int)
+POST    /file                  api.controllers.FileController.upload
 
-POST    /schedule              controllers.TaskController.schedule
 
-#PATCH   /schedule/:id
-#DELETE  /schedule/:id
-#PUT     /schedule/:id
+

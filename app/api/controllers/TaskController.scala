@@ -1,11 +1,14 @@
-package controllers
+package api.controllers
 
 import api.dtos.TaskDTO
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
 import play.api.mvc._
 import api.services.TaskService._
-import database.repositories.TaskRepository._
+import database.repositories.{FileRepository, TaskRepository}
+import slick.jdbc.MySQLProfile.api._
+import api.validators.Validator._
+import database.utils.DatabaseUtils._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -15,7 +18,11 @@ import scala.concurrent.{ExecutionContext, Future}
   *
   * @param cc standard controller components
   */
-class TaskController @Inject()(cc: ControllerComponents)(implicit exec: ExecutionContext) extends AbstractController(cc) {
+@Singleton
+class TaskController @Inject()(cc: ControllerComponents)(implicit exec: ExecutionContext) extends AbstractController(cc){
+
+  val fileRepo = new FileRepository(DEFAULT_DB)
+  val taskRepo = new TaskRepository(DEFAULT_DB)
 
   /**
     * Method that runs when a GET request is made on localhost:9000/

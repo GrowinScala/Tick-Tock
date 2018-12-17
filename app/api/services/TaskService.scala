@@ -3,24 +3,27 @@ package api.services
 import java.sql.Timestamp
 import java.util.{Calendar, Date}
 
-import database.repositories.FileRepository._
-import database.repositories.TaskRepository._
-import api.services.SchedulingType._
 import executionengine.ExecutionJob
 
-
+/**
+  * Object that contains all methods for the task scheduling related to the service layer.
+  */
 object TaskService {
 
-  def scheduleOnce(storageName: String): Unit ={
-    new ExecutionJob(storageName, SchedulingType.RunOnce).run
+  /**
+    * Schedules a task by giving the storageName to be executed immediately.
+    * @param storageName Name of the file on the storage folder.
+    */
+  def scheduleTask(storageName: String): Unit ={
+    new ExecutionJob(storageName, SchedulingType.RunOnce).start
   }
 
-  def scheduleOnce(storageName: String, datetime: Date): Unit = {
-    new ExecutionJob(storageName, SchedulingType.RunOnce, Some(datetime)).run
-  }
-
-  def getCurrentDateTimestamp: Timestamp = {
-    val now = Calendar.getInstance().getTime
-    new Timestamp(now.getTime)
+  /**
+    * Schedules a task by giving the storageName to be executed on the given datetime.
+    * @param storageName Name of the file on the storage folder.
+    * @param datetime Date specifying when the task is executed.
+    */
+  def scheduleTask(storageName: String, datetime: Date): Unit = {
+    new ExecutionJob(storageName, SchedulingType.RunOnce, Some(datetime)).start
   }
 }
