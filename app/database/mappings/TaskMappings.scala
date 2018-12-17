@@ -9,6 +9,12 @@ import database.mappings.FileMappings._
 
 import scala.concurrent.Await
 
+
+/**
+  * Object that contains the representation of the Task table Row,
+  * the slick mappings for the table
+  * and query extensions for that table.
+  */
 object TaskMappings {
 
   //---------------------------------------------------------

@@ -1,19 +1,27 @@
-package controllers
+package api.controllers
 
 import api.dtos.TaskDTO
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
 import play.api.mvc._
 import api.services.TaskService._
-import database.repositories.TaskRepository._
-import database.repositories.FileRepository._
+import database.repositories.{FileRepository, TaskRepository}
+import slick.jdbc.MySQLProfile.api._
+import api.validators.Validator._
+import database.utils.DatabaseUtils._
+
+import scala.concurrent.Future
 
 
 /**
   * This controller handles the HTTP requests that are related to task scheduling.
   * @param cc standard controller components
   */
+@Singleton
 class TaskController @Inject()(cc: ControllerComponents) extends AbstractController(cc){
+
+  val fileRepo = new FileRepository(DEFAULT_DB)
+  val taskRepo = new TaskRepository(DEFAULT_DB)
 
   /**
     * Method that runs when a GET request is made on localhost:9000/
@@ -29,19 +37,14 @@ class TaskController @Inject()(cc: ControllerComponents) extends AbstractControl
     * @return HTTP Response with an OK, meaning all went well.
     *         HTTP Response with a BadRequest, meaning something went wrong and returns the errors.
     */
-  //TODO: .async
-  def schedule: Action[JsValue] = Action(parse.json) { request =>
-
-    val jsonResult = request.body.validate[TaskDTO]
-    jsonResult match {
-      case s: JsSuccess[TaskDTO] =>
-        val taskName = s.get.taskName
-        val startDateAndTime = s.get.startDateAndTime
-        insertTasksTableAction(TaskDTO(startDateAndTime, taskName))
-        scheduleOnce(selectFilePathFromFileName(taskName), startDateAndTime)
-        NoContent
-      case e: JsError =>
-        BadRequest("Errors: " + JsError.toJson(e).toString())
+  def schedule: Action[JsValue] = Action(parse.json).async { request =>
+    taskParsingErrors(request.body) match {
+      case Right(task) =>
+        taskRepo.insertInTasksTable(TaskDTO(task.startDateAndTime, task.fileName))
+        scheduleTask(fileRepo.selectStorageNameFromFileName(task.fileName), task.startDateAndTime)
+        Future.successful(NoContent)
+      case Left(errorList) =>
+        Future.successful(BadRequest(JsArray(errorList.map(e => Json.toJsObject(e)).toIndexedSeq)))
     }
   }
 
