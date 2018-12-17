@@ -9,6 +9,8 @@ import play.api.libs.json._
 import api.dtos.TaskDTO._
 import api.validators.Error._
 
+import scala.concurrent.ExecutionContext
+
 /**
   * Object that handles the validation for the received JSON's on the HTTP request controller classes.
   */
@@ -26,7 +28,7 @@ object Validator {
     * @param jsValue JsValue that holds the JSON body.
     * @return Returns the TaskDTO if everything went well or a JsArray with errors.
     */
-  def taskParsingErrors(jsValue: JsValue): Either[List[Error], TaskDTO] = {
+  def taskParsingErrors(jsValue: JsValue)(implicit ec: ExecutionContext): Either[List[Error], TaskDTO] = {
     jsValue.validate[TaskDTO] match {
       case JsSuccess(task, _) => // Parsing successful
         // Checking the values

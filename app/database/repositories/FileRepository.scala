@@ -2,17 +2,15 @@ package database.repositories
 
 import api.dtos.FileDTO
 import database.mappings.FileMappings._
-import slick.dbio.DBIO
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.Future
-import scala.concurrent.Await
-import scala.concurrent.duration._
 
-object FileRepository(db: Database) extends BaseRepository{
+class FileRepository(db: Database) extends BaseRepository {
 
   /**
     * Selects all rows from the files table on the database.
+    *
     * @return
     */
   def selectAllFiles: Future[Seq[FileRow]] = {
@@ -21,6 +19,7 @@ object FileRepository(db: Database) extends BaseRepository{
 
   /**
     * Deletes all rows from the files table on the database.
+    *
     * @return
     */
   def selectFileById(id: Int): Future[Seq[FileRow]] = {
@@ -30,7 +29,7 @@ object FileRepository(db: Database) extends BaseRepository{
   /**
     *
     */
-  def deleteAllFiles: Future[Int]  = {
+  def deleteAllFiles: Future[Int] = {
     exec(deleteAllFromFilesTable)
   }
 
@@ -57,22 +56,27 @@ object FileRepository(db: Database) extends BaseRepository{
 
   /**
     * Checks if a corresponding file row exists on the database by providing its fileId.
+    *
     * @param fileId Id of the file on the database.
     * @return true if row exists, false if not.
     */
   def existsCorrespondingFileId(fileId: Int): Future[Boolean] = {
     exec(selectById(fileId).exists.result)
+  }
 
   /**
     * Checks if a corresponding file row exists on the database by providing the fileName.
+    *
     * @param fileName Name of the file given by the user on the database.
     * @return true if row exists, false if not.
     */
   def existsCorrespondingFileName(fileName: String): Future[Boolean] = {
     exec(selectByFileName(fileName).exists.result)
+  }
 
   /**
     * Retrieves a fileId of a row on the database by providing the fileName.
+    *
     * @param fileName Name of the file given by the user on the database.
     */
   def selectFileIdFromName(fileName: String): Future[Int] = {
@@ -81,6 +85,7 @@ object FileRepository(db: Database) extends BaseRepository{
 
   /**
     * Retrieves a fileName of a row on the database by providing the fileId.
+    *
     * @param fileId Id of the file on the database.
     */
   def selectNameFromFileId(fileId: Int): Future[String] = {
@@ -89,6 +94,7 @@ object FileRepository(db: Database) extends BaseRepository{
 
   /**
     * Retrieves a storageName of a row on the database by providing the fileName.
+    *
     * @param fileName Name of the file given by the user on the database.
     */
   def selectFilePathFromFileName(fileName: String): Future[String] = {
@@ -97,6 +103,7 @@ object FileRepository(db: Database) extends BaseRepository{
 
   /**
     * Retrieves a fileName of a row on the database by providing the storageName.
+    *
     * @param storageName Name of the file on the storage folder on the database.
     */
   def selectFileNameFromFilePath(filePath: String): Future[String] = {
@@ -105,15 +112,13 @@ object FileRepository(db: Database) extends BaseRepository{
 
   /**
     * Method that inserts a file (row) on the files table on the database.
+    *
     * @param file FileRow to be inserted on the database.
     */
-  def insertInFilesTable(file: FileRow): Unit = {
+  def insertInFilesTable(file:FileRow): Unit = {
     exec(insertFile(file))
   }
 
-  /**
-    *
-    */
   def insertInFilesTable(file: FileDTO): Unit = {
     exec(insertFile(FileRow(0, file.storageName, file.fileName, file.uploadDate)))
   }

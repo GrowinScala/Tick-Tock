@@ -38,7 +38,6 @@ class ExecutionJob(storageName: String, schedulingType: SchedulingType, datetime
       */
     def receive= { //TODO - if both dateTime and interval are optional, maybe we can't do this this way? (datetime.get)
       case 0 =>
-        val sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss")
         if(datetime.isEmpty)
           println(getSpecificCurrentTime + " Error running file " + storageName + " scheduled at " + dateToStringFormat(datetime.get, "yyyy-MM-dd HH:mm:ss") + ".")
         else

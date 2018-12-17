@@ -1,23 +1,22 @@
-package controllers
+package api.controllers
 
 import java.io.File
 import java.nio.file.Paths
 import java.sql.Timestamp
 import java.util.Calendar
+
 import api.services.FileService._
 import api.dtos.FileDTO
 import database.repositories.{FileRepository, TaskRepository}
 import javax.inject.{Inject, Singleton}
 import org.apache.commons.io.FilenameUtils
 import slick.jdbc.MySQLProfile.api._
-import play.api.mvc.{AbstractController, ControllerComponents}
+import play.api.mvc._
 import database.utils.DatabaseUtils._
-
 import api.dtos.FileDTO
 import javax.inject.Inject
-import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
 import api.services.FileService._
-import database.repositories.FileRepository._
+import play.api.libs.Files
 import play.api.libs.json._
 
 import scala.concurrent.ExecutionContext
@@ -34,8 +33,7 @@ class FileController @Inject()(cc: ControllerComponents)(implicit exec: Executio
     Ok("It works!")
   }
 
-  def upload = Action(parse.multipartFormData(MAX_FILE_SIZE)) { request =>
-
+  def upload: Action[MultipartFormData[Files.TemporaryFile]] = Action(parse.multipartFormData(MAX_FILE_SIZE)) { request =>
     request.body.file("file").map { file =>
       if(FilenameUtils.getExtension(file.filename) == "jar") {
         val storageName = Paths.get(file.filename).getFileName.toString
@@ -58,7 +56,7 @@ class FileController @Inject()(cc: ControllerComponents)(implicit exec: Executio
     * @return a list containing all the files in the database
     */
   def getAllFiles: Action[AnyContent] = Action.async {
-    selectAllFiles.map { seq =>
+    fileRepo.selectAllFiles.map { seq =>
       val result = JsArray(seq.map(tr => Json.toJsObject(tr)))
       Ok(result)
     }
@@ -71,7 +69,7 @@ class FileController @Inject()(cc: ControllerComponents)(implicit exec: Executio
     * @return the file corresponding to the id given
     */
   def getFileById(id: Int): Action[AnyContent] = Action.async {
-    selectFileById(id).map { seq =>
+    fileRepo.selectFileById(id).map { seq =>
       val result = JsArray(seq.map(tr => Json.toJsObject(tr)))
       Ok(result)
     }
@@ -84,7 +82,7 @@ class FileController @Inject()(cc: ControllerComponents)(implicit exec: Executio
     * @return HTTP response Ok if the file was deleted and BadRequest if not
     */
   def deleteFile(id: Int): Action[AnyContent] = Action.async {
-    deleteFileById(id). map { i =>
+    fileRepo.deleteFileById(id). map { i =>
       if(i > 0) { //TODO - Create file exists and check first
         Ok("File with id = " + id + " as been deleted.")
       } else BadRequest("File with id "+ id+ " does not exist.")

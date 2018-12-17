@@ -11,6 +11,7 @@ import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import api.validators.Error._
 
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 /**
@@ -107,12 +108,8 @@ object TaskDTO {
     * @return Returns a ValidationError if its not valid. None otherwise.
     */
   def isValidFileName(fileName: String): Option[Error] = {
-    if(fileRepo.existsCorrespondingFileName(fileName)) None
-    else Some(fileNameNotFound)
+    ???
+
+    //TODO - Binders should not go to the database to validate
   }
-
-
-
-
-
 }

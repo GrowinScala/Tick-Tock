@@ -19,9 +19,9 @@ import scala.concurrent.{ExecutionContext, Future}
   *
   * @param db Database class that contains the database information.
   */
-class TaskRepository(db: Database) extends BaseRepository {
+class TaskRepository(dtbase: Database) extends BaseRepository {
 
-  val fileRepo = new FileRepository(db)
+  val fileRepo = new FileRepository(dtbase)
 
   /**
     * Selects all tasks from the tasks table on the database.
@@ -32,7 +32,13 @@ class TaskRepository(db: Database) extends BaseRepository {
     exec(selectAllFromTasksTable.result)
   }
 
-  def selectTaskById(id:Int): Future[Seq[TaskRow]] = {
+  /**
+    * Select a single task from the database given an its id
+    *
+    * @param id - the identifier of the task we want to select
+    * @return the selected task according to the id given
+    */
+  def selectTaskById(id: Int): Future[Seq[TaskRow]] = {
     exec(selectByTaskId(id).result)
   }
 
@@ -59,21 +65,25 @@ class TaskRepository(db: Database) extends BaseRepository {
 
   /**
     * Inserts a task (row) on the tasks table on the database.
+    *
     * @param task TaskRow to be inserted.
     */
-  def insertInTasksTable(task: TaskRow): Unit = {
-    if(fileRepo.existsCorrespondingFileId(task.fileId)) exec(insertTask(task))
-    else println("Could not insert Task with id " + task.fileId + " due to not finding a corresponding File.")
+  def insertInTasksTable(task: TaskRow)(implicit ec: ExecutionContext): Unit = { //TODO - Refactor this TaskRow
+    fileRepo.existsCorrespondingFileId(task.fileId).map { f =>
+      if (f) exec(insertTask(task))
+      else println("Could not insert Task with id " + task.fileId + " due to not finding a corresponding File.")
+    }
   }
 
   /**
     * Inserts a task (row) on the tasks table on the database.
+    *
     * @param task TaskDTO to be inserted.
     */
   def insertTasksTableAction(task: TaskDTO)(implicit ec: ExecutionContext): Unit = {
-    if(existsCorrespondingFileName(task.taskName)) {
-      selectFileIdFromName(task.taskName).map(id => exec(insertTask(TaskRow(0, id, task.startDateAndTime))))
+    fileRepo.existsCorrespondingFileName(task.fileName).map { exists =>
+      if (exists) fileRepo.selectFileIdFromName(task.fileName).map(id => exec(insertTask(TaskRow(0, id, task.startDateAndTime))))
+      else println("Could not insert Task with name " + task.fileName + "due to not finding a corresponding File.")
     }
-    else println("Could not insert Task with name " + task.taskName + "due to not finding a corresponding File.")
   }
 }

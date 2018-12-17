@@ -46,8 +46,8 @@ class TaskController @Inject()(cc: ControllerComponents)(implicit exec: Executio
       errors =>
         Future.successful(BadRequest(Json.obj("status" -> "Error:", "message" -> JsError.toJson(errors)))), //TODO - create object Error (extends DefaultHttpErrorHandler)
       task => {
-        insertTasksTableAction(TaskDTO(task.startDateAndTime, task.taskName))
-        scheduleOnce(task.taskName, task.startDateAndTime)
+        taskRepo.insertTasksTableAction(TaskDTO(task.startDateAndTime, task.fileName))
+        scheduleTask(task.fileName, task.startDateAndTime)
         Future.successful(Ok)
       }
     )
@@ -59,7 +59,7 @@ class TaskController @Inject()(cc: ControllerComponents)(implicit exec: Executio
     * @return HTTP Response OK with all the scheduled tasks
     */
   def getSchedule: Action[AnyContent] = Action.async {
-    selectAllTasks.map { seq =>
+    taskRepo.selectAllTasks.map { seq =>
       val result = JsArray(seq.map(tr => Json.toJsObject(tr)))
       Ok(result)
     }
@@ -72,7 +72,7 @@ class TaskController @Inject()(cc: ControllerComponents)(implicit exec: Executio
     * @return the task corresponding to the given id
     */
   def getScheduleById(id: Int): Action[AnyContent] = Action.async { //TODO - Error handling ID
-    selectTaskById(id).map { seq =>
+    taskRepo.selectTaskById(id).map { seq =>
       val result = JsArray(seq.map(tr => Json.toJsObject(tr)))
       Ok(result)
     }
