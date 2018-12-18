@@ -11,7 +11,9 @@ import database.utils.DatabaseUtils._
 import scala.concurrent._
 import scala.concurrent.duration._
 
-class DatabaseFileSuite(implicit ec: ExecutionContext) extends PlaySpec with BeforeAndAfterAll with BeforeAndAfterEach {
+class DatabaseFileSuite extends PlaySpec with BeforeAndAfterAll with BeforeAndAfterEach {
+
+  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
   val fileRepo = new FileRepository(TEST_DB)
 
@@ -88,11 +90,11 @@ class DatabaseFileSuite(implicit ec: ExecutionContext) extends PlaySpec with Bef
       fileRepo.insertInFilesTable(FileRow(0, "test1", "asd1", getCurrentDateTimestamp))
       fileRepo.insertInFilesTable(FileRow(0, "test2", "asd2", getCurrentDateTimestamp))
       fileRepo.insertInFilesTable(FileRow(0, "test3", "asd3", getCurrentDateTimestamp))
-      assert(!fileRepo.existsCorrespondingFileName("test0")) // "test0" shouldn't exist.
-      assert(fileRepo.existsCorrespondingFileName("test1"))
-      assert(fileRepo.existsCorrespondingFileName("test2"))
-      assert(fileRepo.existsCorrespondingFileName("test3"))
-      assert(!fileRepo.existsCorrespondingFileName("test4")) // "test4" shouldn't exist.
+      fileRepo.existsCorrespondingFileName("test0").map(result => assert(!result)) //fileName "test0" does not exist
+      fileRepo.existsCorrespondingFileName("test1").map(result => assert(result))
+      fileRepo.existsCorrespondingFileName("test2").map(result => assert(result))
+      fileRepo.existsCorrespondingFileName("test3").map(result => assert(result))
+      fileRepo.existsCorrespondingFileName("test4").map(result => assert(!result)) //fileName "test0" does not exist
     }
   }
 
@@ -101,13 +103,9 @@ class DatabaseFileSuite(implicit ec: ExecutionContext) extends PlaySpec with Bef
       fileRepo.insertInFilesTable(FileRow(0, "test1", "asd1", getCurrentDateTimestamp)) // fileId should be 1
       fileRepo.insertInFilesTable(FileRow(0, "test2", "asd2", getCurrentDateTimestamp)) // fileId should be 2
       fileRepo.insertInFilesTable(FileRow(0, "test3", "asd3", getCurrentDateTimestamp)) // fileId should be 3
-      assert(fileRepo.selectFileIdFromName("test1") == 1)
-      assert(fileRepo.selectFileIdFromName("test3") != 1)
-      assert(fileRepo.selectFileIdFromName("test1") != 2)
-      assert(fileRepo.selectFileIdFromName("test2") == 2)
-      assert(fileRepo.selectFileIdFromName("test2") != 3)
-      assert(fileRepo.selectFileIdFromName("test3") == 3)
-
+      fileRepo.selectFileIdFromName("test1").map(result => assert(result == 1))
+      fileRepo.selectFileIdFromName("test2").map(result => assert(result == 2))
+      fileRepo.selectFileIdFromName("test3").map(result => assert(result == 3))
     }
   }
 
@@ -116,12 +114,9 @@ class DatabaseFileSuite(implicit ec: ExecutionContext) extends PlaySpec with Bef
       fileRepo.insertInFilesTable(FileRow(0, "test1", "asd1", getCurrentDateTimestamp)) // fileId should be 1
       fileRepo.insertInFilesTable(FileRow(0, "test2", "asd2", getCurrentDateTimestamp)) // fileId should be 2
       fileRepo.insertInFilesTable(FileRow(0, "test3", "asd3", getCurrentDateTimestamp)) // fileId should be 3
-      assert(fileRepo.selectFileNameFromFileId(1) == "test1")
-      assert(fileRepo.selectFileNameFromFileId(3) != "test1")
-      assert(fileRepo.selectFileNameFromFileId(1) != "test2")
-      assert(fileRepo.selectFileNameFromFileId(2) == "test2")
-      assert(fileRepo.selectFileNameFromFileId(2) != "test3")
-      assert(fileRepo.selectFileNameFromFileId(3) == "test3")
+      fileRepo.selectNameFromFileId(1).map(result => assert(result.equals("test1")))
+      fileRepo.selectNameFromFileId(2).map(result => assert(result.equals("test2")))
+      fileRepo.selectNameFromFileId(3).map(result => assert(result.equals("test3")))
     }
   }
 
@@ -130,12 +125,9 @@ class DatabaseFileSuite(implicit ec: ExecutionContext) extends PlaySpec with Bef
       fileRepo.insertInFilesTable(FileRow(0, "test1", "asd1", getCurrentDateTimestamp))
       fileRepo.insertInFilesTable(FileRow(0, "test2", "asd2", getCurrentDateTimestamp))
       fileRepo.insertInFilesTable(FileRow(0, "test3", "asd3", getCurrentDateTimestamp))
-      assert(fileRepo.selectStorageNameFromFileName("test1") == "asd1")
-      assert(fileRepo.selectStorageNameFromFileName("test3") != "asd1")
-      assert(fileRepo.selectStorageNameFromFileName("test1") != "asd2")
-      assert(fileRepo.selectStorageNameFromFileName("test2") == "asd2")
-      assert(fileRepo.selectStorageNameFromFileName("test2") != "asd3")
-      assert(fileRepo.selectStorageNameFromFileName("test3") == "asd3")
+      fileRepo.selectStorageNameFromFileName("test1").map(result => assert(result.equals("asd1")))
+      fileRepo.selectStorageNameFromFileName("test2").map(result => assert(result.equals("asd2")))
+      fileRepo.selectStorageNameFromFileName("test3").map(result => assert(result.equals("asd3")))
     }
   }
 
@@ -144,12 +136,9 @@ class DatabaseFileSuite(implicit ec: ExecutionContext) extends PlaySpec with Bef
       fileRepo.insertInFilesTable(FileRow(0, "test1", "asd1", getCurrentDateTimestamp))
       fileRepo.insertInFilesTable(FileRow(0, "test2", "asd2", getCurrentDateTimestamp))
       fileRepo.insertInFilesTable(FileRow(0, "test3", "asd3", getCurrentDateTimestamp))
-      assert(fileRepo.selectFileNameFromStorageName("asd1") == "test1")
-      assert(fileRepo.selectFileNameFromStorageName("asd3") != "test1")
-      assert(fileRepo.selectFileNameFromStorageName("asd1") != "test2")
-      assert(fileRepo.selectFileNameFromStorageName("asd2") == "test2")
-      assert(fileRepo.selectFileNameFromStorageName("asd2") != "test3")
-      assert(fileRepo.selectFileNameFromStorageName("asd3") == "test3")
+      fileRepo.selectFileNameFromStorageName("asd1").map(result => assert(result.equals("test1")))
+      fileRepo.selectFileNameFromStorageName("asd2").map(result => assert(result.equals("test2")))
+      fileRepo.selectFileNameFromStorageName("asd3").map(result => assert(result.equals("test3")))
     }
   }
 }

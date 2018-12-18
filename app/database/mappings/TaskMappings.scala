@@ -6,6 +6,8 @@ import java.util.Date
 import slick.jdbc.MySQLProfile.api._
 import database.mappings.FileMappings._
 import play.api.libs.json.{Json, OFormat}
+import slick.dbio.Effect
+import slick.sql.FixedSqlAction
 
 
 /**
@@ -77,7 +79,7 @@ object TaskMappings {
     tasksTable.filter(_.startDateAndTime === startDateAndTime)
   }
 
-  def insertTask(task: TaskRow) = {
+  def insertTask(task: TaskRow): FixedSqlAction[Int, NoStream, Effect.Write] = {
     tasksTable += task
   }
 

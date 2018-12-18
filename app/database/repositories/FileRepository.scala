@@ -97,7 +97,7 @@ class FileRepository(db: Database) extends BaseRepository {
     *
     * @param fileName Name of the file given by the user on the database.
     */
-  def selectFilePathFromFileName(fileName: String): Future[String] = {
+  def selectStorageNameFromFileName(fileName: String): Future[String] = {
     exec(selectByFileName(fileName).map(_.storageName).result.head)
   }
 
@@ -106,7 +106,7 @@ class FileRepository(db: Database) extends BaseRepository {
     *
     * @param storageName Name of the file on the storage folder on the database.
     */
-  def selectFileNameFromFilePath(filePath: String): Future[String] = {
+  def selectFileNameFromStorageName(filePath: String): Future[String] = {
     exec(selectByStorageName(filePath).map(_.fileName).result.head)
   }
 

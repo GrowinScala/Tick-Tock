@@ -46,7 +46,7 @@ class TaskController @Inject()(cc: ControllerComponents)(implicit exec: Executio
       errors =>
         Future.successful(BadRequest(Json.obj("status" -> "Error:", "message" -> JsError.toJson(errors)))), //TODO - create object Error (extends DefaultHttpErrorHandler)
       task => {
-        taskRepo.insertTasksTableAction(TaskDTO(task.startDateAndTime, task.fileName))
+        taskRepo.insertInTasksTable(TaskDTO(task.startDateAndTime, task.fileName))
         scheduleTask(task.fileName, task.startDateAndTime)
         Future.successful(Ok)
       }

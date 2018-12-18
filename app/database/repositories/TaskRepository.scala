@@ -1,5 +1,7 @@
 package database.repositories
 
+import akka.actor.FSM.Failure
+import akka.actor.Status.Success
 import api.dtos.TaskDTO
 import database.mappings.TaskMappings
 import database.mappings.TaskMappings.TaskRow
@@ -9,8 +11,8 @@ import slick.dbio.DBIO
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 
 /**
@@ -68,10 +70,10 @@ class TaskRepository(dtbase: Database) extends BaseRepository {
     *
     * @param task TaskRow to be inserted.
     */
-  def insertInTasksTable(task: TaskRow)(implicit ec: ExecutionContext): Unit = { //TODO - Refactor this TaskRow
-    fileRepo.existsCorrespondingFileId(task.fileId).map { f =>
-      if (f) exec(insertTask(task))
-      else println("Could not insert Task with id " + task.fileId + " due to not finding a corresponding File.")
+  def insertInTasksTable(task: TaskRow)(implicit ec: ExecutionContext): Future[Boolean] = { //TODO - Refactor this TaskRow
+    fileRepo.existsCorrespondingFileId(task.fileId).flatMap { exists =>
+      if (exists) exec(insertTask(task)).map { i => i == 1 }
+      else Future.successful(false)
     }
   }
 
@@ -80,10 +82,11 @@ class TaskRepository(dtbase: Database) extends BaseRepository {
     *
     * @param task TaskDTO to be inserted.
     */
-  def insertInTasksTable(task: TaskDTO)(implicit ec: ExecutionContext): Unit = {
-    fileRepo.existsCorrespondingFileName(task.fileName).map { exists =>
-      if (exists) fileRepo.selectFileIdFromName(task.fileName).map(id => exec(insertTask(TaskRow(0, id, task.startDateAndTime))))
-      else println("Could not insert Task with name " + task.fileName + "due to not finding a corresponding File.")
+  def insertInTasksTable(task: TaskDTO)(implicit ec: ExecutionContext): Future[Boolean] = {
+    fileRepo.existsCorrespondingFileName(task.fileName).flatMap { exists =>
+      if (exists)
+        fileRepo.selectFileIdFromName(task.fileName).flatMap(id => exec(insertTask(TaskRow(0, id, task.startDateAndTime))).map(i => i == 1))
+      else Future.successful(false)
     }
   }
 }

@@ -13,6 +13,8 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 object TickTock {
 
+  implicit val ec: ExecutionContext = this.ec
+
   val fileRepo = new FileRepository(DEFAULT_DB)
   val taskRepo = new TaskRepository(DEFAULT_DB)
 
@@ -23,7 +25,7 @@ object TickTock {
     }
   }
 
-  def main(args: Array[String])(implicit ec: ExecutionContext): Unit = {
+  def main(args: Array[String]): Unit = {
     fileRepo.createFilesTable
     taskRepo.createTasksTable
 
