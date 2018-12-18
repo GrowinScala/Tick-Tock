@@ -12,6 +12,7 @@ import api.validators.Error._
 import api.utils.DateUtils._
 import database.repositories.slick.FileRepositoryImpl
 
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 /**
