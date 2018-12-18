@@ -8,18 +8,12 @@ import api.dtos.TaskDTO
 import play.api.libs.json._
 import api.dtos.TaskDTO._
 import api.validators.Error._
+import api.utils.DateUtils._
 
 /**
   * Object that handles the validation for the received JSON's on the HTTP request controller classes.
   */
 object Validator {
-
-  val dateFormatsList: Array[SimpleDateFormat] = Array(
-    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"),
-    new SimpleDateFormat("dd-MM-yyyy HH:mm:ss"),
-    new SimpleDateFormat("yyyy/MM/dd HH:mm:ss"),
-    new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
-  )
 
   /**
     * Method that handles the validation for the received JSON bodies for task scheduling.
