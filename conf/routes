@@ -2,11 +2,16 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-GET     /           api.controllers.TaskController.index
+GET     /                      api.controllers.TaskController.index
+GET     /task                  api.controllers.TaskController.getSchedule
+GET     /task/:id              api.controllers.TaskController.getScheduleById(id: Int)
+PATCH   /task/:id              api.controllers.TaskController.updateTask(id: Int)
+POST    /task                  api.controllers.TaskController.schedule
 
-POST    /task       api.controllers.TaskController.schedule
-
-POST    /file       api.controllers.FileController.upload
+GET     /files                 api.controllers.FileController.getAllFiles
+GET     /files/:id             api.controllers.FileController.getFileById(id: Int)
+DELETE  /files/:id             api.controllers.FileController.deleteFile(id: Int)
+POST    /file                  api.controllers.FileController.upload
 
 
 

@@ -36,9 +36,8 @@ class ExecutionJob(storageName: String, schedulingType: SchedulingType, datetime
       * Inherited method from the Actor trait that executes after a scheduled task finishes its execution.
       * It handles the received error code from the executed file and prints out the result.
       */
-    def receive= {
+    def receive= { //TODO - if both dateTime and interval are optional, maybe we can't do this this way? (datetime.get)
       case 0 =>
-        val sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss")
         if(datetime.isEmpty)
           println(getSpecificCurrentTime + " Error running file " + storageName + " scheduled at " + dateToStringFormat(datetime.get, "yyyy-MM-dd HH:mm:ss") + ".")
         else

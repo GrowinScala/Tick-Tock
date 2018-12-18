@@ -4,7 +4,6 @@ import slick.dbio.DBIO
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent._
-import scala.concurrent.duration._
 
 /**
   * Trait that defines a repository. Contains methods/values that are in common for all repositories.

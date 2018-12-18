@@ -9,6 +9,8 @@ import play.api.libs.json._
 import api.dtos.TaskDTO._
 import api.validators.Error._
 
+import scala.concurrent.ExecutionContext
+
 /**
   * Object that handles the validation for the received JSON's on the HTTP request controller classes.
   */
@@ -32,7 +34,7 @@ object Validator {
         // Checking the values
         val errorList = List(
           ("startDateAndTime", isValidDateValue(task.startDateAndTime)),
-          ("taskName", isValidFileName(task.fileName))
+          ("taskName", isValidFileName(task.fileName)) //TODO - Validation should not go to database
         ).filter(item => item._2.isDefined).map(_._2.get)
 
         if(errorList.isEmpty) Right(task)
