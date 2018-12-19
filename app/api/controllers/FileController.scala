@@ -7,14 +7,12 @@ import org.apache.commons.io.FilenameUtils
 import play.api.mvc._
 import api.dtos.FileDTO
 import javax.inject.Inject
-import database.utils.DatabaseUtils
 import play.api.libs.Files
 import play.api.libs.json._
 
 import scala.concurrent.ExecutionContext
 import api.utils.DateUtils._
 import database.repositories.{FileRepository, TaskRepository}
-import database.repositories.slick.{FileRepositoryImpl, TaskRepositoryImpl}
 
 @Singleton
 class FileController @Inject()(cc: ControllerComponents, fileRepo: FileRepository, taskRepo: TaskRepository)(implicit exec: ExecutionContext) extends AbstractController(cc){

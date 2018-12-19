@@ -5,12 +5,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
 import play.api.mvc._
 import api.services.TaskService._
-import slick.jdbc.MySQLProfile.api._
-import api.validators.Validator._
 import database.repositories.{FileRepository, TaskRepository}
-import database.repositories.slick.{FileRepositoryImpl, TaskRepositoryImpl}
-import database.utils.DatabaseUtils
-
 import scala.concurrent.{ExecutionContext, Future}
 
 

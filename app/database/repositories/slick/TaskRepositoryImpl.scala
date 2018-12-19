@@ -5,11 +5,9 @@ import database.mappings.TaskMappings.{TaskRow, _}
 import database.repositories.TaskRepository
 import slick.dbio.DBIO
 import slick.jdbc.MySQLProfile.api._
-import database.repositories.FileRepository
 
 import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.concurrent.duration._
-import scala.util.{Failure, Success}
+
 
 /**
   * Class that handles the data layer for the scheduled tasks.
@@ -19,7 +17,7 @@ import scala.util.{Failure, Success}
   */
 class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
 
-  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+  implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
 
   val fileRepo = new FileRepositoryImpl(dtbase)
 
