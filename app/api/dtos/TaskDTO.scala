@@ -5,11 +5,12 @@ import java.util.{Date, TimeZone}
 
 import akka.japi
 import api.validators.Error
-import database.repositories.FileRepository
 import slick.jdbc.MySQLProfile.api._
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import api.validators.Error._
+import api.utils.DateUtils._
+import database.repositories.slick.FileRepositoryImpl
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -29,19 +30,8 @@ case class TaskDTO(
   */
 object TaskDTO {
 
-  /**
-    * List of permitted date formats for the startDateAndTime field.
-    * It is used for validation for received date strings through the HTTP request.
-    */
-  val dateFormatsList: List[SimpleDateFormat] = List(
-    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"),
-    new SimpleDateFormat("dd-MM-yyyy HH:mm:ss"),
-    new SimpleDateFormat("yyyy/MM/dd HH:mm:ss"),
-    new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
-  )
-
   val db = Database.forConfig("dbinfo")
-  val fileRepo = new FileRepository(db)
+  val fileRepo = new FileRepositoryImpl(db)
 
   /**
     * Method that constructs the TaskDTO giving strings as dates and making the date format validation and conversion from string to date.

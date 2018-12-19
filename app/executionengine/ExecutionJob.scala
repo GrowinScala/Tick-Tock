@@ -7,6 +7,7 @@ import akka.actor.{Actor, ActorSystem, Props}
 import api.services.SchedulingType._
 import java.time.Duration
 import java.time.Duration._
+import api.utils.DateUtils._
 
 /**
   * Class that handles independent scheduling jobs and calls the ExecutionManager
@@ -104,17 +105,6 @@ class ExecutionJob(storageName: String, schedulingType: SchedulingType, datetime
   }
 
   /**
-    * Converts a Date to a String by providing the Date and a String specifying the date format.
-    * @param date Date given to convert to string.
-    * @param format String specifying the date format.
-    * @return String of the given date.
-    */
-  def dateToStringFormat(date: Date, format: String): String ={
-    val sdf = new SimpleDateFormat(format)
-    sdf.format(date)
-  }
-
-  /**
     * Calculated the delay between the current date and time with the given date and time.
     * If the date isn't defined, it returns zero. If it's defined, it makes the calculation.
     * @param datetime Date given to calculate the delay between now and then.
@@ -130,16 +120,6 @@ class ExecutionJob(storageName: String, schedulingType: SchedulingType, datetime
       val scheduledTime = sdf.parse(sdf.format(datetime.get)).getTime
       Duration.ofMillis(scheduledTime - currentTime)
     }
-  }
-
-  /**
-    * Method that returns the current time in a HH:mm:ss.SSS string format.
-    * @return String of the current date.
-    */
-  def getSpecificCurrentTime: String = {
-    val now = new Date()
-    val sdf = new SimpleDateFormat("HH:mm:ss.SSS")
-    sdf.format(now)
   }
 
 }

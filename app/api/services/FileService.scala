@@ -8,11 +8,4 @@ import java.util.Calendar
   */
 object FileService {
 
-  /**
-    * Auxiliary method that returns the current date in the Timestamp format.
-    */
-  def getCurrentDateTimestamp: Timestamp = {
-    val now = Calendar.getInstance().getTime
-    new Timestamp(now.getTime)
-  }
 }
