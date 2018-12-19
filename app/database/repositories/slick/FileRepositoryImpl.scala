@@ -6,28 +6,47 @@ import slick.dbio.DBIO
 import slick.jdbc.MySQLProfile.api._
 import database.repositories.FileRepository
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
 
-class FileRepositoryImpl(dtbase: Database) extends FileRepository{
+class FileRepositoryImpl(dtbase: Database)(implicit ec: ExecutionContext) extends FileRepository{
 
-  def exec[T](action: DBIO[T]): T = Await.result(dtbase.run(action), 2 seconds)
+  def exec[T](action: DBIO[T]): Future[T] = dtbase.run(action)
 
   /**
     * Selects all rows from the files table on the database.
     * @return
     */
-  def selectAllFiles: Seq[FileDTO] = {
-    val row = exec(selectAllFromFilesTable.result)
-    row.map(elem => FileDTO(elem.fileName, elem.storageName, elem.uploadDate))
+  def selectAllFiles: Future[Seq[FileDTO]] = {
+    exec(selectAllFromFilesTable.result).map{seq =>
+      seq.map(elem => FileDTO(elem.fileName, elem.storageName, elem.uploadDate))
+    }
+  }
+
+  /**
+    *
+    */
+  def selectFileById(id: Int): Future[Seq[FileDTO]] = {
+    exec(selectById(id).result).map{
+      seq => seq.map {
+        elem => FileDTO(elem.fileName, elem.storageName, elem.uploadDate)
+      }
+    }
   }
 
   /**
     * Deletes all rows from the files table on the database.
     * @return
     */
-  def deleteAllFiles: Int  = {
+  def deleteAllFiles: Future[Int] = {
     exec(deleteAllFromFilesTable)
+  }
+
+  /**
+    *
+    */
+  def deleteFileById(id: Int): Future[Int] = {
+    exec(deleteById(id))
   }
 
   /**
@@ -49,8 +68,8 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
     * @param fileId Id of the file on the database.
     * @return true if row exists, false if not.
     */
-  def existsCorrespondingFileId(fileId: Int): Boolean = {
-    exec(selectById(fileId).result) != Vector()
+  def existsCorrespondingFileId(fileId: Int): Future[Boolean] = {
+    exec(selectById(fileId).exists.result)
   }
 
   /**
@@ -58,15 +77,15 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
     * @param fileName Name of the file given by the user on the database.
     * @return true if row exists, false if not.
     */
-  def existsCorrespondingFileName(fileName: String): Boolean = {
-    exec(selectByFileName(fileName).result) != Vector()
+  def existsCorrespondingFileName(fileName: String): Future[Boolean] = {
+    exec(selectByFileName(fileName).exists.result)
   }
 
   /**
     * Retrieves a fileId of a row on the database by providing the fileName.
     * @param fileName Name of the file given by the user on the database.
     */
-  def selectFileIdFromName(fileName: String): Int = {
+  def selectFileIdFromName(fileName: String): Future[Int] = {
     exec(selectByFileName(fileName).map(_.fileId).result.head)
   }
 
@@ -74,7 +93,7 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
     * Retrieves a fileName of a row on the database by providing the fileId.
     * @param fileId Id of the file on the database.
     */
-  def selectFileNameFromFileId(fileId: Int): String = {
+  def selectFileNameFromFileId(fileId: Int): Future[String] = {
     exec(selectById(fileId).map(_.fileName).result.head)
   }
 
@@ -82,7 +101,7 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
     * Retrieves a storageName of a row on the database by providing the fileName.
     * @param fileName Name of the file given by the user on the database.
     */
-  def selectStorageNameFromFileName(fileName: String): String = {
+  def selectStorageNameFromFileName(fileName: String): Future[String] = {
     exec(selectByFileName(fileName).map(_.storageName).result.head)
   }
 
@@ -90,7 +109,7 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
     * Retrieves a fileName of a row on the database by providing the storageName.
     * @param storageName Name of the file on the storage folder on the database.
     */
-  def selectFileNameFromStorageName(storageName: String): String = {
+  def selectFileNameFromStorageName(storageName: String): Future[String] = {
     exec(selectByStorageName(storageName).map(_.fileName).result.head)
   }
 

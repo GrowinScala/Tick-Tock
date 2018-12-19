@@ -3,6 +3,7 @@ package database.mappings
 import java.sql.Timestamp
 import java.util.Date
 
+import api.dtos.TaskDTO
 import slick.jdbc.MySQLProfile.api._
 import database.mappings.FileMappings._
 import play.api.libs.json.{Json, OFormat}
@@ -34,9 +35,7 @@ object TaskMappings {
   //---------------------------------------------------------
   class TasksTable(tag: Tag) extends Table[TaskRow](tag, "tasks") {
     def taskId = column[Int]("taskId", O.PrimaryKey, O.AutoInc)
-
     def fileId = column[Int]("fileId", O.Length(100))
-
     def startDateAndTime = column[Date]("startDateAndTime", O.Length(100))
 
     def fileIdFK =

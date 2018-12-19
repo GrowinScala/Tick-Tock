@@ -11,9 +11,9 @@ import play.api.libs.functional.syntax._
 import api.validators.Error._
 import api.utils.DateUtils._
 import database.repositories.slick.FileRepositoryImpl
+import database.utils.DatabaseUtils
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
 
 /**
   * Data transfer object for the scheduled tasks on the service side.
@@ -30,8 +30,9 @@ case class TaskDTO(
   */
 object TaskDTO {
 
-  val db = Database.forConfig("dbinfo")
-  val fileRepo = new FileRepositoryImpl(db)
+  implicit val ec = ExecutionContext.global
+  val dbUtils = new DatabaseUtils
+  val fileRepo = new FileRepositoryImpl(dbUtils.DEFAULT_DB)
 
   /**
     * Method that constructs the TaskDTO giving strings as dates and making the date format validation and conversion from string to date.
@@ -56,13 +57,6 @@ object TaskDTO {
   /**
     * Implicit that defines how a TaskDTO is written to a JSON format.
     */
-  implicit val taskWrites = new Writes[TaskDTO] {
-    def writes(st: TaskDTO): JsValue = {
-      Json.obj(
-        "startDateAndTime" -> st.startDateAndTime,
-        "fileName" -> st.fileName,
-      )
-    }
-  }
+  implicit val taskFormat: OFormat[TaskDTO] = Json.format[TaskDTO]
 
 }

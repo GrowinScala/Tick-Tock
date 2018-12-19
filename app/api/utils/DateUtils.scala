@@ -8,9 +8,12 @@ import api.dtos.TaskDTO.fileRepo
 import api.validators.Error
 import api.validators.Error.{fileNameNotFound, invalidDateValue}
 
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.Try
 
 object DateUtils {
+
+  implicit val ec = ExecutionContext.global
 
   //---------------------------------------------------------
   //# DATE FORMATS
@@ -63,9 +66,11 @@ object DateUtils {
     * @param fileName The fileName to be checked.
     * @return Returns a ValidationError if its not valid. None otherwise.
     */
-  def isValidFileName(fileName: String): Option[Error] = {
-    if(fileRepo.existsCorrespondingFileName(fileName)) None
-    else Some(fileNameNotFound)
+  def isValidFileName(fileName: String): Future[Option[Error]] = {
+    fileRepo.existsCorrespondingFileName(fileName).map(elem =>
+      if(elem) None
+      else Some(fileNameNotFound)
+    )
   }
 
   //---------------------------------------------------------
