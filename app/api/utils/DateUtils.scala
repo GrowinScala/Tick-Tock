@@ -3,7 +3,6 @@ package api.utils
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Date}
-
 import api.dtos.TaskDTO.fileRepo
 import api.validators.Error
 import api.validators.Error.{fileNameNotFound, invalidDateValue}

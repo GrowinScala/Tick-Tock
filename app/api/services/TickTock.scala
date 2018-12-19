@@ -17,30 +17,27 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 object TickTock {
 
-  val dbUtils = new DatabaseUtils
-  val fileRepo = new FileRepositoryImpl(dbUtils.DEFAULT_DB)
-  val taskRepo = new TaskRepositoryImpl(dbUtils.DEFAULT_DB)
   implicit val ec: ExecutionContext = this.ec
-
   val db = Database.forConfig("dbinfo")
   val fileRepo = new FileRepositoryImpl(db)
   val taskRepo = new TaskRepositoryImpl(db)
 
   def retrieveDataFromDB(implicit ec: ExecutionContext): Future[Unit] = {
-    println("retrieving data from DB")
-    taskRepo.selectAllTasks.map { seq =>
-      seq.foreach(t => fileRepo.selectNameFromFileId(t.fileId).map(name => scheduleTask(name, t.startDateAndTime)))
-    }
+//    println("retrieving data from DB")
+//    taskRepo.selectAllTasks.map { seq =>
+//      seq.foreach(t => fileRepo.selectNameFromFileId(t.fileId).map(name => scheduleTask(name, t.startDateAndTime)))
+//    }
+    ???
   }
 
   def main(args: Array[String]): Unit = {
     fileRepo.createFilesTable
     taskRepo.createTasksTable
 
-    fileRepo.insertInFilesTable(FileRow(0, "EmailSender", "EmailSender", FileService.getCurrentDateTimestamp))
+//    fileRepo.insertInFilesTable(FileRow(0, "EmailSender", "EmailSender", FileService.getCurrentDateTimestamp))
 
     retrieveDataFromDB
-      seq.foreach(t => scheduleTask(t.fileName, t.startDateAndTime))
+//      seq.foreach(t => scheduleTask(t.fileName, t.startDateAndTime))
   }
 
 }

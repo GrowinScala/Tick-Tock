@@ -17,7 +17,9 @@ import scala.util.{Failure, Success}
   *
   * @param db Database class that contains the database information.
   */
-class TaskRepositoryImpl(dtbase: Database)(implicit ec: ExecutionContext) extends TaskRepository {
+class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
+
+  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
   val fileRepo = new FileRepositoryImpl(dtbase)
 

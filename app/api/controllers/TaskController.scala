@@ -7,6 +7,7 @@ import play.api.mvc._
 import api.services.TaskService._
 import slick.jdbc.MySQLProfile.api._
 import api.validators.Validator._
+import database.repositories.{FileRepository, TaskRepository}
 import database.repositories.slick.{FileRepositoryImpl, TaskRepositoryImpl}
 import database.utils.DatabaseUtils
 
@@ -19,11 +20,7 @@ import scala.concurrent.{ExecutionContext, Future}
   * @param cc standard controller components
   */
 @Singleton
-class TaskController @Inject()(cc: ControllerComponents)(implicit exec: ExecutionContext) extends AbstractController(cc){
-
-  val dbUtils = new DatabaseUtils
-  val fileRepo = new FileRepositoryImpl(dbUtils.DEFAULT_DB)
-  val taskRepo = new TaskRepositoryImpl(dbUtils.DEFAULT_DB)
+class TaskController @Inject()(cc: ControllerComponents, fileRepo: FileRepository, taskRepo: TaskRepository)(implicit exec: ExecutionContext) extends AbstractController(cc){
 
   /**
     * Method that runs when a GET request is made on localhost:9000/

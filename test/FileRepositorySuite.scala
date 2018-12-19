@@ -1,25 +1,16 @@
 import api.dtos.FileDTO
-import database.repositories.FileRepository
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FunSuite, Inside}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.PlaySpec
-import slick.jdbc.H2Profile.api._
-import database.mappings.FileMappings._
-import api.services.FileService._
-import api.services.TaskService._
 import database.repositories.slick.FileRepositoryImpl
-import slick.jdbc.meta.MTable
 import api.utils.DateUtils._
-import database.utils.DatabaseUtils
-
+import database.utils.DatabaseUtils._
 import scala.concurrent._
-import scala.concurrent.duration._
 
 class FileRepositorySuite extends PlaySpec with BeforeAndAfterAll with BeforeAndAfterEach {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
-  val dbUtils = new DatabaseUtils
-  val fileRepo = new FileRepositoryImpl(dbUtils.TEST_DB)
+  val fileRepo = new FileRepositoryImpl(TEST_DB)
 
   override def beforeEach(): Unit = {
     fileRepo.createFilesTable

@@ -4,13 +4,12 @@ import org.scalatest._
 import org.scalatestplus.play.PlaySpec
 import api.utils.DateUtils._
 import database.repositories.slick.{FileRepositoryImpl, TaskRepositoryImpl}
-import database.utils.DatabaseUtils
+import database.utils.DatabaseUtils._
 
 class TaskRepositorySuite extends PlaySpec with BeforeAndAfterAll with BeforeAndAfterEach{
 
-  val dbUtils = new DatabaseUtils
-  val fileRepo = new FileRepositoryImpl(dbUtils.TEST_DB)
-  val taskRepo = new TaskRepositoryImpl(dbUtils.TEST_DB)
+  val fileRepo = new FileRepositoryImpl(TEST_DB)
+  val taskRepo = new TaskRepositoryImpl(TEST_DB)
 
   override def beforeAll = {
     fileRepo.createFilesTable

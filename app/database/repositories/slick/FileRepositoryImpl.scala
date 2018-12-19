@@ -9,7 +9,9 @@ import database.repositories.FileRepository
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
 
-class FileRepositoryImpl(dtbase: Database)(implicit ec: ExecutionContext) extends FileRepository{
+class FileRepositoryImpl(dtbase: Database) extends FileRepository{
+
+  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
   def exec[T](action: DBIO[T]): Future[T] = dtbase.run(action)
 

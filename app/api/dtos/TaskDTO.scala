@@ -2,7 +2,7 @@ package api.dtos
 
 import java.text.SimpleDateFormat
 import java.util.{Date, TimeZone}
-
+import database.utils.DatabaseUtils._
 import akka.japi
 import api.validators.Error
 import slick.jdbc.MySQLProfile.api._
@@ -31,8 +31,7 @@ case class TaskDTO(
 object TaskDTO {
 
   implicit val ec = ExecutionContext.global
-  val dbUtils = new DatabaseUtils
-  val fileRepo = new FileRepositoryImpl(dbUtils.DEFAULT_DB)
+  val fileRepo = new FileRepositoryImpl(DEFAULT_DB)
 
   /**
     * Method that constructs the TaskDTO giving strings as dates and making the date format validation and conversion from string to date.
