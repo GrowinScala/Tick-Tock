@@ -7,27 +7,45 @@ import slick.dbio.DBIO
 import slick.jdbc.MySQLProfile.api._
 import database.repositories.FileRepository
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 /**
   * Class that handles the data layer for the scheduled tasks.
   * It contains task scheduling related queries to communicate with the database.
+  *
   * @param db Database class that contains the database information.
   */
-class TaskRepositoryImpl(dtbase: Database) extends TaskRepository{
+class TaskRepositoryImpl(dtbase: Database)(implicit ec: ExecutionContext) extends TaskRepository {
 
   val fileRepo = new FileRepositoryImpl(dtbase)
 
-  def exec[T](action: DBIO[T]): T = Await.result(dtbase.run(action), 2 seconds)
+  def exec[T](action: DBIO[T]): Future[T] = dtbase.run(action)
 
   /**
     * Selects all tasks from the tasks table on the database.
+    *
     * @return
     */
-  def selectAllTasks: Seq[TaskDTO] = {
-    val row = exec(selectAllFromTasksTable.result)
-    row.map(elem => TaskDTO(elem.startDateAndTime, fileRepo.selectFileNameFromFileId(elem.fileId)))
+  def selectAllTasks: Future[Seq[TaskDTO]] = {
+    exec(selectAllFromTasksTable.result).flatMap { seq =>
+      Future.sequence {
+        seq.map { elem =>
+          fileRepo.selectFileNameFromFileId(elem.fileId).map(name => TaskDTO(elem.startDateAndTime, name))
+        }
+      }
+    }
+  }
+
+  /**
+    * Select a single task from the database given an its id
+    *
+    * @param id - the identifier of the task we want to select
+    * @return the selected task according to the id given
+    */
+  def selectTaskById(id: Int): Future[Seq[TaskRow]] = {
+    exec(selectByTaskId(id).result)
   }
 
   /**
@@ -53,10 +71,14 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository{
 
   /**
     * Inserts a task (row) on the tasks table on the database.
+    *
     * @param task TaskDTO to be inserted.
     */
-  def insertInTasksTable(task: TaskDTO): Unit = {
-    exec(insertTask(TaskRow(0, fileRepo.selectFileIdFromName(task.fileName), task.startDateAndTime)))
-
+  def insertInTasksTable(task: TaskDTO): Future[Boolean] = {
+    fileRepo.existsCorrespondingFileName(task.fileName).flatMap { exists =>
+      if(exists)
+        fileRepo.selectFileIdFromName(task.fileName).flatMap(id => exec(insertTask(TaskRow(0, id, task.startDateAndTime))).map(i => i == 1))
+      else Future.successful(false)
+    }
   }
 }

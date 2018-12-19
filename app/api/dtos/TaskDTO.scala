@@ -11,9 +11,9 @@ import play.api.libs.functional.syntax._
 import api.validators.Error._
 import api.utils.DateUtils._
 import database.repositories.slick.FileRepositoryImpl
+import database.utils.DatabaseUtils
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
 
 /**
   * Data transfer object for the scheduled tasks on the service side.
@@ -30,8 +30,9 @@ case class TaskDTO(
   */
 object TaskDTO {
 
-  val db = Database.forConfig("dbinfo")
-  val fileRepo = new FileRepositoryImpl(db)
+  implicit val ec = ExecutionContext.global
+  val dbUtils = new DatabaseUtils
+  val fileRepo = new FileRepositoryImpl(dbUtils.DEFAULT_DB)
 
   /**
     * Method that constructs the TaskDTO giving strings as dates and making the date format validation and conversion from string to date.
@@ -56,50 +57,6 @@ object TaskDTO {
   /**
     * Implicit that defines how a TaskDTO is written to a JSON format.
     */
-  implicit val taskWrites = new Writes[TaskDTO] {
-    def writes(st: TaskDTO): JsValue = {
-      Json.obj(
-        "startDateAndTime" -> st.startDateAndTime,
-        "fileName" -> st.fileName,
-      )
-    }
-  }
+  implicit val taskFormat: OFormat[TaskDTO] = Json.format[TaskDTO]
 
-  /**
-    * Method that validates a String representing a date and verifies if it follows any
-    * of the permitted formats in the dateFormatsList and attempts to parse it accordingly.
-    * @param date Date in a string format.
-    * @return Returns the parsed date if the received String is valid encapsulated as an Option[Date].
-    *         Returns None if not.
-    */
-  def getValidDate(date: String): Option[Date] = {
-    dateFormatsList.flatMap { format =>
-      format.setLenient(false)
-      Try(Some(format.parse(date))).getOrElse(None)
-    }.headOption
-  }
-
-  /**
-    * Checks if the date given is valid, (if it already happened or not)
-    * @param date The Date to be checked
-    * @return Returns a ValidationError if its not valid. None otherwise.
-    */
-  def isValidDateValue(date: Date): Option[Error] = {
-    val now = new Date()
-    val currentDate = now.getTime
-    val givenDate = date.getTime
-    if(givenDate - currentDate > 0) None
-    else Some(invalidDateValue)
-  }
-
-  /**
-    * Checks if the given fileName exists.
-    * @param fileName The fileName to be checked.
-    * @return Returns a ValidationError if its not valid. None otherwise.
-    */
-  def isValidFileName(fileName: String): Option[Error] = {
-    ???
-
-    //TODO - Binders should not go to the database to validate
-  }
 }
