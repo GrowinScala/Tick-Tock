@@ -5,17 +5,15 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
 import play.api.mvc._
 import api.services.TaskService._
-import slick.jdbc.MySQLProfile.api._
-import api.validators.Validator._
 import database.repositories.{FileRepository, TaskRepository}
-import database.repositories.slick.{FileRepositoryImpl, TaskRepositoryImpl}
-import database.utils.DatabaseUtils
+import api.validators.Validator._
 
 import scala.concurrent.{ExecutionContext, Future}
 
 
 /**
   * This controller handles the HTTP requests that are related to task scheduling.
+  *
   *
   * @param cc standard controller components
   */
@@ -32,7 +30,7 @@ class TaskController @Inject()(cc: ControllerComponents, fileRepo: FileRepositor
   }
 
   /**
-    * Method that runs when a POST request is made on localhost:9000/schedule and a JSON body is sent.
+    * Method that runs when a POST request is made on localhost:9000/task and a JSON body is sent.
     * This method is used to handle a schedule task request on a particular file.
     *
     * @return HTTP Response with an OK, meaning all went well.
@@ -44,9 +42,14 @@ class TaskController @Inject()(cc: ControllerComponents, fileRepo: FileRepositor
       errors =>
         Future.successful(BadRequest(Json.obj("status" -> "Error:", "message" -> JsError.toJson(errors)))), //TODO - create object Error (extends DefaultHttpErrorHandler)
       task => {
-        taskRepo.insertInTasksTable(TaskDTO(task.startDateAndTime, task.fileName))
-        scheduleTask(task.fileName, task.startDateAndTime)
-        Future.successful(Ok)
+        val validationResult = taskValidator(task)
+        if(validationResult.isDefined)
+          Future.successful(BadRequest(JsArray(validationResult.get.map(error => Json.toJsObject(error)).toIndexedSeq)))
+        else{
+          taskRepo.insertInTasksTable(TaskDTO(task.startDateAndTime, task.fileName))
+          scheduleTask(task.fileName, task.startDateAndTime)
+          Future.successful(Ok)
+        }
       }
     )
   }
@@ -67,7 +70,7 @@ class TaskController @Inject()(cc: ControllerComponents, fileRepo: FileRepositor
     * Method that gets the task with the id given
     *
     * @param id - identifier of the task we are looking for
-    * @return the task corresponding to the given id
+    * @return the task corresponding to the given idl
     */
   def getScheduleById(id: Int): Action[AnyContent] = Action.async { //TODO - Error handling ID
     taskRepo.selectTaskById(id).map { seq =>
@@ -76,6 +79,14 @@ class TaskController @Inject()(cc: ControllerComponents, fileRepo: FileRepositor
     }
   }
 
+  /**
+    * Method that runs when a PATCH request is made on localhost:9000/task and a JSON body is sent.
+    * This method is used to handle updates on a particular scheduled task by giving its id.
+    *
+    * @param id taskId of the task to be updated.
+    * @return HTTP Response with an OK, meaning all went well.
+    *         HTTP Response with a BadRequest, meaning something went wrong and returns the errors.
+    */
   def updateTask(id: Int): Action[JsValue] = Action(parse.json).async { request: Request[JsValue] =>
     val jsonResult = request.body.validate[TaskDTO]
     jsonResult.fold( //TODO - create new DTO, rename taskDTO to CreateTaskDTO

@@ -3,7 +3,6 @@ package api.validators
 import java.nio.file.{FileSystems, Files}
 import java.text.{DateFormat, SimpleDateFormat}
 import java.util.Date
-
 import api.dtos.TaskDTO
 import play.api.libs.json._
 import api.dtos.TaskDTO._
@@ -16,6 +15,17 @@ import scala.concurrent.ExecutionContext
   * Object that handles the validation for the received JSON's on the HTTP request controller classes.
   */
 object Validator {
+
+  def taskValidator(task: TaskDTO): Option[List[Error]] = {
+    val errorList = List(
+      (isValidDateValue(task.startDateAndTime), invalidDateValue),
+      (isValidFileName(task.fileName), invalidFileName)
+    )
+    if(errorList.forall(elem => elem._1)) None
+    else {
+      Some(errorList.filter(elem => elem._1).unzip._2)
+    }
+  }
 //
 //  /**
 //    * Method that handles the validation for the received JSON bodies for task scheduling.

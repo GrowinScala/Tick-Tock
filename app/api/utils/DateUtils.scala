@@ -3,12 +3,14 @@ package api.utils
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Date}
+
 import api.dtos.TaskDTO.fileRepo
 import api.validators.Error
 import api.validators.Error.{fileNameNotFound, invalidDateValue}
 
 import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
+import scala.concurrent.duration._
 
 object DateUtils {
 
@@ -28,6 +30,7 @@ object DateUtils {
     new SimpleDateFormat("yyyy/MM/dd HH:mm:ss"),
     new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
   )
+
 
   //---------------------------------------------------------
   //# VALIDATORS
@@ -52,12 +55,11 @@ object DateUtils {
     * @param date The Date to be checked
     * @return Returns a ValidationError if its not valid. None otherwise.
     */
-  def isValidDateValue(date: Date): Option[Error] = {
+  def isValidDateValue(date: Date): Boolean = {
     val now = new Date()
     val currentDate = now.getTime
     val givenDate = date.getTime
-    if(givenDate - currentDate > 0) None
-    else Some(invalidDateValue)
+    givenDate - currentDate > 0
   }
 
   /**
@@ -65,11 +67,8 @@ object DateUtils {
     * @param fileName The fileName to be checked.
     * @return Returns a ValidationError if its not valid. None otherwise.
     */
-  def isValidFileName(fileName: String): Future[Option[Error]] = {
-    fileRepo.existsCorrespondingFileName(fileName).map(elem =>
-      if(elem) None
-      else Some(fileNameNotFound)
-    )
+  def isValidFileName(fileName: String): Boolean = {
+    Await.result(fileRepo.existsCorrespondingFileName(fileName), 5 seconds)
   }
 
   //---------------------------------------------------------
@@ -84,6 +83,13 @@ object DateUtils {
     new Timestamp(now.getTime)
   }
 
+  /**
+    * Converts a String to a Date by providing the Date and a String specifying the date format.
+    *
+    * @param date String given to convert to Date.
+    * @param format String specifying the date format.
+    * @return String of the given date.
+    */
   def stringToDateFormat(date: String, format: String): Date = {
     val sdf = new SimpleDateFormat(format)
     sdf.parse(date)

@@ -49,13 +49,13 @@ object TaskDTO {
     * This implicit is used on the TaskController when Play's "validate" method is called.
     */
   implicit val taskReads: Reads[TaskDTO] = (
-    (JsPath \ "startDateAndTime").read[String] and
+    (JsPath \ "startDateAndTime").read[Date] and
       (JsPath \ "fileName").read[String]
-    ) (TaskDTO.construct _)
+    ) (TaskDTO.apply _)
 
   /**
     * Implicit that defines how a TaskDTO is written to a JSON format.
     */
-  implicit val taskFormat: OFormat[TaskDTO] = Json.format[TaskDTO]
+  implicit val taskFormat: OWrites[TaskDTO] = Json.writes[TaskDTO]
 
 }

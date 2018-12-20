@@ -22,7 +22,7 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
     }
   }
 
-  "TaskController#schedule" should {
+  "TaskController#task" should {
     "receive a POST request with a JSON body with the correct data. (yyyy-MM-dd HH:mm:ss date format)" in {
       val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
@@ -35,7 +35,7 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
       val result = route(app, fakeRequest)
       status(result.get) mustBe OK
     }
-
+    /*
     "receive a POST request with a JSON body with the correct data. (dd-MM-yyyy HH:mm:ss date format)" in {
       val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
@@ -74,13 +74,13 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
       val result = route(app, fakeRequest)
       status(result.get) mustBe OK
     }
-
+    */
     "receive a POST request with a JSON body with the correct data. (max delay exceeded)" in {
       val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "01/01/2030 00:00:00",
+            "startDateAndTime": "2030-01-01 00:00:00",
             "fileName": "test"
           }
         """))
