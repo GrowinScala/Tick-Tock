@@ -82,27 +82,27 @@ object TaskMappings {
     tasksTable += task
   }
 
-  def updateTaskByTaskId(id: Int, task: TaskRow) = {
+  def updateTaskByTaskId(id: Int, task: TaskRow): FixedSqlAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.taskId === id).update(task)
   }
 
-  def updateByFileId(id: Int, task: TaskRow) = {
+  def updateByFileId(id: Int, task: TaskRow): FixedSqlAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.fileId === id).update(task)
   }
 
-  def updateByStartDateAndTime(startDateAndTime: Date, task: TaskRow) = {
+  def updateByStartDateAndTime(startDateAndTime: Date, task: TaskRow): FixedSqlAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.startDateAndTime === startDateAndTime).update(task)
   }
 
-  def deleteByTaskId(id: Int) = {
+  def deleteByTaskId(id: Int): FixedSqlAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.taskId === id).delete
   }
 
-  def deleteByFileId(id: Int) = {
+  def deleteByFileId(id: Int): FixedSqlAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.fileId === id).delete
   }
 
-  def deleteByStartDateAndTime(startDateAndTime: Date) = {
+  def deleteByStartDateAndTime(startDateAndTime: Date): FixedSqlAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.startDateAndTime === startDateAndTime).delete
   }
 

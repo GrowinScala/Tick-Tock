@@ -6,12 +6,6 @@ import play.api.test.Helpers._
 
 class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
 
-  /**
-    * new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-    * new SimpleDateFormat("dd-MM-yyyy HH:mm:ss")
-    * new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
-    * new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
-    */
 
   "TaskController#index" should {
     "receive a GET request" in {
@@ -163,4 +157,19 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
     }
   }
 
+  "TaskController#GETtaskWithId" should {
+    "receive a GET request with a valid id" in {
+      val fakeRequest = FakeRequest(GET, s"/task/1")
+        .withHeaders(HOST -> "localhost:9000")
+      val result = route(app, fakeRequest)
+      status(result.get) mustBe OK
+    }
+
+    "receive a GET request with an invalid id" in {
+      val fakeRequest = FakeRequest(GET, s"/task/asd")
+        .withHeaders(HOST -> "localhost:9000")
+      val result = route(app, fakeRequest)
+      status(result.get) mustBe BAD_REQUEST
+    }
+  }
 }
