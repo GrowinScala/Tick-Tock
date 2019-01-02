@@ -34,7 +34,16 @@ trait TaskRepository {
   /**
     * Deletes all tasks from the tasks table on the database.
     */
-  def deleteAllTasks: Unit
+  def deleteAllTasks: Future[Int]
+
+  /**
+    * Given a na id deletes the corresponding task
+    *
+    * @param id - identifier of the task to be deleted
+    */
+  def deleteTaskById(id: Int): Future[Int]
+
+  def updateTaskById(id: Int, task: TaskDTO): Future[Int]
 
   /**
     * Creates the tasks table on the database.

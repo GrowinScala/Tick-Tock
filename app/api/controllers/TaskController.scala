@@ -15,7 +15,7 @@ import scala.concurrent.{ExecutionContext, Future}
   * @param cc standard controller components
   */
 @Singleton
-class TaskController @Inject()(cc: ControllerComponents, fileRepo: FileRepository, taskRepo: TaskRepository)(implicit exec: ExecutionContext) extends AbstractController(cc){
+class TaskController @Inject()(cc: ControllerComponents, fileRepo: FileRepository, taskRepo: TaskRepository)(implicit exec: ExecutionContext) extends AbstractController(cc) {
 
   /**
     * Method that runs when a GET request is made on localhost:9000/
@@ -41,7 +41,7 @@ class TaskController @Inject()(cc: ControllerComponents, fileRepo: FileRepositor
       task => {
         taskRepo.insertInTasksTable(TaskDTO(task.startDateAndTime, task.fileName))
         scheduleTask(task.fileName, task.startDateAndTime)
-        Future.successful(Ok)
+        Future.successful(Ok("Task inserted"))
       }
     )
   }
@@ -75,8 +75,17 @@ class TaskController @Inject()(cc: ControllerComponents, fileRepo: FileRepositor
     val jsonResult = request.body.validate[TaskDTO]
     jsonResult.fold( //TODO - create new DTO, rename taskDTO to CreateTaskDTO
       errors => Future.successful(BadRequest("Error updating scheduled task: \n" + errors)),
-      task => Future.successful(Ok("Something"))
+      task =>  taskRepo.updateTaskById(id, task).map { i =>
+        if (i > 0) Ok("Task with id = " + id + " was updated")
+        else BadRequest("Task does not exist")
+      }
     )
   }
 
+  def deleteTask(id: Int): Action[AnyContent] = Action.async {
+    taskRepo.deleteTaskById(id).map { i =>
+      if (i > 0) Ok("Task with id = " + id + " was deleted")
+      else BadRequest("Error deleting file with given id")
+    }
+  }
 }

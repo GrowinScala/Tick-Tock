@@ -51,8 +51,23 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
   /**
     * Deletes all tasks from the tasks table on the database.
     */
-  def deleteAllTasks: Unit = {
+  def deleteAllTasks: Future[Int] = {
     exec(deleteAllFromTasksTable)
+  }
+
+  /**
+    * Deletes a single task from the table on the database
+    *
+    * @param id - identifier of the task to be deleted
+    */
+  def deleteTaskById(id: Int): Future[Int] = {
+    exec(deleteByTaskId(id))
+  }
+
+  def updateTaskById(id: Int, task: TaskDTO): Future[Int] = {
+    fileRepo.selectFileIdFromName(task.fileName).flatMap { fileId =>
+      exec(updateTaskByTaskId(id, new TaskRow(id, fileId, task.startDateAndTime)))
+    }
   }
 
   /**
