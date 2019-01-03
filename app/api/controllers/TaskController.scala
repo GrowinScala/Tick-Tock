@@ -71,6 +71,13 @@ class TaskController @Inject()(cc: ControllerComponents, fileRepo: FileRepositor
     }
   }
 
+  /**
+    * This method updates a Task given its ID and a JSON is passed with the information to be
+    * altered
+    *
+    * @param id - identifier of the task to be modified
+    * @return An HTTP response that is Ok if the task was updated or BadRequest if there was an error
+    */
   def updateTask(id: Int): Action[JsValue] = Action(parse.json).async { request: Request[JsValue] =>
     val jsonResult = request.body.validate[TaskDTO]
     jsonResult.fold( //TODO - create new DTO, rename taskDTO to CreateTaskDTO
@@ -82,6 +89,13 @@ class TaskController @Inject()(cc: ControllerComponents, fileRepo: FileRepositor
     )
   }
 
+  /**
+    * This method deletes a task according to its ID
+    *
+    * @param id - identifier of the task to be deleted
+    * @return An HTTP response that is Ok if the corresponding task was deleted or BadRequest if
+    *         it wasn't.
+    */
   def deleteTask(id: Int): Action[AnyContent] = Action.async {
     taskRepo.deleteTaskById(id).map { i =>
       if (i > 0) Ok("Task with id = " + id + " was deleted")

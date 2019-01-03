@@ -6,7 +6,7 @@ import database.repositories.TaskRepository
 import slick.dbio.DBIO
 import slick.jdbc.MySQLProfile.api._
 
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 
 
 /**
@@ -64,6 +64,13 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
     exec(deleteByTaskId(id))
   }
 
+  /**
+    * Updates a single task given its identifier
+    *
+    * @param id   - identifier of the task to be updated
+    * @param task - information to update the task with
+    * @return an Int with information of the updated task
+    */
   def updateTaskById(id: Int, task: TaskDTO): Future[Int] = {
     fileRepo.selectFileIdFromName(task.fileName).flatMap { fileId =>
       exec(updateTaskByTaskId(id, new TaskRow(id, fileId, task.startDateAndTime)))

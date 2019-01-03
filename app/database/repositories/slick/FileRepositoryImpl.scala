@@ -6,8 +6,7 @@ import slick.dbio.DBIO
 import slick.jdbc.MySQLProfile.api._
 import database.repositories.FileRepository
 
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 class FileRepositoryImpl(dtbase: Database) extends FileRepository{
 
@@ -17,6 +16,7 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
 
   /**
     * Selects all rows from the files table on the database.
+    *
     * @return
     */
   def selectAllFiles: Future[Seq[FileDTO]] = {
@@ -26,7 +26,10 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
   }
 
   /**
+    * Selects a single File given its ID
+    * @param id - the id of the file to be selected
     *
+    * @return the information of the selected file
     */
   def selectFileById(id: Int): Future[Seq[FileDTO]] = {
     exec(selectById(id).result).map{
@@ -38,6 +41,7 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
 
   /**
     * Deletes all rows from the files table on the database.
+    *
     * @return
     */
   def deleteAllFiles: Future[Int] = {
@@ -45,7 +49,10 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
   }
 
   /**
+    * Deleted a single File given an id
     *
+    * @param id - id of the task to be deleted
+    * @return
     */
   def deleteFileById(id: Int): Future[Int] = {
     exec(deleteById(id))
@@ -67,6 +74,7 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
 
   /**
     * Checks if a corresponding file row exists on the database by providing its fileId.
+    *
     * @param fileId Id of the file on the database.
     * @return true if row exists, false if not.
     */
@@ -76,6 +84,7 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
 
   /**
     * Checks if a corresponding file row exists on the database by providing the fileName.
+    *
     * @param fileName Name of the file given by the user on the database.
     * @return true if row exists, false if not.
     */
@@ -85,6 +94,7 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
 
   /**
     * Retrieves a fileId of a row on the database by providing the fileName.
+    * 
     * @param fileName Name of the file given by the user on the database.
     */
   def selectFileIdFromName(fileName: String): Future[Int] = {

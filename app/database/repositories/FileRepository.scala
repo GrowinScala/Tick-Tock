@@ -9,12 +9,14 @@ trait FileRepository {
   /**
     * Selects all rows from the files table on the database.
     *
-    * @return
+    * @return all files in the database
     */
   def selectAllFiles: Future[Seq[FileDTO]]
 
   /**
+    * Selects a file from the database given an id
     *
+    * @return A fileDTO containing the selected file
     */
   def selectFileById(id: Int): Future[Seq[FileDTO]]
 
@@ -26,7 +28,7 @@ trait FileRepository {
   def deleteAllFiles: Future[Int]
 
   /**
-    *
+    * Deletes a single file from the database given its id
     */
   def deleteFileById(id: Int): Future[Int]
 

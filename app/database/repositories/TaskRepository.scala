@@ -1,16 +1,8 @@
 package database.repositories
 
-import akka.actor.FSM.Failure
-import akka.actor.Status.Success
 import api.dtos.TaskDTO
-import database.mappings.TaskMappings
 import database.mappings.TaskMappings.TaskRow
-import database.mappings.TaskMappings._
-
-import scala.concurrent.Await
-import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.Future
 
 
 /**
@@ -43,6 +35,13 @@ trait TaskRepository {
     */
   def deleteTaskById(id: Int): Future[Int]
 
+  /**
+    * Updates a single task given its identifier
+    *
+    * @param id   - identifier of the task to be updated
+    * @param task - information to update the task with
+    * @return an Int with information of the updated task
+    */
   def updateTaskById(id: Int, task: TaskDTO): Future[Int]
 
   /**
