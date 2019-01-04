@@ -19,7 +19,7 @@ object ExecutionManager{
     * @return
     */
   def runFile(file: String): Int = synchronized {
-    val pathSeq = Seq("java", "-jar", storagePath + file)
+    val pathSeq = Seq("java", "-jar", storagePath + file + ".jar")
     pathSeq.!
   }
 

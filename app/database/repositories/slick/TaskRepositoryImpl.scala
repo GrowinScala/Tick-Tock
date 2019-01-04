@@ -1,5 +1,7 @@
 package database.repositories.slick
 
+import java.util.UUID
+
 import api.dtos.TaskDTO
 import database.mappings.TaskMappings.{TaskRow, _}
 import database.repositories.TaskRepository
@@ -20,7 +22,6 @@ import scala.util.{Failure, Success}
 class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
-
   val fileRepo = new FileRepositoryImpl(dtbase)
 
   def exec[T](action: DBIO[T]): Future[T] = dtbase.run(action)
@@ -34,7 +35,7 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
     exec(selectAllFromTasksTable.result).flatMap { seq =>
       Future.sequence {
         seq.map { elem =>
-          fileRepo.selectFileNameFromFileId(elem.fileId).map(name => TaskDTO(elem.startDateAndTime, name))
+          fileRepo.selectFileNameFromFileId(elem.fileId).map(name => TaskDTO(elem.taskId, elem.startDateAndTime, name))
         }
       }
     }
@@ -46,8 +47,19 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
     * @param id - the identifier of the task we want to select
     * @return the selected task according to the id given
     */
-  def selectTaskById(id: Int): Future[Seq[TaskRow]] = {
-    exec(selectByTaskId(id).result)
+  def selectTaskById(id: String): Future[Seq[TaskDTO]] = {
+    exec(selectByTaskId(id).result).flatMap { seq =>
+      Future.sequence {
+        seq.map { elem =>
+          fileRepo.selectFileNameFromFileId(elem.fileId).map(name => TaskDTO(elem.taskId, elem.startDateAndTime, name))}
+      }
+    }
+  }
+
+  def selectFileIdFromTaskId(taskId: String): Future[String] = {
+    selectTaskById(taskId).flatMap{
+      seq => fileRepo.selectFileIdFromName(seq.head.fileName) //TODO: Improve implementation.
+    }
   }
 
   /**
@@ -79,7 +91,7 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
   def insertInTasksTable(task: TaskDTO): Future[Boolean] = {
     fileRepo.existsCorrespondingFileName(task.fileName).flatMap { exists =>
       if(exists)
-        fileRepo.selectFileIdFromName(task.fileName).flatMap(id => exec(insertTask(TaskRow(0, id, task.startDateAndTime))).map(i => i == 1))
+        fileRepo.selectFileIdFromName(task.fileName).flatMap(fileId => exec(insertTask(TaskRow(task.taskId, fileId, task.startDateAndTime))).map(i => i == 1))
       else Future.successful(false)
     }
   }

@@ -1,7 +1,7 @@
 package database.mappings
 
 import java.sql.Timestamp
-import java.util.Date
+import java.util.{Date, UUID}
 
 import play.api.libs.json.{Json, OFormat}
 import slick.jdbc.MySQLProfile.api._
@@ -18,76 +18,74 @@ object FileMappings {
   //# ROW REPRESENTATION
   //---------------------------------------------------------
   case class FileRow(
-                   fileId: Int,
+                   fileId: String,
                    fileName: String,
-                   storageName: String,
                    uploadDate: Date
                  )
 
-  implicit val taskRowFormat: OFormat[FileRow] = Json.format[FileRow]
+  implicit val fileRowFormat: OFormat[FileRow] = Json.format[FileRow]
 
   //---------------------------------------------------------
   //# TABLE MAPPINGS
   //---------------------------------------------------------
   class FilesTable(tag: Tag) extends Table[FileRow](tag, "files"){
-    def fileId = column[Int]("FileId", O.PrimaryKey, O.AutoInc)
-    def fileName = column[String]("fileName", O.Unique, O.Length(30))
-    def storageName = column[String]("storageName", O.Length(100))
+    def fileId = column[String]("fileId", O.PrimaryKey, O.Length(36))
+    def fileName = column[String]("fileName", O.Unique, O.Length(50))
     def uploadDate = column[Date]("uploadDate")
 
-    def * = (fileId, fileName, storageName, uploadDate) <> (FileRow.tupled, FileRow.unapply)
+    def * = (fileId, fileName, uploadDate) <> (FileRow.tupled, FileRow.unapply)
   }
 
   //---------------------------------------------------------
   //# TYPE MAPPINGS
   //---------------------------------------------------------
-  implicit val columnType: BaseColumnType[Date] =
-    MappedColumnType.base[Date, Timestamp](dateToTimestamp, timestampToDate)
+  implicit val dateColumnType: BaseColumnType[Date] = MappedColumnType.base[Date, Timestamp](dateToTimestamp, timestampToDate)
+  private def dateToTimestamp(date: Date): Timestamp = new Timestamp(date.getTime)
+  private def timestampToDate(timestamp: Timestamp): Date = new Date(timestamp.getTime)
 
-  private def dateToTimestamp(date: Date): Timestamp =
-    new Timestamp(date.getTime)
-
-  private def timestampToDate(timestamp: Timestamp): Date =
-    new Date(timestamp.getTime)
+  /*
+  implicit val uuidColumnType: BaseColumnType[UUID] = MappedColumnType.base[UUID, String](uuidToString, stringToUUID)
+  private def uuidToString(uuid: UUID): String = uuid.toString
+  private def stringToUUID(string: String): UUID = UUID.fromString(string)
+  */
 
   //---------------------------------------------------------
   //# QUERY EXTENSIONS
   //---------------------------------------------------------
   lazy val filesTable = TableQuery[FilesTable]
   val createFilesTableAction = filesTable.schema.create
+  /*val createFilesTableActionSQL = sqlu"""
+    CREATE TABLE `ticktock`.`files` (
+    `fileId` VARCHAR(36) NOT NULL,
+    `fileName` VARCHAR(50) NOT NULL,
+    `uploadDate` TIMESTAMP NOT NULL,
+    PRIMARY KEY (`fileId`),
+    UNIQUE INDEX `fileName_UNIQUE` (`fileName` ASC) VISIBLE);""".*/
   val dropFilesTableAction = filesTable.schema.drop
-  val deleteAllFromFilesTable = filesTable.delete
+  //val dropFilesTableActionSQL = sqlu"DROP TABLE `ticktock`.`files`;"
   val selectAllFromFilesTable = filesTable
+  val deleteAllFromFilesTable = filesTable.delete
 
-  def selectById(id: Int): Query[FilesTable, FileRow, Seq] = {
+  def selectById(id: String) = {
     filesTable.filter(_.fileId === id)
   }
-  def selectByFileName(name: String): Query[FilesTable, FileRow, Seq] = {
+  def selectByFileName(name: String)  = {
     filesTable.filter(_.fileName === name)
-  }
-  def selectByStorageName(name: String): Query[FilesTable, FileRow, Seq] = {
-    filesTable.filter(_.storageName === name)
   }
   def insertFile(file: FileRow) = {
     filesTable += file
   }
-  def updateById(id: Int, file: FileRow)= {
+  def updateById(id: String, file: FileRow)= {
     filesTable.filter(_.fileId === id).update(file)
   }
   def updateByFileName(name: String, file: FileRow) = {
     filesTable.filter(_.fileName === name).update(file)
   }
-  def updateByStorageName(name: String, file: FileRow) = {
-    filesTable.filter(_.storageName === name).update(file)
-  }
-  def deleteById(id: Int) = {
+  def deleteById(id: String) = {
     filesTable.filter(_.fileId === id).delete
   }
   def deleteByFileName(name: String) = {
     filesTable.filter(_.fileName === name).delete
-  }
-  def deleteByStorageName(name: String) = {
-    filesTable.filter(_.storageName === name).delete
   }
 
 }

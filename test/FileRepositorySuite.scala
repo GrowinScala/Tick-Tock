@@ -1,9 +1,12 @@
+import java.util.UUID
+
 import api.dtos.FileDTO
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.PlaySpec
 import database.repositories.slick.FileRepositoryImpl
 import api.utils.DateUtils._
 import database.utils.DatabaseUtils._
+
 import scala.concurrent._
 
 class FileRepositorySuite extends PlaySpec with BeforeAndAfterAll with BeforeAndAfterEach {
@@ -14,6 +17,7 @@ class FileRepositorySuite extends PlaySpec with BeforeAndAfterAll with BeforeAnd
 
   override def beforeEach(): Unit = {
     fileRepo.createFilesTable
+    fileRepo.selectAllFiles.map(seq => assert(seq.isEmpty))
   }
 
   override def afterEach(): Unit = {
@@ -29,36 +33,27 @@ class FileRepositorySuite extends PlaySpec with BeforeAndAfterAll with BeforeAnd
     }
   }*/
 
-  "DBFilesTable#insertInFilesTable" should {
-    "insert rows into the Files table on the database and check if they were inserted correctly." in {
-      fileRepo.selectAllFiles.map(seq => assert(seq.isEmpty))
-      fileRepo.insertInFilesTable(FileDTO("test1", "asd1", getCurrentDateTimestamp))
-      fileRepo.insertInFilesTable(FileDTO("test2", "asd2", getCurrentDateTimestamp))
-      fileRepo.selectAllFiles.map(seq => assert(seq.size == 2))
-      fileRepo.insertInFilesTable(FileDTO("test3", "asd3", getCurrentDateTimestamp))
-      fileRepo.insertInFilesTable(FileDTO("test4", "asd4", getCurrentDateTimestamp))
-      fileRepo.selectAllFiles.map(seq => assert(seq.size == 4))
-    }
-  }
-
-  "DBFilesTable#SelectAllFiles" should {
-    "insert and select all rows from the Files table on the database." in {
-      fileRepo.selectAllFiles.map(seq => assert(seq.isEmpty))
-      fileRepo.insertInFilesTable(FileDTO("test1", "asd1", getCurrentDateTimestamp))
+  "DBFilesTable#SelectAllFiles,insertInFilesTable" should {
+    "insert rows into the Files table and make select queries on those rows" in {
+      val uuid1 = UUID.randomUUID().toString
+      val uuid2 = UUID.randomUUID().toString
+      val uuid3 = UUID.randomUUID().toString
+      fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
       fileRepo.selectAllFiles.map(seq => assert(seq.size == 1 && seq.head.fileName.equals("test1")))
-      fileRepo.insertInFilesTable(FileDTO("test2", "asd2", getCurrentDateTimestamp))
-      fileRepo.insertInFilesTable(FileDTO("test3", "asd3", getCurrentDateTimestamp))
+      fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
+      fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
       fileRepo.selectAllFiles.map(seq => assert(seq.size == 3 && seq.last.fileName.equals("test3")))
     }
   }
 
   "DBFilesTable#DeleteAllFiles" should {
-    "insert several rows and then delete them all from the Files table on the database." in {
-      fileRepo.selectAllFiles.map(seq => assert(seq.isEmpty))
-      fileRepo.insertInFilesTable(FileDTO("test1", "asd1", getCurrentDateTimestamp))
-      fileRepo.insertInFilesTable(FileDTO("test2", "asd2", getCurrentDateTimestamp))
-      fileRepo.insertInFilesTable(FileDTO("test3", "asd3", getCurrentDateTimestamp))
-      fileRepo.selectAllFiles.map(seq => assert(seq.size == 3))
+    "insert rows into the Files table and then delete them all from the Files table on the database." in {
+      val uuid1 = UUID.randomUUID().toString
+      val uuid2 = UUID.randomUUID().toString
+      val uuid3 = UUID.randomUUID().toString
+      fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
+      fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
+      fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
       fileRepo.deleteAllFiles
       fileRepo.selectAllFiles.map(seq => assert(seq.isEmpty))
     }
@@ -66,55 +61,67 @@ class FileRepositorySuite extends PlaySpec with BeforeAndAfterAll with BeforeAnd
 
   "DBFilesTable#existsCorrespondingFileId" should {
     "insert some rows into the Files table on the database and check if certain fileId's exist." in {
-      fileRepo.insertInFilesTable(FileDTO("test1", "asd1", getCurrentDateTimestamp)) // fileId should be 1
-      fileRepo.insertInFilesTable(FileDTO("test2", "asd2", getCurrentDateTimestamp)) // fileId should be 2
-      fileRepo.existsCorrespondingFileId(0).map(result => assert(!result)) //fieldId 0 does not exist
-      fileRepo.existsCorrespondingFileId(1).map(result => assert(result))
-      fileRepo.existsCorrespondingFileId(2).map(result => assert(result))
-      fileRepo.existsCorrespondingFileId(3).map(result => assert(!result)) //fieldId 0 does not exist
-      fileRepo.insertInFilesTable(FileDTO("test3", "asd3", getCurrentDateTimestamp)) // fileId should be 3
-      fileRepo.insertInFilesTable(FileDTO("test4", "asd4", getCurrentDateTimestamp)) // fileId should be 4
-      fileRepo.existsCorrespondingFileId(3).map(result => assert(result))
-      fileRepo.existsCorrespondingFileId(4).map(result => assert(result))
-      fileRepo.existsCorrespondingFileId(5).map(result => assert(!result)) //fieldId 0 does not exist
+      val uuid1 = UUID.randomUUID().toString
+      val uuid2 = UUID.randomUUID().toString
+      fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
+      fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
+      fileRepo.selectFileIdFromName("test1").map(elem =>
+        fileRepo.existsCorrespondingFileId(elem).map(result => assert(result))
+      )
+      fileRepo.selectFileIdFromName("test2").map(elem =>
+        fileRepo.existsCorrespondingFileId(elem).map(result => assert(result))
+      )
+      val uuidWrong = UUID.randomUUID().toString
+      fileRepo.existsCorrespondingFileId(uuidWrong).map(result => assert(!result))
     }
   }
 
   "DBFilesTable#existsCorrespondingFileName" should {
     "insert some rows into the Files table on the database and check if certain fileName's exist." in {
-      fileRepo.insertInFilesTable(FileDTO("test1", "asd1", getCurrentDateTimestamp))
-      fileRepo.insertInFilesTable(FileDTO("test2", "asd2", getCurrentDateTimestamp))
-      fileRepo.insertInFilesTable(FileDTO("test3", "asd3", getCurrentDateTimestamp))
+      val uuid1 = UUID.randomUUID().toString
+      val uuid2 = UUID.randomUUID().toString
+      val uuid3 = UUID.randomUUID().toString
+      fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
+      fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
+      fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
       fileRepo.existsCorrespondingFileName("test0").map(result => assert(!result)) //fileName "test0" does not exist
       fileRepo.existsCorrespondingFileName("test1").map(result => assert(result))
       fileRepo.existsCorrespondingFileName("test2").map(result => assert(result))
       fileRepo.existsCorrespondingFileName("test3").map(result => assert(result))
-      fileRepo.existsCorrespondingFileName("test4").map(result => assert(!result)) //fileName "test0" does not exist
+      fileRepo.existsCorrespondingFileName("test4").map(result => assert(!result)) //fileName "test4" does not exist
     }
   }
 
   "DBFilesTable#selectFileIdFromName" should {
     "insert some rows into the Files table on the database and retrieve fileId's by giving fileName's." in {
-      fileRepo.insertInFilesTable(FileDTO("test1", "asd1", getCurrentDateTimestamp)) // fileId should be 1
-      fileRepo.insertInFilesTable(FileDTO("test2", "asd2", getCurrentDateTimestamp)) // fileId should be 2
-      fileRepo.insertInFilesTable(FileDTO("test3", "asd3", getCurrentDateTimestamp)) // fileId should be 3
-      fileRepo.selectFileIdFromName("test1").map(result => assert(result == 1))
-      fileRepo.selectFileIdFromName("test2").map(result => assert(result == 2))
-      fileRepo.selectFileIdFromName("test3").map(result => assert(result == 3))
+      val uuid1 = UUID.randomUUID().toString
+      val uuid2 = UUID.randomUUID().toString
+      val uuid3 = UUID.randomUUID().toString
+      fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
+      fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
+      fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
+      fileRepo.selectFileIdFromName("test1").map(result => assert(result == uuid1))
+      fileRepo.selectFileIdFromName("test2").map(result => assert(result == uuid2))
+      fileRepo.selectFileIdFromName("test3").map(result => assert(result == uuid3))
     }
   }
+
 
   "DBFilesTable#selectNameFromFileId" should {
     "insert some rows into the Files table on the database and retrieve fileName's by giving FileId's." in {
-      fileRepo.insertInFilesTable(FileDTO("test1", "asd1", getCurrentDateTimestamp)) // fileId should be 1
-      fileRepo.insertInFilesTable(FileDTO("test2", "asd2", getCurrentDateTimestamp)) // fileId should be 2
-      fileRepo.insertInFilesTable(FileDTO("test3", "asd3", getCurrentDateTimestamp)) // fileId should be 3
-      fileRepo.selectFileNameFromFileId(1).map(result => assert(result.equals("test1")))
-      fileRepo.selectFileNameFromFileId(2).map(result => assert(result.equals("test2")))
-      fileRepo.selectFileNameFromFileId(3).map(result => assert(result.equals("test3")))
+      val uuid1 = UUID.randomUUID().toString
+      val uuid2 = UUID.randomUUID().toString
+      val uuid3 = UUID.randomUUID().toString
+      fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
+      fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
+      fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
+      fileRepo.selectFileNameFromFileId(uuid1).map(result => assert(result.equals("test1")))
+      fileRepo.selectFileNameFromFileId(uuid2).map(result => assert(result.equals("test2")))
+      fileRepo.selectFileNameFromFileId(uuid3).map(result => assert(result.equals("test3")))
     }
   }
 
+  /*
   "DBFilesTable#selectFilePathFromFileName" should {
     "insert some rows into the Files table on the database and retrieve storageName's by giving fileName's." in {
       fileRepo.insertInFilesTable(FileDTO("test1", "asd1", getCurrentDateTimestamp))
@@ -136,4 +143,5 @@ class FileRepositorySuite extends PlaySpec with BeforeAndAfterAll with BeforeAnd
       fileRepo.selectFileNameFromStorageName("asd3").map(result => assert(result.equals("test3")))
     }
   }
+  */
 }

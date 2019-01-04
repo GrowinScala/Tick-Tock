@@ -1,5 +1,7 @@
 package database.repositories.slick
 
+import java.util.UUID
+
 import api.dtos.FileDTO
 import database.mappings.FileMappings._
 import slick.dbio.DBIO
@@ -21,17 +23,17 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
     */
   def selectAllFiles: Future[Seq[FileDTO]] = {
     exec(selectAllFromFilesTable.result).map{seq =>
-      seq.map(elem => FileDTO(elem.fileName, elem.storageName, elem.uploadDate))
+      seq.map(elem => FileDTO(elem.fileId, elem.fileName, elem.uploadDate))
     }
   }
 
   /**
     *
     */
-  def selectFileById(id: Int): Future[Seq[FileDTO]] = {
+  def selectFileById(id: String): Future[Seq[FileDTO]] = {
     exec(selectById(id).result).map{
       seq => seq.map {
-        elem => FileDTO(elem.fileName, elem.storageName, elem.uploadDate)
+        elem => FileDTO(elem.fileId, elem.fileName, elem.uploadDate)
       }
     }
   }
@@ -47,7 +49,7 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
   /**
     *
     */
-  def deleteFileById(id: Int): Future[Int] = {
+  def deleteFileById(id: String): Future[Int] = {
     exec(deleteById(id))
   }
 
@@ -70,7 +72,7 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
     * @param fileId Id of the file on the database.
     * @return true if row exists, false if not.
     */
-  def existsCorrespondingFileId(fileId: Int): Future[Boolean] = {
+  def existsCorrespondingFileId(fileId: String): Future[Boolean] = {
     exec(selectById(fileId).exists.result)
   }
 
@@ -87,18 +89,19 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
     * Retrieves a fileId of a row on the database by providing the fileName.
     * @param fileName Name of the file given by the user on the database.
     */
-  def selectFileIdFromName(fileName: String): Future[Int] = {
-    exec(selectByFileName(fileName).map(_.fileId).result.head)
+  def selectFileIdFromName(fileName: String): Future[String] = {
+    exec(selectByFileName(fileName).result.head.map(_.fileId))
   }
 
   /**
     * Retrieves a fileName of a row on the database by providing the fileId.
     * @param fileId Id of the file on the database.
     */
-  def selectFileNameFromFileId(fileId: Int): Future[String] = {
+  def selectFileNameFromFileId(fileId: String): Future[String] = {
     exec(selectById(fileId).map(_.fileName).result.head)
   }
 
+  /*
   /**
     * Retrieves a storageName of a row on the database by providing the fileName.
     * @param fileName Name of the file given by the user on the database.
@@ -114,13 +117,14 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
   def selectFileNameFromStorageName(storageName: String): Future[String] = {
     exec(selectByStorageName(storageName).map(_.fileName).result.head)
   }
+  */
 
   /**
     * Method that inserts a file (row) on the files table on the database.
     * @param file FileDTO to be inserted on the database.
     */
   def insertInFilesTable(file: FileDTO): Unit = {
-    exec(insertFile(FileRow(0, file.storageName, file.fileName, file.uploadDate)))
+    exec(insertFile(FileRow(file.fileId, file.fileName, file.uploadDate)))
   }
 
 }

@@ -156,7 +156,7 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
 
   "TaskController#GETtask" should {
     "receive a GET request" in {
-      val fakeRequest = FakeRequest(GET, s"/task")
+      val fakeRequest = FakeRequest(GET, s"/tasks")
         .withHeaders(HOST -> "localhost:9000")
       val result = route(app, fakeRequest)
       status(result.get) mustBe OK

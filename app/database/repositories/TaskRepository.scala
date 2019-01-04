@@ -1,5 +1,7 @@
 package database.repositories
 
+import java.util.UUID
+
 import akka.actor.FSM.Failure
 import akka.actor.Status.Success
 import api.dtos.TaskDTO
@@ -29,7 +31,7 @@ trait TaskRepository {
     * @param id - the identifier of the task we want to select
     * @return the selected task according to the id given
     */
-  def selectTaskById(id: Int): Future[Seq[TaskRow]]
+  def selectTaskById(id: String): Future[Seq[TaskDTO]]
 
   /**
     * Deletes all tasks from the tasks table on the database.

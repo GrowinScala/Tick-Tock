@@ -1,5 +1,7 @@
 package database.repositories
 
+import java.util.UUID
+
 import api.dtos.FileDTO
 
 import scala.concurrent.Future
@@ -16,7 +18,7 @@ trait FileRepository {
   /**
     *
     */
-  def selectFileById(id: Int): Future[Seq[FileDTO]]
+  def selectFileById(id: String): Future[Seq[FileDTO]]
 
   /**
     * Deletes all rows from the files table on the database.
@@ -28,7 +30,7 @@ trait FileRepository {
   /**
     *
     */
-  def deleteFileById(id: Int): Future[Int]
+  def deleteFileById(id: String): Future[Int]
 
   /**
     * Creates the files table on the database.
@@ -46,7 +48,7 @@ trait FileRepository {
     * @param fileId Id of the file on the database.
     * @return true if row exists, false if not.
     */
-  def existsCorrespondingFileId(fileId: Int): Future[Boolean]
+  def existsCorrespondingFileId(fileId: String): Future[Boolean]
 
   /**
     * Checks if a corresponding file row exists on the database by providing the fileName.
@@ -61,15 +63,16 @@ trait FileRepository {
     *
     * @param fileName Name of the file given by the user on the database.
     */
-  def selectFileIdFromName(fileName: String): Future[Int]
+  def selectFileIdFromName(fileName: String): Future[String]
 
   /**
     * Retrieves a fileName of a row on the database by providing the fileId.
     *
     * @param fileId Id of the file on the database.
     */
-  def selectFileNameFromFileId(fileId: Int): Future[String]
+  def selectFileNameFromFileId(fileId: String): Future[String]
 
+  /*
   /**
     * Retrieves a storageName of a row on the database by providing the fileName.
     *
@@ -83,7 +86,7 @@ trait FileRepository {
     * @param storageName Name of the file on the storage folder on the database.
     */
   def selectFileNameFromStorageName(storageName: String): Future[String]
-
+  */
   /**
     * Method that inserts a file (row) on the files table on the database.
     *

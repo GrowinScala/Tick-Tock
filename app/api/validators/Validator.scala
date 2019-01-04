@@ -3,7 +3,8 @@ package api.validators
 import java.nio.file.{FileSystems, Files}
 import java.text.{DateFormat, SimpleDateFormat}
 import java.util.Date
-import api.dtos.TaskDTO
+
+import api.dtos.{CreateTaskDTO, TaskDTO}
 import play.api.libs.json._
 import api.dtos.TaskDTO._
 import api.validators.Error._
@@ -16,15 +17,13 @@ import scala.concurrent.ExecutionContext
   */
 object Validator {
 
-  def taskValidator(task: TaskDTO): Option[List[Error]] = {
+  def taskValidator(task: CreateTaskDTO): Option[List[Error]] = {
     val errorList = List(
-      (isValidDateValue(task.startDateAndTime), invalidDateValue),
+      //(isValidDateValue(task.startDateAndTime), invalidDateValue),
       (isValidFileName(task.fileName), invalidFileName)
-    )
-    if(errorList.forall(elem => elem._1)) None
-    else {
-      Some(errorList.filter(elem => elem._1).unzip._2)
-    }
+    ).filter(!_._1)
+    if(errorList.isEmpty) None
+    else Some(errorList.unzip._2)
   }
 //
 //  /**

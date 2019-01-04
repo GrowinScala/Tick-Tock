@@ -4,13 +4,13 @@
 
 GET     /                      api.controllers.TaskController.index
 GET     /task                  api.controllers.TaskController.getSchedule
-GET     /task/:id              api.controllers.TaskController.getScheduleById(id: Int)
-PATCH   /task/:id              api.controllers.TaskController.updateTask(id: Int)
+GET     /task/:id              api.controllers.TaskController.getScheduleById(id: String)
+PATCH   /task/:id              api.controllers.TaskController.updateTask(id: String)
 POST    /task                  api.controllers.TaskController.schedule
 
 GET     /file                  api.controllers.FileController.getAllFiles
-GET     /file/:id              api.controllers.FileController.getFileById(id: Int)
-DELETE  /file/:id              api.controllers.FileController.deleteFile(id: Int)
+GET     /file/:id              api.controllers.FileController.getFileById(id: String)
+DELETE  /file/:id              api.controllers.FileController.deleteFile(id: String)
 POST    /file                  api.controllers.FileController.upload
 
 

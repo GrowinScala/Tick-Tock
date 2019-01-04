@@ -1,8 +1,7 @@
 package api.dtos
 
-import java.util.Date
+import java.util.{Date, UUID}
 
-import api.validators.Error
 import play.api.libs.json._
 
 /**
@@ -12,8 +11,8 @@ import play.api.libs.json._
   * @param uploadDate Date of when the file was uploaded.
   */
 case class FileDTO(
+               fileId: String,
                fileName: String,
-               storageName: String,
                uploadDate: Date
              )
 

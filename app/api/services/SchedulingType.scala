@@ -10,5 +10,4 @@ object SchedulingType extends Enumeration {
 
   type SchedulingType = Value
   val RunOnce, Periodic = Value
-
 }

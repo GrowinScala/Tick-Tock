@@ -1,15 +1,17 @@
 package api.controllers
 
 import java.nio.file.Paths
+import java.util.UUID
 
 import javax.inject.Singleton
 import org.apache.commons.io.FilenameUtils
 import play.api.mvc._
-import api.dtos.FileDTO
 import javax.inject.Inject
-import database.utils.DatabaseUtils
 import play.api.libs.Files
 import play.api.libs.json._
+import java.util.UUID._
+
+import api.dtos.FileDTO
 
 import scala.concurrent.ExecutionContext
 import api.utils.DateUtils._
@@ -28,15 +30,18 @@ class FileController @Inject()(cc: ControllerComponents, fileRepo: FileRepositor
   def upload: Action[MultipartFormData[Files.TemporaryFile]] = Action(parse.multipartFormData(MAX_FILE_SIZE)) { request =>
     request.body.file("file").map { file =>
       if(FilenameUtils.getExtension(file.filename) == "jar") {
-        val storageName = Paths.get(file.filename).getFileName.toString
+        //val storageName = Paths.get(file.filename).getFileName.toString
+        val uuid = randomUUID().toString
         val fileName = request.body.dataParts.head._2.head
         val uploadDate = getCurrentDateTimestamp
-        fileRepo.insertInFilesTable(FileDTO(storageName, fileName, uploadDate))
-        file.ref.moveTo(Paths.get(s"app/filestorage/$storageName"), replace = false)
-        Ok("File uploaded successfully => storageName: " + storageName + ", fileName: " + fileName + ", uploadDate: " + uploadDate)
-        //TODO: change StorageName to the UUID
+        fileRepo.existsCorrespondingFileName(fileName).map{elem =>
+          if(elem) BadRequest("File name already exists.")
+        }
+        file.ref.moveTo(Paths.get(s"app/filestorage/$uuid" + ".jar"), replace = true)
+        fileRepo.insertInFilesTable(FileDTO(uuid, fileName, uploadDate))
+        Ok("File uploaded successfully => fileId: " + uuid + ", fileName: " + fileName + ", uploadDate: " + uploadDate)
       }
-      else BadRequest("File had the wrong extension")
+      else BadRequest("File had the wrong extension.")
     }.getOrElse {
       BadRequest("File upload went wrong.")
     }
@@ -60,7 +65,7 @@ class FileController @Inject()(cc: ControllerComponents, fileRepo: FileRepositor
     * @param id - identifier of the file we are looking for
     * @return the file corresponding to the id given
     */
-  def getFileById(id: Int): Action[AnyContent] = Action.async {
+  def getFileById(id: String): Action[AnyContent] = Action.async {
     fileRepo.selectFileById(id).map { seq =>
       val result = JsArray(seq.map(tr => Json.toJsObject(tr)))
       Ok(result)
@@ -73,13 +78,12 @@ class FileController @Inject()(cc: ControllerComponents, fileRepo: FileRepositor
     * @param id - identifier of the file to be deleted
     * @return HTTP response Ok if the file was deleted and BadRequest if not
     */
-  def deleteFile(id: Int): Action[AnyContent] = Action.async {
+  def deleteFile(id: String): Action[AnyContent] = Action.async {
     fileRepo.deleteFileById(id). map { i =>
       if(i > 0) { //TODO - Create file exists and check first
         Ok("File with id = " + id + " as been deleted.")
-      } else BadRequest("File with id "+ id+ " does not exist.")
+      } else BadRequest("File with id " + id + " does not exist.")
     }
   }
-
 
 }

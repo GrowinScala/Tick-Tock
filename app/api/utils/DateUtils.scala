@@ -4,16 +4,18 @@ import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Date}
 
-import api.dtos.TaskDTO.fileRepo
 import api.validators.Error
 import api.validators.Error.{fileNameNotFound, invalidDateValue}
+import database.repositories.slick.FileRepositoryImpl
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 import scala.concurrent.duration._
+import database.utils.DatabaseUtils._
 
 object DateUtils {
 
+  val fileRepo = new FileRepositoryImpl(DEFAULT_DB)
   implicit val ec = ExecutionContext.global
 
   //---------------------------------------------------------
@@ -33,7 +35,7 @@ object DateUtils {
 
 
   //---------------------------------------------------------
-  //# VALIDATORS
+  //# DATE VALIDATORS
   //---------------------------------------------------------
 
   /**
@@ -54,12 +56,9 @@ object DateUtils {
     * Checks if the date given is valid, (if it already happened or not)
     * @param date The Date to be checked
     * @return Returns a ValidationError if its not valid. None otherwise.
-    */
+  */
   def isValidDateValue(date: Date): Boolean = {
-    val now = new Date()
-    val currentDate = now.getTime
-    val givenDate = date.getTime
-    givenDate - currentDate > 0
+    date.after(getCurrentDate)
   }
 
   /**
@@ -75,12 +74,15 @@ object DateUtils {
   //# AUXILIARY
   //---------------------------------------------------------
 
+  def getCurrentDate: Date = {
+    Calendar.getInstance().getTime
+  }
+
   /**
     * Auxiliary method that returns the current date in the Timestamp format.
     */
   def getCurrentDateTimestamp: Timestamp = {
-    val now = Calendar.getInstance().getTime
-    new Timestamp(now.getTime)
+    new Timestamp(getCurrentDate.getTime)
   }
 
   /**
