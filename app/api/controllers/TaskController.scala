@@ -34,7 +34,7 @@ class TaskController @Inject()(cc: ControllerComponents, fileRepo: FileRepositor
     *         HTTP Response with a BadRequest, meaning something went wrong and returns the errors.
     */
   def schedule: Action[JsValue] = Action(parse.json).async { request: Request[JsValue] =>
-    val jsonResult = request.body.validate[TaskDTO]
+    val jsonResult = request.body.validate[TaskDTO] //TODO - validate the file ID given
     jsonResult.fold(
       errors =>
         Future.successful(BadRequest(Json.obj("status" -> "Error:", "message" -> JsError.toJson(errors)))), //TODO - create object Error (extends DefaultHttpErrorHandler)
@@ -80,7 +80,7 @@ class TaskController @Inject()(cc: ControllerComponents, fileRepo: FileRepositor
     */
   def updateTask(id: Int): Action[JsValue] = Action(parse.json).async { request: Request[JsValue] =>
     val jsonResult = request.body.validate[TaskDTO]
-    jsonResult.fold( //TODO - create new DTO, rename taskDTO to CreateTaskDTO
+    jsonResult.fold( //TODO - Validate the file id given
       errors => Future.successful(BadRequest("Error updating scheduled task: \n" + errors)),
       task =>  taskRepo.updateTaskById(id, task).map { i =>
         if (i > 0) Ok("Task with id = " + id + " was updated")

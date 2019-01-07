@@ -27,7 +27,6 @@ object TaskMappings {
                       startDateAndTime: Date
                     )
 
-  //TODO - separate TaskRow
   implicit val taskRowFormat: OFormat[TaskRow] = Json.format[TaskRow]
 
   //---------------------------------------------------------

@@ -9,7 +9,8 @@ import database.mappings.FileMappings.FileRow
 import database.repositories.{FileRepository, TaskRepository}
 import database.utils.DatabaseUtils
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 /**
   * Object that contains the main method for the project.
@@ -30,10 +31,11 @@ object TickTock {
   }
 
   def main(args: Array[String]): Unit = {
-//    fileRepo.createFilesTable
-//    taskRepo.createTasksTable
+//    fileRepo.dropFilesTable
+//    taskRepo.dropTasksTable
 
-    fileRepo.insertInFilesTable(FileDTO("EmailSender", "EmailSender", getCurrentDateTimestamp))
+    fileRepo.createFilesTable
+    taskRepo.createTasksTable
 
 //    retrieveDataFromDB
 //      seq.foreach(t => scheduleTask(t.fileName, t.startDateAndTime))

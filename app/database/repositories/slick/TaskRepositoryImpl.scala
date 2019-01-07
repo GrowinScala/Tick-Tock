@@ -23,6 +23,7 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
 
   def exec[T](action: DBIO[T]): Future[T] = dtbase.run(action)
 
+
   /**
     * Selects all tasks from the tasks table on the database.
     *
