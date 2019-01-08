@@ -20,7 +20,8 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
     "receive a POST request with a JSON body with the correct data. (yyyy-MM-dd HH:mm:ss date format)" in {
       val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
-        .withJsonBody(Json.parse("""
+        .withJsonBody(Json.parse(
+          """
           {
             "startDateAndTime": "2019-07-01 00:00:00",
             "fileName": "test"
@@ -33,7 +34,8 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
     "receive a POST request with a JSON body with the correct data. (dd-MM-yyyy HH:mm:ss date format)" in {
       val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
-        .withJsonBody(Json.parse("""
+        .withJsonBody(Json.parse(
+          """
           {
             "startDateAndTime": "01-07-2019 00:00:00",
             "fileName": "test"
@@ -46,7 +48,8 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
     "receive a POST request with a JSON body with the correct data. (yyyy/MM/dd HH:mm:ss date format)" in {
       val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
-        .withJsonBody(Json.parse("""
+        .withJsonBody(Json.parse(
+          """
           {
             "startDateAndTime": "2019/07/01 00:00:00",
             "fileName": "test"
@@ -59,7 +62,8 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
     "receive a POST request with a JSON body with the correct data. (dd/MM/yyyy HH:mm:ss date format)" in {
       val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
-        .withJsonBody(Json.parse("""
+        .withJsonBody(Json.parse(
+          """
           {
             "startDateAndTime": "01/07/2019 00:00:00",
             "fileName": "test"
@@ -72,7 +76,8 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
     "receive a POST request with a JSON body with the correct data. (max delay exceeded)" in {
       val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
-        .withJsonBody(Json.parse("""
+        .withJsonBody(Json.parse(
+          """
           {
             "startDateAndTime": "01/01/2030 00:00:00",
             "fileName": "test"
@@ -85,7 +90,8 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
     "receive a POST request with a JSON body with incorrect data. (wrong file name)" in {
       val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
-        .withJsonBody(Json.parse("""
+        .withJsonBody(Json.parse(
+          """
           {
             "startDateAndTime": "01/01/2030 00:00:00",
             "fileName": "Unknown"
@@ -98,7 +104,8 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
     "receive a POST request with a JSON body with incorrect data. (wrong date format)" in {
       val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
-        .withJsonBody(Json.parse("""
+        .withJsonBody(Json.parse(
+          """
           {
             "startDateAndTime": "01:01:2030 00:00:00",
             "fileName": "test"
@@ -111,7 +118,8 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
     "receive a POST request with a JSON body with incorrect data. (wrong date values)" in {
       val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
-        .withJsonBody(Json.parse("""
+        .withJsonBody(Json.parse(
+          """
           {
             "startDateAndTime": "01/14/2030 00:00:00",
             "fileName": "test"
@@ -124,7 +132,8 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
     "receive a POST request with a JSON body with incorrect data. (wrong time values)" in {
       val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
-        .withJsonBody(Json.parse("""
+        .withJsonBody(Json.parse(
+          """
           {
             "startDateAndTime": "01/01/2030 25:00:00",
             "fileName": "test"
@@ -137,7 +146,8 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
     "receive a POST request with a JSON body with incorrect data. (given date already happened)" in {
       val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
-        .withJsonBody(Json.parse("""
+        .withJsonBody(Json.parse(
+          """
           {
             "startDateAndTime": "01/01/2015 00:00:00",
             "fileName": "test"
@@ -174,25 +184,27 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
   }
 
   "TaskController#UpdateTaskWithId" should {
-    "receive a Patch request with a valid id" in {
+    "receive a PATCH request with a valid id" in {
       val fakeRequest = FakeRequest(PATCH, s"/task/1")
         .withHeaders(HOST -> "localhost:9000")
-        .withJsonBody(Json.parse("""
+        .withJsonBody(Json.parse(
+          """
           {
-            "startDateAndTime": "2030:01:01 00:00:00",
-            "fileName": "test"
+            "startDateAndTime": "2019-07-10 00:00:00",
+            "fileName": "EmailSender"
           }
         """))
       val result = route(app, fakeRequest)
       status(result.get) mustBe OK
     }
 
-    "receive a Patch request with an invalid id" in {
+    "receive a PATCH request with an invalid id" in {
       val fakeRequest = FakeRequest(PATCH, s"/task/asd")
         .withHeaders(HOST -> "localhost:9000")
-        .withJsonBody(Json.parse("""
+        .withJsonBody(Json.parse(
+          """
           {
-            "startDateAndTime": "2030:01:01 00:00:00",
+            "startDateAndTime": "2019-07-01 00:00:00",
             "fileName": "test"
           }
         """))
