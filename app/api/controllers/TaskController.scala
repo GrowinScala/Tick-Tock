@@ -87,7 +87,7 @@ class TaskController @Inject()(cc: ControllerComponents, fileRepo: FileRepositor
         else BadRequest("Task does not exist")
       }
     )
-  }
+  } //TODO - implement exception when periodicity is implemented
 
   /**
     * This method deletes a task according to its ID

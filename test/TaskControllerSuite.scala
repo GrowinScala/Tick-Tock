@@ -172,4 +172,48 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
       status(result.get) mustBe BAD_REQUEST
     }
   }
+
+  "TaskController#UpdateTaskWithId" should {
+    "receive a Patch request with a valid id" in {
+      val fakeRequest = FakeRequest(PATCH, s"/task/1")
+        .withHeaders(HOST -> "localhost:9000")
+        .withJsonBody(Json.parse("""
+          {
+            "startDateAndTime": "2030:01:01 00:00:00",
+            "fileName": "test"
+          }
+        """))
+      val result = route(app, fakeRequest)
+      status(result.get) mustBe OK
+    }
+
+    "receive a Patch request with an invalid id" in {
+      val fakeRequest = FakeRequest(PATCH, s"/task/asd")
+        .withHeaders(HOST -> "localhost:9000")
+        .withJsonBody(Json.parse("""
+          {
+            "startDateAndTime": "2030:01:01 00:00:00",
+            "fileName": "test"
+          }
+        """))
+      val result = route(app, fakeRequest)
+      status(result.get) mustBe BAD_REQUEST
+    }
+  }
+
+  "TaskController#DELETEtaskWithId" should {
+    "receive a DELETE request with a valid id" in {
+      val fakeRequest = FakeRequest(DELETE, s"/task/1")
+        .withHeaders(HOST -> "localhost:9000")
+      val result = route(app, fakeRequest)
+      status(result.get) mustBe OK
+    }
+
+    "receive a DELETE request with an invalid id" in {
+      val fakeRequest = FakeRequest(DELETE, s"/task/asd")
+        .withHeaders(HOST -> "localhost:9000")
+      val result = route(app, fakeRequest)
+      status(result.get) mustBe BAD_REQUEST
+    }
+  }
 }
