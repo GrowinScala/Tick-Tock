@@ -6,10 +6,6 @@ import play.api.libs.json._
 import play.api.mvc._
 import api.services.TaskService._
 import database.repositories.{FileRepository, TaskRepository}
-import slick.jdbc.MySQLProfile.api._
-import api.validators.Validator._
-import database.utils.DatabaseUtils._
-
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -19,10 +15,7 @@ import scala.concurrent.{ExecutionContext, Future}
   * @param cc standard controller components
   */
 @Singleton
-class TaskController @Inject()(cc: ControllerComponents)(implicit exec: ExecutionContext) extends AbstractController(cc){
-
-  val fileRepo = new FileRepository(DEFAULT_DB)
-  val taskRepo = new TaskRepository(DEFAULT_DB)
+class TaskController @Inject()(cc: ControllerComponents, fileRepo: FileRepository, taskRepo: TaskRepository)(implicit exec: ExecutionContext) extends AbstractController(cc) {
 
   /**
     * Method that runs when a GET request is made on localhost:9000/
@@ -41,14 +34,14 @@ class TaskController @Inject()(cc: ControllerComponents)(implicit exec: Executio
     *         HTTP Response with a BadRequest, meaning something went wrong and returns the errors.
     */
   def schedule: Action[JsValue] = Action(parse.json).async { request: Request[JsValue] =>
-    val jsonResult = request.body.validate[TaskDTO]
+    val jsonResult = request.body.validate[TaskDTO] //TODO - validate the file ID given
     jsonResult.fold(
       errors =>
         Future.successful(BadRequest(Json.obj("status" -> "Error:", "message" -> JsError.toJson(errors)))), //TODO - create object Error (extends DefaultHttpErrorHandler)
       task => {
         taskRepo.insertInTasksTable(TaskDTO(task.startDateAndTime, task.fileName))
         scheduleTask(task.fileName, task.startDateAndTime)
-        Future.successful(Ok)
+        Future.successful(Ok("Task inserted"))
       }
     )
   }
@@ -78,12 +71,35 @@ class TaskController @Inject()(cc: ControllerComponents)(implicit exec: Executio
     }
   }
 
+  /**
+    * This method updates a Task given its ID and a JSON is passed with the information to be
+    * altered
+    *
+    * @param id - identifier of the task to be modified
+    * @return An HTTP response that is Ok if the task was updated or BadRequest if there was an error
+    */
   def updateTask(id: Int): Action[JsValue] = Action(parse.json).async { request: Request[JsValue] =>
     val jsonResult = request.body.validate[TaskDTO]
-    jsonResult.fold( //TODO - create new DTO, rename taskDTO to CreateTaskDTO
+    jsonResult.fold( //TODO - Validate the file id given
       errors => Future.successful(BadRequest("Error updating scheduled task: \n" + errors)),
-      task => Future.successful(Ok("Something"))
+      task =>  taskRepo.updateTaskById(id, task).map { i =>
+        if (i > 0) Ok("Task with id = " + id + " was updated")
+        else BadRequest("Task does not exist")
+      }
     )
-  }
+  } //TODO - implement exception when periodicity is implemented
 
+  /**
+    * This method deletes a task according to its ID
+    *
+    * @param id - identifier of the task to be deleted
+    * @return An HTTP response that is Ok if the corresponding task was deleted or BadRequest if
+    *         it wasn't.
+    */
+  def deleteTask(id: Int): Action[AnyContent] = Action.async {
+    taskRepo.deleteTaskById(id).map { i =>
+      if (i > 0) Ok("Task with id = " + id + " was deleted")
+      else BadRequest("Error deleting file with given id")
+    }
+  }
 }

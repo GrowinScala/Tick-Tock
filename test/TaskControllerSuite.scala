@@ -1,23 +1,11 @@
-import akka.http.scaladsl.model.Uri.Host
-import akka.http.scaladsl.model.headers
-import api.controllers.TaskController
-import org.scalatest.FunSuite
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import org.scalatestplus.play.{BaseOneAppPerSuite, FakeApplicationFactory, PlaySpec}
 import play.api.libs.json.Json
-import play.api.mvc.ControllerComponents
 import play.api.test._
-import play.api.test.FakeRequest._
 import play.api.test.Helpers._
 
 class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
 
-  /**
-    * new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-    * new SimpleDateFormat("dd-MM-yyyy HH:mm:ss")
-    * new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
-    * new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
-    */
 
   "TaskController#index" should {
     "receive a GET request" in {
@@ -30,77 +18,83 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
 
   "TaskController#schedule" should {
     "receive a POST request with a JSON body with the correct data. (yyyy-MM-dd HH:mm:ss date format)" in {
-      val fakeRequest = FakeRequest(POST, s"/schedule")
+      val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
-        .withJsonBody(Json.parse("""
+        .withJsonBody(Json.parse(
+          """
           {
             "startDateAndTime": "2019-07-01 00:00:00",
-            "taskName": "EmailSender"
+            "fileName": "test"
           }
         """))
       val result = route(app, fakeRequest)
-      status(result.get) mustBe NO_CONTENT
+      status(result.get) mustBe OK
     }
 
     "receive a POST request with a JSON body with the correct data. (dd-MM-yyyy HH:mm:ss date format)" in {
-      val fakeRequest = FakeRequest(POST, s"/schedule")
+      val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
-        .withJsonBody(Json.parse("""
+        .withJsonBody(Json.parse(
+          """
           {
             "startDateAndTime": "01-07-2019 00:00:00",
-            "taskName": "EmailSender"
+            "fileName": "test"
           }
         """))
       val result = route(app, fakeRequest)
-      status(result.get) mustBe NO_CONTENT
+      status(result.get) mustBe OK
     }
 
     "receive a POST request with a JSON body with the correct data. (yyyy/MM/dd HH:mm:ss date format)" in {
-      val fakeRequest = FakeRequest(POST, s"/schedule")
+      val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
-        .withJsonBody(Json.parse("""
+        .withJsonBody(Json.parse(
+          """
           {
             "startDateAndTime": "2019/07/01 00:00:00",
-            "taskName": "EmailSender"
+            "fileName": "test"
           }
         """))
       val result = route(app, fakeRequest)
-      status(result.get) mustBe NO_CONTENT
+      status(result.get) mustBe OK
     }
 
     "receive a POST request with a JSON body with the correct data. (dd/MM/yyyy HH:mm:ss date format)" in {
-      val fakeRequest = FakeRequest(POST, s"/schedule")
+      val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
-        .withJsonBody(Json.parse("""
+        .withJsonBody(Json.parse(
+          """
           {
             "startDateAndTime": "01/07/2019 00:00:00",
-            "taskName": "EmailSender"
+            "fileName": "test"
           }
         """))
       val result = route(app, fakeRequest)
-      status(result.get) mustBe NO_CONTENT
+      status(result.get) mustBe OK
     }
 
     "receive a POST request with a JSON body with the correct data. (max delay exceeded)" in {
-      val fakeRequest = FakeRequest(POST, s"/schedule")
+      val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
-        .withJsonBody(Json.parse("""
+        .withJsonBody(Json.parse(
+          """
           {
             "startDateAndTime": "01/01/2030 00:00:00",
-            "taskName": "EmailSender"
+            "fileName": "test"
           }
         """))
       val result = route(app, fakeRequest)
-      status(result.get) mustBe NO_CONTENT
+      status(result.get) mustBe OK
     }
 
     "receive a POST request with a JSON body with incorrect data. (wrong file name)" in {
-      val fakeRequest = FakeRequest(POST, s"/schedule")
+      val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
-        .withJsonBody(Json.parse("""
+        .withJsonBody(Json.parse(
+          """
           {
             "startDateAndTime": "01/01/2030 00:00:00",
-            "taskName": "Unknown"
+            "fileName": "Unknown"
           }
         """))
       val result = route(app, fakeRequest)
@@ -108,12 +102,13 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
     }
 
     "receive a POST request with a JSON body with incorrect data. (wrong date format)" in {
-      val fakeRequest = FakeRequest(POST, s"/schedule")
+      val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
-        .withJsonBody(Json.parse("""
+        .withJsonBody(Json.parse(
+          """
           {
             "startDateAndTime": "01:01:2030 00:00:00",
-            "taskName": "EmailSender"
+            "fileName": "test"
           }
         """))
       val result = route(app, fakeRequest)
@@ -121,12 +116,13 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
     }
 
     "receive a POST request with a JSON body with incorrect data. (wrong date values)" in {
-      val fakeRequest = FakeRequest(POST, s"/schedule")
+      val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
-        .withJsonBody(Json.parse("""
+        .withJsonBody(Json.parse(
+          """
           {
             "startDateAndTime": "01/14/2030 00:00:00",
-            "taskName": "EmailSender"
+            "fileName": "test"
           }
         """))
       val result = route(app, fakeRequest)
@@ -134,12 +130,13 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
     }
 
     "receive a POST request with a JSON body with incorrect data. (wrong time values)" in {
-      val fakeRequest = FakeRequest(POST, s"/schedule")
+      val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
-        .withJsonBody(Json.parse("""
+        .withJsonBody(Json.parse(
+          """
           {
             "startDateAndTime": "01/01/2030 25:00:00",
-            "taskName": "EmailSender"
+            "fileName": "test"
           }
         """))
       val result = route(app, fakeRequest)
@@ -147,12 +144,13 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
     }
 
     "receive a POST request with a JSON body with incorrect data. (given date already happened)" in {
-      val fakeRequest = FakeRequest(POST, s"/schedule")
+      val fakeRequest = FakeRequest(POST, s"/task")
         .withHeaders(HOST -> "localhost:9000")
-        .withJsonBody(Json.parse("""
+        .withJsonBody(Json.parse(
+          """
           {
             "startDateAndTime": "01/01/2015 00:00:00",
-            "taskName": "EmailSender"
+            "fileName": "test"
           }
         """))
       val result = route(app, fakeRequest)
@@ -160,4 +158,74 @@ class TaskControllerSuite extends PlaySpec with GuiceOneAppPerSuite {
     }
   }
 
+  "TaskController#GETtask" should {
+    "receive a GET request" in {
+      val fakeRequest = FakeRequest(GET, s"/task")
+        .withHeaders(HOST -> "localhost:9000")
+      val result = route(app, fakeRequest)
+      status(result.get) mustBe OK
+    }
+  }
+
+  "TaskController#GETtaskWithId" should {
+    "receive a GET request with a valid id" in {
+      val fakeRequest = FakeRequest(GET, s"/task/1")
+        .withHeaders(HOST -> "localhost:9000")
+      val result = route(app, fakeRequest)
+      status(result.get) mustBe OK
+    }
+
+    "receive a GET request with an invalid id" in {
+      val fakeRequest = FakeRequest(GET, s"/task/asd")
+        .withHeaders(HOST -> "localhost:9000")
+      val result = route(app, fakeRequest)
+      status(result.get) mustBe BAD_REQUEST
+    }
+  }
+
+  "TaskController#UpdateTaskWithId" should {
+    "receive a PATCH request with a valid id" in {
+      val fakeRequest = FakeRequest(PATCH, s"/task/1")
+        .withHeaders(HOST -> "localhost:9000")
+        .withJsonBody(Json.parse(
+          """
+          {
+            "startDateAndTime": "2019-07-10 00:00:00",
+            "fileName": "EmailSender"
+          }
+        """))
+      val result = route(app, fakeRequest)
+      status(result.get) mustBe OK
+    }
+
+    "receive a PATCH request with an invalid id" in {
+      val fakeRequest = FakeRequest(PATCH, s"/task/asd")
+        .withHeaders(HOST -> "localhost:9000")
+        .withJsonBody(Json.parse(
+          """
+          {
+            "startDateAndTime": "2019-07-01 00:00:00",
+            "fileName": "test"
+          }
+        """))
+      val result = route(app, fakeRequest)
+      status(result.get) mustBe BAD_REQUEST
+    }
+  }
+
+  "TaskController#DELETEtaskWithId" should {
+    "receive a DELETE request with a valid id" in {
+      val fakeRequest = FakeRequest(DELETE, s"/task/1")
+        .withHeaders(HOST -> "localhost:9000")
+      val result = route(app, fakeRequest)
+      status(result.get) mustBe OK
+    }
+
+    "receive a DELETE request with an invalid id" in {
+      val fakeRequest = FakeRequest(DELETE, s"/task/asd")
+        .withHeaders(HOST -> "localhost:9000")
+      val result = route(app, fakeRequest)
+      status(result.get) mustBe BAD_REQUEST
+    }
+  }
 }

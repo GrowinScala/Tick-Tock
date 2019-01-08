@@ -1,13 +1,12 @@
 import com.google.inject.AbstractModule
-import org.h2.engine.Database
-import slick.basic.DatabaseConfig
-import slick.jdbc.MySQLProfile
+import database.repositories.{FileRepository, TaskRepository}
+import database.repositories.slick.{FileRepositoryImpl, TaskRepositoryImpl}
+import database.utils.DatabaseUtils._
 
-class Module extends AbstractModule{
+class Module extends AbstractModule {
 
   def configure = {
-    bind(classOf[DatabaseConfig[MySQLProfile]]).toInstance(DatabaseConfig.forConfig("dbinfo"))
+    Seq(bind(classOf[FileRepository]).toInstance(new FileRepositoryImpl(DEFAULT_DB)),
+      bind(classOf[TaskRepository]).toInstance(new TaskRepositoryImpl(DEFAULT_DB)))
   }
-
-
 }

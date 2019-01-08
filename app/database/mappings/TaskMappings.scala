@@ -3,6 +3,7 @@ package database.mappings
 import java.sql.Timestamp
 import java.util.Date
 
+import api.dtos.TaskDTO
 import slick.jdbc.MySQLProfile.api._
 import database.mappings.FileMappings._
 import play.api.libs.json.{Json, OFormat}
@@ -26,7 +27,6 @@ object TaskMappings {
                       startDateAndTime: Date
                     )
 
-  //TODO - separate TaskRow
   implicit val taskRowFormat: OFormat[TaskRow] = Json.format[TaskRow]
 
   //---------------------------------------------------------
@@ -34,9 +34,7 @@ object TaskMappings {
   //---------------------------------------------------------
   class TasksTable(tag: Tag) extends Table[TaskRow](tag, "tasks") {
     def taskId = column[Int]("taskId", O.PrimaryKey, O.AutoInc)
-
     def fileId = column[Int]("fileId", O.Length(100))
-
     def startDateAndTime = column[Date]("startDateAndTime", O.Length(100))
 
     def fileIdFK =
@@ -83,27 +81,27 @@ object TaskMappings {
     tasksTable += task
   }
 
-  def updateTaskByTaskId(id: Int, task: TaskRow) = {
+  def updateTaskByTaskId(id: Int, task: TaskRow): FixedSqlAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.taskId === id).update(task)
   }
 
-  def updateByFileId(id: Int, task: TaskRow) = {
+  def updateByFileId(id: Int, task: TaskRow): FixedSqlAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.fileId === id).update(task)
   }
 
-  def updateByStartDateAndTime(startDateAndTime: Date, task: TaskRow) = {
+  def updateByStartDateAndTime(startDateAndTime: Date, task: TaskRow): FixedSqlAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.startDateAndTime === startDateAndTime).update(task)
   }
 
-  def deleteByTaskId(id: Int) = {
+  def deleteByTaskId(id: Int): FixedSqlAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.taskId === id).delete
   }
 
-  def deleteByFileId(id: Int) = {
+  def deleteByFileId(id: Int): FixedSqlAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.fileId === id).delete
   }
 
-  def deleteByStartDateAndTime(startDateAndTime: Date) = {
+  def deleteByStartDateAndTime(startDateAndTime: Date): FixedSqlAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.startDateAndTime === startDateAndTime).delete
   }
 

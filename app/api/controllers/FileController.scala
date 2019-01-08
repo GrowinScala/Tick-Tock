@@ -1,33 +1,23 @@
 package api.controllers
 
-import java.io.File
 import java.nio.file.Paths
-import java.sql.Timestamp
-import java.util.Calendar
 
-import api.services.FileService._
-import api.dtos.FileDTO
-import database.repositories.{FileRepository, TaskRepository}
-import javax.inject.{Inject, Singleton}
+import javax.inject.Singleton
 import org.apache.commons.io.FilenameUtils
-import slick.jdbc.MySQLProfile.api._
 import play.api.mvc._
-import database.utils.DatabaseUtils._
 import api.dtos.FileDTO
 import javax.inject.Inject
-import api.services.FileService._
 import play.api.libs.Files
 import play.api.libs.json._
 
 import scala.concurrent.ExecutionContext
+import api.utils.DateUtils._
+import database.repositories.{FileRepository, TaskRepository}
 
 @Singleton
-class FileController @Inject()(cc: ControllerComponents)(implicit exec: ExecutionContext) extends AbstractController(cc){
+class FileController @Inject()(cc: ControllerComponents, fileRepo: FileRepository, taskRepo: TaskRepository)(implicit exec: ExecutionContext) extends AbstractController(cc){
 
   final val MAX_FILE_SIZE = 1024*1024*300 // 300MB
-
-  val fileRepo = new FileRepository(DEFAULT_DB)
-  val taskRepo = new TaskRepository(DEFAULT_DB)
 
   def index = Action {
     Ok("It works!")
