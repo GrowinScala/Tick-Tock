@@ -3,7 +3,7 @@ package executionengine
 import java.text.SimpleDateFormat
 import java.util.{Date, TimeZone}
 
-import akka.actor.{Actor, ActorSystem, Props}
+import akka.actor.{Actor, ActorSystem, PoisonPill, Props}
 import api.services.SchedulingType._
 import java.time.Duration
 import java.time.Duration._
@@ -12,9 +12,8 @@ import api.services.SchedulingType
 import api.utils.DateUtils._
 import database.repositories.slick.{FileRepositoryImpl, TaskRepositoryImpl}
 import database.utils.DatabaseUtils._
-import api.services.TickTock._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Await, ExecutionContext}
 
 
 /**
@@ -26,14 +25,11 @@ import scala.concurrent.ExecutionContext
   * @param datetime Date of when the file is run. (If Periodic, it represents the first execution)
   * @param interval Time interval between each execution. (Only applicable in a Periodic task)
   */
-class ExecutionJob(taskId: String, fileId: String, schedulingType: SchedulingType, startDate: Option[Date] = None, interval: Option[Duration] = Some(ZERO), endDate: Option[Date] = None, occurrences: Option[Int] = None) {
+class ExecutionJob(taskId: String, fileId: String, schedulingType: SchedulingType, startDate: Date, interval: Option[Duration] = Some(ZERO), endDate: Option[Date] = None) {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
   val fileRepo = new FileRepositoryImpl(DEFAULT_DB)
   val taskRepo = new TaskRepositoryImpl(DEFAULT_DB)
-
-  val hasOccurrences = occurrences.isDefined
-  val hasEndDate = endDate.isDefined
 
   /**
     * Actor and Runnable that handles file executions.
@@ -42,28 +38,28 @@ class ExecutionJob(taskId: String, fileId: String, schedulingType: SchedulingTyp
 
     /**
       * Inherited method from the Runnable trait that is used when the scheduling job fires.
-      * It calls the runFile method from the ExecutionManager object so it executes the file asynchronously.
       */
     def run(): Unit = {
-      if(hasEndDate){
-        if(endDate.get.before(getCurrentDate)){
-          taskMap.get(taskId).get.cancel
-        }
-        else{
-          schedulerActor ! ExecutionManager.runFile(fileId)
-        }
-      }
-      else {
-        if(hasOccurrences){
-          if(occurrences.get == 0){
-            taskMap.get(taskId).get.cancel
+      if(schedulingType == SchedulingType.RunOnce) schedulerActor ! ExecutionManager.runFile(fileId)
+      else { //if it's not a RunOnce task, its a periodic one, so it has to have either endDate or occurrences
+        if(endDate.isDefined){
+          if(endDate.get.before(getCurrentDate)){
+            system.terminate
           }
           else{
             schedulerActor ! ExecutionManager.runFile(fileId)
           }
         }
-        else{
-          schedulerActor ! ExecutionManager.runFile(taskId)
+        else{ //if it doesn't have endDate, it has occurrences.
+          taskRepo.selectCurrentOccurrencesByTaskId(taskId).map{ occurrences =>
+            if (occurrences.get == 0) {
+              system.terminate
+            }
+            else {
+              taskRepo.decrementCurrentOccurrencesByTaskId(taskId)
+              schedulerActor ! ExecutionManager.runFile(fileId)
+            }
+          }
         }
       }
     }
@@ -74,10 +70,7 @@ class ExecutionJob(taskId: String, fileId: String, schedulingType: SchedulingTyp
       */
     def receive= { //TODO - if both dateTime and interval are optional, maybe we can't do this this way? (datetime.get)
       case 0 =>
-        if(startDate.isEmpty)
-          println(getSpecificCurrentTime + " Error running file " + fileId + " scheduled at " + dateToStringFormat(startDate.get, "yyyy-MM-dd HH:mm:ss") + ".")
-        else
-          println(getSpecificCurrentTime + " Ran file " + fileId + " scheduled at " + dateToStringFormat(startDate.get, "yyyy-MM-dd HH:mm:ss") + ".")
+          println(getSpecificCurrentTime + " Ran file " + fileId + " scheduled at " + dateToStringFormat(startDate, "yyyy-MM-dd HH:mm:ss") + ".")
       case _ => println("Failed to run file: " + fileId)
     }
     //TODO: Error handling / handle Option[Date] better when its None.
@@ -127,15 +120,15 @@ class ExecutionJob(taskId: String, fileId: String, schedulingType: SchedulingTyp
   def start: Unit ={
     val delay = calculateDelay(startDate)
     if(delay.toMillis < 0) return
-    else if(delay.getSeconds > MAX_DELAY_SECONDS) system.scheduler.scheduleOnce(Duration.ofSeconds(MAX_DELAY_SECONDS), DelayerActor)
+    else if(delay.getSeconds > MAX_DELAY_SECONDS){
+      system.scheduler.scheduleOnce(Duration.ofSeconds(MAX_DELAY_SECONDS), DelayerActor)
+    }
     else {
       schedulingType match {
         case RunOnce =>
-          val cancellable = system.scheduler.scheduleOnce(delay, ExecutionActor)
-          taskMap + (taskId -> cancellable)
+          system.scheduler.scheduleOnce(delay, ExecutionActor)
         case Periodic =>
-          val cancellable = system.scheduler.schedule(delay, interval.get, ExecutionActor)
-          taskMap + (taskId -> cancellable)
+          system.scheduler.schedule(delay, interval.get, ExecutionActor)
       }
     }
   }
@@ -146,16 +139,12 @@ class ExecutionJob(taskId: String, fileId: String, schedulingType: SchedulingTyp
     * @param datetime Date given to calculate the delay between now and then.
     * @return Duration object holding the calculated delay.
     */
-  def calculateDelay(datetime: Option[Date]): Duration = {
-    if(datetime.isEmpty) ZERO
-    else {
-      val now = new Date()
-      val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-      sdf.setTimeZone(TimeZone.getTimeZone("Portugal"))
-      val currentTime = sdf.parse(sdf.format(now)).getTime
-      val scheduledTime = sdf.parse(sdf.format(datetime.get)).getTime
-      Duration.ofMillis(scheduledTime - currentTime)
-    }
+  def calculateDelay(datetime: Date): Duration = {
+    val now = new Date()
+    val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    sdf.setTimeZone(TimeZone.getTimeZone("Portugal"))
+    val currentTime = sdf.parse(sdf.format(now)).getTime
+    val scheduledTime = sdf.parse(sdf.format(datetime)).getTime
+    Duration.ofMillis(scheduledTime - currentTime)
   }
-
 }

@@ -8,6 +8,8 @@ package api.services
   */
 object SchedulingType extends Enumeration {
 
-  type SchedulingType = Value
-  val RunOnce, Periodic = Value
+  type SchedulingType = String
+
+  lazy val RunOnce = "RunOnce"
+  lazy val Periodic = "Periodic"
 }

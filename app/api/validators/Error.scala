@@ -24,8 +24,17 @@ object Error {
   lazy val header = Some("header")
   lazy val param = Some("param")
 
-  lazy val invalidJsonStructure = Error(
+
+
+  lazy val invalidTaskDTOFormat = Error(
     message = """Json must only contain the String fields "startDateAndTime" and "fileName" in that order""",
+    reason = Error.invalid,
+    locationType = None,
+    location = header
+  )
+
+  lazy val invalidFileDTOFormat = Error(
+    message = """Request must be a MultipartFormData and have the first parameter be a File with key 'file' and the second parameter being a String with the file name.""",
     reason = Error.invalid,
     locationType = None,
     location = header

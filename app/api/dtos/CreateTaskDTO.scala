@@ -6,6 +6,8 @@ import java.util.{Date, TimeZone, UUID}
 
 import database.utils.DatabaseUtils._
 import akka.japi
+import api.services.PeriodType.PeriodType
+import api.services.SchedulingType.SchedulingType
 import slick.jdbc.MySQLProfile.api._
 import play.api.libs.json._
 import play.api.libs.json.Reads._
@@ -17,7 +19,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class CreateTaskDTO(
                      startDateAndTime: Date,
-                     fileName: String
+                     fileName: String,
+                     taskType: SchedulingType,
+                     periodType: Option[PeriodType] = None,
+                     period: Option[Int] = None,
+                     endDateAndTime: Option[Date] = None,
+                     occurrences: Option[Int] = None
                    )
 
 object CreateTaskDTO {
@@ -31,10 +38,15 @@ object CreateTaskDTO {
     * @param fileName Name of the file that is executed.
     * @return the taskDTO if the date received is valid. Throws an IllegalArgumentException if it's invalid.
     */
-  def construct(startDateAndTime: String, fileName: String): CreateTaskDTO = {
+  def construct(startDateAndTime: String, fileName: String, taskType: SchedulingType, periodType: Option[PeriodType], period: Option[Int], endDateAndTime: Option[String], occurrences: Option[Int]): CreateTaskDTO = {
     //val date = getValidDate(startDateAndTime).get
-    val date = stringToDateFormat(startDateAndTime, "yyyy-MM-dd HH:mm:ss")
-    CreateTaskDTO.apply(date, fileName)
+    val startDate = stringToDateFormat(startDateAndTime, "yyyy-MM-dd HH:mm:ss")
+    if(endDateAndTime.isDefined){
+
+      CreateTaskDTO.apply(startDate, fileName, taskType, periodType, period, Some(stringToDateFormat(endDateAndTime.get, "yyyy-MM-dd HH:mm:ss")), occurrences)
+    }
+    else CreateTaskDTO.apply(startDate, fileName, taskType, periodType, period, None, occurrences)
+
   }
 
   /**
@@ -42,8 +54,13 @@ object CreateTaskDTO {
     * This implicit is used on the TaskController when Play's "validate" method is called.
     */
   implicit val createTaskReads: Reads[CreateTaskDTO] = (
-    (JsPath \ "startDateAndTime").read[String] and
-      (JsPath \ "fileName").read[String]
+      (JsPath \ "startDateAndTime").read[String] and
+      (JsPath \ "fileName").read[String] and
+      (JsPath \ "taskType").read[String] and
+      (JsPath \ "periodType").readNullable[String] and
+      (JsPath \ "period").readNullable[Int] and
+      (JsPath \ "endDateAndTime").readNullable[String] and
+      (JsPath \ "occurrences").readNullable[Int]
     ) (CreateTaskDTO.construct _)
 
   /**

@@ -89,7 +89,7 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
     * Retrieves a fileId of a row on the database by providing the fileName.
     * @param fileName Name of the file given by the user on the database.
     */
-  def selectFileIdFromName(fileName: String): Future[String] = {
+  def selectFileIdFromFileName(fileName: String): Future[String] = {
     exec(selectByFileName(fileName).result.head.map(_.fileId))
   }
 

@@ -63,7 +63,7 @@ trait FileRepository {
     *
     * @param fileName Name of the file given by the user on the database.
     */
-  def selectFileIdFromName(fileName: String): Future[String]
+  def selectFileIdFromFileName(fileName: String): Future[String]
 
   /**
     * Retrieves a fileName of a row on the database by providing the fileId.

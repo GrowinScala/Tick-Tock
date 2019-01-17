@@ -26,12 +26,45 @@ trait TaskRepository {
   def selectAllTasks: Future[Seq[TaskDTO]]
 
   /**
-    * Select a single task from the database given an its id
+    * Select a single task from the database by giving its id.
     *
-    * @param id - the identifier of the task we want to select
-    * @return the selected task according to the id given
+    * @param id - the identifier of the task.
+    * @return a TaskDTO of the selected task.
     */
-  def selectTaskById(id: String): Future[Seq[TaskDTO]]
+  def selectTaskByTaskId(id: String): Future[TaskDTO]
+
+  /**
+    *
+    * Select the fileId from a task by giving its taskId.
+    *
+    * @param id - the identifier of the task.
+    * @return a String containing the fileId.
+    */
+  def selectFileIdByTaskId(id: String): Future[String]
+
+  /**
+    * Select the totalOccurrences from a task on the database by giving its id.
+    *
+    * @param id - the identifier of the task.
+    * @return an Int representing the totalOccurrences of the task.
+    */
+  def selectTotalOccurrencesByTaskId(id: String): Future[Option[Int]]
+
+  /**
+    * Select the currentOccurrences from a task on the database by giving its id
+    *
+    * @param id - the identifier of the task we want to select.
+    * @return an Int representing the currentOccurrences of the task.
+    */
+  def selectCurrentOccurrencesByTaskId(id: String): Future[Option[Int]]
+
+  /**
+    *
+    * Reduces the currentOccurrences from a task on the database by 1 by giving its id.
+    *
+    * @param id - the identifier of the task we want to select.
+    */
+  def decrementCurrentOccurrencesByTaskId(id: String): Unit
 
   /**
     * Deletes all tasks from the tasks table on the database.

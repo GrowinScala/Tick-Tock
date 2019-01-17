@@ -3,11 +3,13 @@ package database.repositories.slick
 import java.util.UUID
 
 import api.dtos.TaskDTO
+import api.services.{PeriodType, SchedulingType}
 import database.mappings.TaskMappings.{TaskRow, _}
 import database.repositories.TaskRepository
 import slick.dbio.DBIO
 import slick.jdbc.MySQLProfile.api._
 import database.repositories.FileRepository
+import api.utils.DTOUtils._
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
@@ -35,7 +37,17 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
     exec(selectAllFromTasksTable.result).flatMap { seq =>
       Future.sequence {
         seq.map { elem =>
-          fileRepo.selectFileNameFromFileId(elem.fileId).map(name => TaskDTO(elem.taskId, elem.startDateAndTime, name))
+          fileRepo.selectFileNameFromFileId(elem.fileId).map{ name =>
+            elem.period match{
+              case 0 /*RunOnce*/=> TaskDTO(elem.taskId, elem.startDateAndTime, name, SchedulingType.RunOnce)
+              case 1 /*Minutely*/=> TaskDTO(elem.taskId, elem.startDateAndTime, name, SchedulingType.Periodic, Some(PeriodType.Minutely), elem.value, elem.endDateAndTime, elem.currentOccurrences)
+              case 2 /*Hourly*/=> TaskDTO(elem.taskId, elem.startDateAndTime, name, SchedulingType.Periodic, Some(PeriodType.Hourly), elem.value, elem.endDateAndTime, elem.currentOccurrences)
+              case 3 /*Daily*/=> TaskDTO(elem.taskId, elem.startDateAndTime, name, SchedulingType.Periodic, Some(PeriodType.Daily), elem.value, elem.endDateAndTime, elem.currentOccurrences)
+              case 4 /*Weekly*/=> TaskDTO(elem.taskId, elem.startDateAndTime, name, SchedulingType.Periodic, Some(PeriodType.Weekly), elem.value, elem.endDateAndTime, elem.currentOccurrences)
+              case 5 /*Monthly*/=> TaskDTO(elem.taskId, elem.startDateAndTime, name, SchedulingType.Periodic, Some(PeriodType.Monthly), elem.value, elem.endDateAndTime, elem.currentOccurrences)
+              case 6 /*Yearly*/=> TaskDTO(elem.taskId, elem.startDateAndTime, name, SchedulingType.Periodic, Some(PeriodType.Yearly), elem.value, elem.endDateAndTime, elem.currentOccurrences)
+            }
+          }
         }
       }
     }
@@ -47,18 +59,30 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
     * @param id - the identifier of the task we want to select
     * @return the selected task according to the id given
     */
-  def selectTaskById(id: String): Future[Seq[TaskDTO]] = {
-    exec(selectByTaskId(id).result).flatMap { seq =>
-      Future.sequence {
-        seq.map { elem =>
-          fileRepo.selectFileNameFromFileId(elem.fileId).map(name => TaskDTO(elem.taskId, elem.startDateAndTime, name))}
-      }
+  def selectTaskByTaskId(id: String): Future[TaskDTO] = {
+    exec(selectByTaskId(id).result).map{seq =>
+      taskRowToTaskDTO(seq.head)
     }
   }
 
-  def selectFileIdFromTaskId(taskId: String): Future[String] = {
-    selectTaskById(taskId).flatMap{
-      seq => fileRepo.selectFileIdFromName(seq.head.fileName) //TODO: Improve implementation.
+
+  def selectFileIdByTaskId(id: String): Future[String] = {
+    selectTaskByTaskId(id).flatMap{
+      elem => fileRepo.selectFileIdFromFileName(elem.fileName) //TODO: Improve implementation.
+    }
+  }
+
+  def selectTotalOccurrencesByTaskId(id: String): Future[Option[Int]] = {
+    exec(selectByTaskId(id).result.head.map(_.totalOccurrences))
+  }
+
+  def selectCurrentOccurrencesByTaskId(id: String): Future[Option[Int]] = {
+    exec(selectByTaskId(id).result.head.map(_.currentOccurrences))
+  }
+
+  def decrementCurrentOccurrencesByTaskId(id: String): Unit = {
+    selectCurrentOccurrencesByTaskId(id).map{
+      elem => exec(selectByTaskId(id).map(_.currentOccurrences).update(Some(elem.get - 1)))
     }
   }
 
@@ -89,9 +113,8 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
     * @param task TaskDTO to be inserted.
     */
   def insertInTasksTable(task: TaskDTO): Future[Boolean] = {
-    fileRepo.existsCorrespondingFileName(task.fileName).flatMap { exists =>
-      if(exists)
-        fileRepo.selectFileIdFromName(task.fileName).flatMap(fileId => exec(insertTask(TaskRow(task.taskId, fileId, task.startDateAndTime))).map(i => i == 1))
+    fileRepo.existsCorrespondingFileName(task.fileName).flatMap {exists =>
+      if(exists) exec(insertTask(taskDTOToTaskRow(task))).map(i => i == 1)
       else Future.successful(false)
     }
   }

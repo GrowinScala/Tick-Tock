@@ -33,43 +33,6 @@ object DateUtils {
     new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
   )
 
-
-  //---------------------------------------------------------
-  //# DATE VALIDATORS
-  //---------------------------------------------------------
-
-  /**
-    * Method that validates a String representing a date and verifies if it follows any
-    * of the permitted formats in the dateFormatsList and attempts to parse it accordingly.
-    * @param date Date in a string format.
-    * @return Returns the parsed date if the received String is valid encapsulated as an Option[Date].
-    *         Returns None if not.
-    */
-  def getValidDate(date: String): Option[Date] = {
-    dateFormatsList.flatMap { format =>
-      format.setLenient(false)
-      Try(Some(format.parse(date))).getOrElse(None)
-    }.headOption
-  }
-
-  /**
-    * Checks if the date given is valid, (if it already happened or not)
-    * @param date The Date to be checked
-    * @return Returns a ValidationError if its not valid. None otherwise.
-  */
-  def isValidDateValue(date: Date): Boolean = {
-    date.after(getCurrentDate)
-  }
-
-  /**
-    * Checks if the given fileName exists.
-    * @param fileName The fileName to be checked.
-    * @return Returns a ValidationError if its not valid. None otherwise.
-    */
-  def isValidFileName(fileName: String): Boolean = {
-    Await.result(fileRepo.existsCorrespondingFileName(fileName), 5 seconds)
-  }
-
   //---------------------------------------------------------
   //# AUXILIARY
   //---------------------------------------------------------

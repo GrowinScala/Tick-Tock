@@ -1,19 +1,19 @@
 package api.controllers
 
-import java.nio.file.Paths
+import java.io.File
+import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import java.util.UUID
 
 import javax.inject.Singleton
 import org.apache.commons.io.FilenameUtils
 import play.api.mvc._
 import javax.inject.Inject
-import play.api.libs.Files
 import play.api.libs.json._
 import java.util.UUID._
 
 import api.dtos.FileDTO
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import api.utils.DateUtils._
 import database.repositories.{FileRepository, TaskRepository}
 import database.repositories.slick.{FileRepositoryImpl, TaskRepositoryImpl}
@@ -21,31 +21,52 @@ import database.repositories.slick.{FileRepositoryImpl, TaskRepositoryImpl}
 @Singleton
 class FileController @Inject()(cc: ControllerComponents, fileRepo: FileRepository, taskRepo: TaskRepository)(implicit exec: ExecutionContext) extends AbstractController(cc){
 
-  final val MAX_FILE_SIZE = 1024*1024*300 // 300MB
-
   def index = Action {
     Ok("It works!")
   }
 
-  def upload: Action[MultipartFormData[Files.TemporaryFile]] = Action(parse.multipartFormData(MAX_FILE_SIZE)) { request =>
-    request.body.file("file").map { file =>
+  def upload: Action[AnyContent] = Action.async { request =>
+    request.body.asMultipartFormData.get.file("file").map{
+      file =>
+        if(FilenameUtils.getExtension(file.filename) == "jar") {
+          //val storageName = Paths.get(file.filename).getFileName.toString
+          val uuid = randomUUID().toString
+          val fileName = request.body.asMultipartFormData.get.dataParts.head._2.head
+          val uploadDate = getCurrentDateTimestamp
+          fileRepo.existsCorrespondingFileName(fileName).map{elem =>
+            if(elem) Future.successful(BadRequest("File name already exists."))
+          }
+          val initialFilePath = Paths.get(s"C:/Users/Pedro/Desktop/$uuid")
+          val finalFilePath = Paths.get(s"app/filestorage/$uuid" + ".jar")
+          file.ref.moveTo(initialFilePath, replace = false)
+          Files.move(initialFilePath, finalFilePath, StandardCopyOption.ATOMIC_MOVE)
+          fileRepo.insertInFilesTable(FileDTO(uuid, fileName, uploadDate))
+          Future.successful(Ok("File uploaded successfully => fileId: " + uuid + ", fileName: " + fileName + ", uploadDate: " + uploadDate))
+        }
+        else Future.successful(BadRequest("File had the wrong extension."))
+    }.getOrElse {
+      Future.successful(BadRequest("File upload went wrong."))
+    }
+  }
+    /*request.asMfile("file").map { file =>
       if(FilenameUtils.getExtension(file.filename) == "jar") {
         //val storageName = Paths.get(file.filename).getFileName.toString
         val uuid = randomUUID().toString
         val fileName = request.body.dataParts.head._2.head
+        val jarName = Paths.get(file.filename).getFileName
         val uploadDate = getCurrentDateTimestamp
         fileRepo.existsCorrespondingFileName(fileName).map{elem =>
           if(elem) BadRequest("File name already exists.")
         }
-        file.ref.moveTo(Paths.get(s"app/filestorage/$uuid" + ".jar"), replace = true)
+        file.ref.moveTo(Paths.get(s"app/filestorage/$uuid" + ".jar"), replace = false)
         fileRepo.insertInFilesTable(FileDTO(uuid, fileName, uploadDate))
         Ok("File uploaded successfully => fileId: " + uuid + ", fileName: " + fileName + ", uploadDate: " + uploadDate)
       }
       else BadRequest("File had the wrong extension.")
     }.getOrElse {
       BadRequest("File upload went wrong.")
-    }
-  }
+    }*/
+
 
   /**
     * Method that retrieves all files in the database

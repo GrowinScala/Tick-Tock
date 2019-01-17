@@ -4,6 +4,7 @@ import java.sql.Timestamp
 import java.util.Date
 import java.util.UUID
 
+import api.services.SchedulingType.SchedulingType
 import slick.jdbc.MySQLProfile.api._
 import database.mappings.FileMappings._
 import play.api.libs.json.{Json, OFormat}
@@ -24,7 +25,12 @@ object TaskMappings {
   case class TaskRow(
                       taskId: String,
                       fileId: String,
-                      startDateAndTime: Date
+                      period: Int,
+                      value: Option[Int],
+                      startDateAndTime: Date,
+                      endDateAndTime: Option[Date],
+                      totalOccurrences: Option[Int],
+                      currentOccurrences: Option[Int]
                     )
 
   //TODO - separate TaskRow
@@ -36,12 +42,17 @@ object TaskMappings {
   class TasksTable(tag: Tag) extends Table[TaskRow](tag, "tasks") {
     def taskId = column[String]("taskId", O.PrimaryKey, O.Length(36))
     def fileId = column[String]("fileId", O.Length(36))
+    def period = column[Int]("period")
+    def value = column[Option[Int]]("value")
     def startDateAndTime = column[Date]("startDateAndTime")
+    def endDateAndTime = column[Option[Date]]("endDateAndTime")
+    def totalOccurrences = column[Option[Int]]("totalOccurrences")
+    def currentOccurrences = column[Option[Int]]("currentOccurrences")
 
     /*def fileIdFK =
       foreignKey("fileId", fileId, filesTable)(_.fileId, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Cascade)*/
 
-    def * = (taskId, fileId, startDateAndTime) <> (TaskRow.tupled, TaskRow.unapply)
+    def * = (taskId, fileId, period, value, startDateAndTime, endDateAndTime, totalOccurrences, currentOccurrences) <> (TaskRow.tupled, TaskRow.unapply)
   }
 
   //---------------------------------------------------------
@@ -78,32 +89,68 @@ object TaskMappings {
   val deleteAllFromTasksTable = tasksTable.delete
 
   //TODO - Define better names
-  def selectByTaskId(id: String): Query[TasksTable, TaskRow, Seq] = {
-    tasksTable.filter(_.taskId === id)
+  def selectByTaskId(taskId: String): Query[TasksTable, TaskRow, Seq] = {
+    tasksTable.filter(_.taskId === taskId)
   }
 
-  def selectByFileId(id: String): Query[TasksTable, TaskRow, Seq] = {
-    tasksTable.filter(_.fileId === id)
+  def selectByFileId(fileId: String): Query[TasksTable, TaskRow, Seq] = {
+    tasksTable.filter(_.fileId === fileId)
+  }
+
+  def selectByPeriod(period: Int): Query[TasksTable, TaskRow, Seq] = {
+    tasksTable.filter(_.period === period)
+  }
+
+  def selectByValue(value: Int): Query[TasksTable, TaskRow, Seq] = {
+    tasksTable.filter(_.value === value)
   }
 
   def selectByStartDateAndTime(startDateAndTime: Date): Query[TasksTable, TaskRow, Seq] = {
     tasksTable.filter(_.startDateAndTime === startDateAndTime)
   }
 
+  def selectByEndDateAndTime(endDateAndTime: Date): Query[TasksTable, TaskRow, Seq] = {
+    tasksTable.filter(_.endDateAndTime === endDateAndTime)
+  }
+
+  def selectByTotalOccurrences(totalOccurrences: Int): Query[TasksTable, TaskRow, Seq] = {
+    tasksTable.filter(_.totalOccurrences === totalOccurrences)
+  }
+
+  def selectByCurrentOccurrences(currentOccurrences: Int): Query[TasksTable, TaskRow, Seq] = {
+    tasksTable.filter(_.currentOccurrences === currentOccurrences)
+  }
+
   def insertTask(task: TaskRow): FixedSqlAction[Int, NoStream, Effect.Write] = {
     tasksTable += task
   }
 
-  def updateTaskByTaskId(id: String, task: TaskRow) = {
-    tasksTable.filter(_.taskId === id).update(task)
+  def updateTaskByTaskId(taskId: String, task: TaskRow) = {
+    tasksTable.filter(_.taskId === taskId).update(task)
   }
 
-  def updateByFileId(id: String, task: TaskRow) = {
-    tasksTable.filter(_.fileId === id).update(task)
+  def updateTaskByFileId(fileId: String, task: TaskRow) = {
+    tasksTable.filter(_.fileId === fileId).update(task)
   }
 
-  def updateByStartDateAndTime(startDateAndTime: Date, task: TaskRow) = {
+  def updateTaskByPeriod(period: Int, task: TaskRow) = {
+    tasksTable.filter(_.period === period).update(task)
+  }
+
+  def updateTaskByStartDateAndTime(startDateAndTime: Date, task: TaskRow) = {
     tasksTable.filter(_.startDateAndTime === startDateAndTime).update(task)
+  }
+
+  def updateTaskByEndDateAndTime(endDateAndTime: Date, task: TaskRow) = {
+    tasksTable.filter(_.endDateAndTime === endDateAndTime).update(task)
+  }
+
+  def updateTaskByTotalOccurrences(totalOccurrences: Int, task: TaskRow) = {
+    tasksTable.filter(_.totalOccurrences === totalOccurrences).update(task)
+  }
+
+  def updateTaskByCurrentOccurrences(currentOccurrences: Int, task: TaskRow) = {
+    tasksTable.filter(_.currentOccurrences === currentOccurrences).update(task)
   }
 
   def deleteByTaskId(id: String) = {
@@ -114,8 +161,28 @@ object TaskMappings {
     tasksTable.filter(_.fileId === id).delete
   }
 
+  def deleteByPeriod(period: Int) = {
+    tasksTable.filter(_.period === period).delete
+  }
+
+  def deleteByValue(value: Int) = {
+    tasksTable.filter(_.value === value).delete
+  }
+
   def deleteByStartDateAndTime(startDateAndTime: Date) = {
     tasksTable.filter(_.startDateAndTime === startDateAndTime).delete
+  }
+
+  def deleteByEndDateAndTime(endDateAndTime: Date) = {
+    tasksTable.filter(_.endDateAndTime === endDateAndTime).delete
+  }
+
+  def deleteByTotalOccurrences(totalOccurrences: Int) = {
+    tasksTable.filter(_.totalOccurrences === totalOccurrences).delete
+  }
+
+  def deleteByCurrentOccurrences(currentOccurrences: Int) = {
+    tasksTable.filter(_.currentOccurrences === currentOccurrences).delete
   }
 
 }

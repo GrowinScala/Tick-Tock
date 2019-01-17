@@ -1,8 +1,7 @@
 package api.controllers
 
 import java.util.UUID
-
-import api.dtos.{CreateTaskDTO, TaskDTO}
+import api.dtos.{TaskDTO, CreateTaskDTO}
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
 import play.api.mvc._
@@ -44,14 +43,15 @@ class TaskController @Inject()(cc: ControllerComponents, fileRepo: FileRepositor
       errors =>
         Future.successful(BadRequest(Json.obj("status" -> "Error:", "message" -> JsError.toJson(errors)))), //TODO - create object Error (extends DefaultHttpErrorHandler)
       task => {
-        val validationResult = taskValidator(task)
+        val validationResult = scheduleValidator(task)
         if(validationResult.isDefined)
           Future.successful(BadRequest(JsArray(validationResult.get.map(error => Json.toJsObject(error)).toIndexedSeq)))
         else{
-          val taskId = UUID.randomUUID().toString
-          taskRepo.insertInTasksTable(TaskDTO(taskId, task.startDateAndTime, task.fileName))
-          scheduleOnce(taskId, task.startDateAndTime)
-          Future.successful(Ok)
+          println(task.startDateAndTime)
+          val taskDto: TaskDTO = TaskDTO(UUID.randomUUID().toString, task.startDateAndTime, task.fileName, task.taskType, task.periodType, task.period, task.endDateAndTime, task.occurrences, task.occurrences)
+          taskRepo.insertInTasksTable(taskDto)
+          scheduleTask(taskDto)
+          Future.successful(Ok("Task received."))
         }
       }
     )
@@ -76,9 +76,9 @@ class TaskController @Inject()(cc: ControllerComponents, fileRepo: FileRepositor
     * @return the task corresponding to the given idl
     */
   def getScheduleById(id: String): Action[AnyContent] = Action.async { //TODO - Error handling ID
-    taskRepo.selectTaskById(id).map { seq =>
-      val result = JsArray(seq.map(tr => Json.toJsObject(tr)))
-      Ok(result)
+    taskRepo.selectTaskByTaskId(id).map { elem =>
+      //val result = JsArray(seq.map(tr => Json.toJsObject(tr)))
+      Ok(Json.toJsObject(elem))
     }
   }
 
@@ -97,5 +97,4 @@ class TaskController @Inject()(cc: ControllerComponents, fileRepo: FileRepositor
       task => Future.successful(Ok("Something"))
     )
   }
-
 }

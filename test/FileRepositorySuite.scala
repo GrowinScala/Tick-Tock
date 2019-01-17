@@ -65,10 +65,10 @@ class FileRepositorySuite extends PlaySpec with BeforeAndAfterAll with BeforeAnd
       val uuid2 = UUID.randomUUID().toString
       fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
       fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
-      fileRepo.selectFileIdFromName("test1").map(elem =>
+      fileRepo.selectFileIdFromFileName("test1").map(elem =>
         fileRepo.existsCorrespondingFileId(elem).map(result => assert(result))
       )
-      fileRepo.selectFileIdFromName("test2").map(elem =>
+      fileRepo.selectFileIdFromFileName("test2").map(elem =>
         fileRepo.existsCorrespondingFileId(elem).map(result => assert(result))
       )
       val uuidWrong = UUID.randomUUID().toString
@@ -100,9 +100,9 @@ class FileRepositorySuite extends PlaySpec with BeforeAndAfterAll with BeforeAnd
       fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
       fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
       fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
-      fileRepo.selectFileIdFromName("test1").map(result => assert(result == uuid1))
-      fileRepo.selectFileIdFromName("test2").map(result => assert(result == uuid2))
-      fileRepo.selectFileIdFromName("test3").map(result => assert(result == uuid3))
+      fileRepo.selectFileIdFromFileName("test1").map(result => assert(result == uuid1))
+      fileRepo.selectFileIdFromFileName("test2").map(result => assert(result == uuid2))
+      fileRepo.selectFileIdFromFileName("test3").map(result => assert(result == uuid3))
     }
   }
 
