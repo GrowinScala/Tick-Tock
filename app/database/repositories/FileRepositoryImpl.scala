@@ -1,28 +1,27 @@
-package database.repositories.slick
-
-import java.util.UUID
+package database.repositories
 
 import api.dtos.FileDTO
 import database.mappings.FileMappings._
+import javax.inject.Inject
 import slick.dbio.DBIO
 import slick.jdbc.MySQLProfile.api._
-import database.repositories.FileRepository
 
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
-class FileRepositoryImpl(dtbase: Database) extends FileRepository{
+class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository{
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
-  def exec[T](action: DBIO[T]): Future[T] = dtbase.run(action)
+  private def fileRowToFileDTO(file: FileRow) = {
+    FileDTO(file.fileId, file.fileName, file.uploadDate)
+  }
 
   /**
     * Selects all rows from the files table on the database.
     * @return
     */
   def selectAllFiles: Future[Seq[FileDTO]] = {
-    exec(selectAllFromFilesTable.result).map{seq =>
+    dtbase.run(selectAllFromFilesTable.result).map{seq =>
       seq.map(elem => FileDTO(elem.fileId, elem.fileName, elem.uploadDate))
     }
   }
@@ -30,12 +29,8 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
   /**
     *
     */
-  def selectFileById(id: String): Future[Seq[FileDTO]] = {
-    exec(selectById(id).result).map{
-      seq => seq.map {
-        elem => FileDTO(elem.fileId, elem.fileName, elem.uploadDate)
-      }
-    }
+  def selectFileById(id: String): Future[FileDTO] = {
+    dtbase.run(selectById(id).result).map(seq => fileRowToFileDTO(seq.head))
   }
 
   /**
@@ -43,28 +38,28 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
     * @return
     */
   def deleteAllFiles: Future[Int] = {
-    exec(deleteAllFromFilesTable)
+    dtbase.run(deleteAllFromFilesTable)
   }
 
   /**
     *
     */
   def deleteFileById(id: String): Future[Int] = {
-    exec(deleteById(id))
+    dtbase.run(deleteById(id))
   }
 
   /**
     * Creates the files table on the database.
     */
-  def createFilesTable: Unit = {
-    exec(createFilesTableAction)
+  def createFilesTable: Future[Unit] = {
+    dtbase.run(createFilesTableAction)
   }
 
   /**
     * Drops the files table on the database.
     */
-  def dropFilesTable: Unit = {
-    exec(dropFilesTableAction)
+  def dropFilesTable: Future[Unit] = {
+    dtbase.run(dropFilesTableAction)
   }
 
   /**
@@ -73,7 +68,7 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
     * @return true if row exists, false if not.
     */
   def existsCorrespondingFileId(fileId: String): Future[Boolean] = {
-    exec(selectById(fileId).exists.result)
+    dtbase.run(selectById(fileId).exists.result)
   }
 
   /**
@@ -82,7 +77,7 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
     * @return true if row exists, false if not.
     */
   def existsCorrespondingFileName(fileName: String): Future[Boolean] = {
-    exec(selectByFileName(fileName).exists.result)
+    dtbase.run(selectByFileName(fileName).exists.result)
   }
 
   /**
@@ -90,7 +85,7 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
     * @param fileName Name of the file given by the user on the database.
     */
   def selectFileIdFromFileName(fileName: String): Future[String] = {
-    exec(selectByFileName(fileName).result.head.map(_.fileId))
+    dtbase.run(selectByFileName(fileName).result.head.map(_.fileId))
   }
 
   /**
@@ -98,33 +93,22 @@ class FileRepositoryImpl(dtbase: Database) extends FileRepository{
     * @param fileId Id of the file on the database.
     */
   def selectFileNameFromFileId(fileId: String): Future[String] = {
-    exec(selectById(fileId).map(_.fileName).result.head)
+    dtbase.run(selectById(fileId).map(_.fileName).result.head)
   }
-
-  /*
-  /**
-    * Retrieves a storageName of a row on the database by providing the fileName.
-    * @param fileName Name of the file given by the user on the database.
-    */
-  def selectStorageNameFromFileName(fileName: String): Future[String] = {
-    exec(selectByFileName(fileName).map(_.storageName).result.head)
-  }
-
-  /**
-    * Retrieves a fileName of a row on the database by providing the storageName.
-    * @param storageName Name of the file on the storage folder on the database.
-    */
-  def selectFileNameFromStorageName(storageName: String): Future[String] = {
-    exec(selectByStorageName(storageName).map(_.fileName).result.head)
-  }
-  */
 
   /**
     * Method that inserts a file (row) on the files table on the database.
     * @param file FileDTO to be inserted on the database.
     */
-  def insertInFilesTable(file: FileDTO): Unit = {
-    exec(insertFile(FileRow(file.fileId, file.fileName, file.uploadDate)))
+  def insertInFilesTable(file: FileDTO): Future[Boolean] = {
+    dtbase.run(insertFile(FileRow(file.fileId, file.fileName, file.uploadDate)).map(i => i == 1))
+
+    /*exec(insertFile(FileRow(file.fileId, file.fileName, file.uploadDate)))*/
+
+    /*fileRepo.existsCorrespondingFileName(task.fileName).flatMap {exists =>
+      if(exists) taskDTOToTaskRow(task).flatMap(elem => exec(insertTask(elem)).map(i => i == 1))
+      else Future.successful(false)
+    }*/
   }
 
 }

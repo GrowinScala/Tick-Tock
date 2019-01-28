@@ -1,11 +1,13 @@
 package database.mappings
 
 import java.sql.Timestamp
-import java.util.{Date, UUID}
+import java.util.Date
 
 import play.api.libs.json.{Json, OFormat}
+import slick.dbio.Effect
+import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._
-
+import slick.sql.FixedSqlAction
 
 /**
   * Object that contains the representation of the File table Row,
@@ -18,10 +20,10 @@ object FileMappings {
   //# ROW REPRESENTATION
   //---------------------------------------------------------
   case class FileRow(
-                   fileId: String,
-                   fileName: String,
-                   uploadDate: Date
-                 )
+                      fileId: String,
+                      fileName: String,
+                      uploadDate: Date
+                    )
 
   implicit val fileRowFormat: OFormat[FileRow] = Json.format[FileRow]
 
@@ -37,7 +39,7 @@ object FileMappings {
   }
 
   //---------------------------------------------------------
-  //# TYPE MAPPINGS
+  //# FILES TABLE TYPE MAPPINGS
   //---------------------------------------------------------
   implicit val dateColumnType: BaseColumnType[Date] = MappedColumnType.base[Date, Timestamp](dateToTimestamp, timestampToDate)
   private def dateToTimestamp(date: Date): Timestamp = new Timestamp(date.getTime)
@@ -54,38 +56,35 @@ object FileMappings {
   //---------------------------------------------------------
   lazy val filesTable = TableQuery[FilesTable]
   val createFilesTableAction = filesTable.schema.create
-  /*val createFilesTableActionSQL = sqlu"""
-    CREATE TABLE `ticktock`.`files` (
-    `fileId` VARCHAR(36) NOT NULL,
-    `fileName` VARCHAR(50) NOT NULL,
-    `uploadDate` TIMESTAMP NOT NULL,
-    PRIMARY KEY (`fileId`),
-    UNIQUE INDEX `fileName_UNIQUE` (`fileName` ASC) VISIBLE);""".*/
   val dropFilesTableAction = filesTable.schema.drop
-  //val dropFilesTableActionSQL = sqlu"DROP TABLE `ticktock`.`files`;"
   val selectAllFromFilesTable = filesTable
   val deleteAllFromFilesTable = filesTable.delete
 
-  def selectById(id: String) = {
+  def selectById(id: String): Query[FilesTable, FileRow, Seq] = {
     filesTable.filter(_.fileId === id)
   }
-  def selectByFileName(name: String)  = {
+
+  def selectByFileName(name: String): Query[FilesTable, FileRow, Seq] = {
     filesTable.filter(_.fileName === name)
   }
-  def insertFile(file: FileRow) = {
+
+  def insertFile(file: FileRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     filesTable += file
   }
-  def updateById(id: String, file: FileRow)= {
+
+  def updateById(id: String, file: FileRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     filesTable.filter(_.fileId === id).update(file)
   }
-  def updateByFileName(name: String, file: FileRow) = {
+
+  def updateByFileName(name: String, file: FileRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     filesTable.filter(_.fileName === name).update(file)
   }
-  def deleteById(id: String) = {
+
+  def deleteById(id: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     filesTable.filter(_.fileId === id).delete
   }
-  def deleteByFileName(name: String) = {
+
+  def deleteByFileName(name: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     filesTable.filter(_.fileName === name).delete
   }
-
 }

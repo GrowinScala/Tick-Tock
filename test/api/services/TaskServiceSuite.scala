@@ -1,8 +1,5 @@
-import java.text.SimpleDateFormat
+package api.services
 
-import api.services.SchedulingType
-import executionengine.ExecutionJob
-import org.scalatest.FunSuite
 import org.scalatestplus.play.PlaySpec
 
 class TaskServiceSuite extends PlaySpec{

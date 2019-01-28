@@ -1,13 +1,14 @@
 package api.controllers
 
 import java.util.UUID
-import api.dtos.{TaskDTO, CreateTaskDTO}
+
+import api.dtos.{CreateTaskDTO, TaskDTO}
+import api.services.TaskService
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
 import play.api.mvc._
-import api.services.TaskService._
 import database.repositories.{FileRepository, TaskRepository}
-import api.validators.Validator._
+import api.validators.TaskValidator
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -19,7 +20,7 @@ import scala.concurrent.{ExecutionContext, Future}
   * @param cc standard controller components
   */
 @Singleton
-class TaskController @Inject()(cc: ControllerComponents, fileRepo: FileRepository, taskRepo: TaskRepository)(implicit exec: ExecutionContext) extends AbstractController(cc){
+class TaskController @Inject()(cc: ControllerComponents)(implicit exec: ExecutionContext, implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository) extends AbstractController(cc){
 
   /**
     * Method that runs when a GET request is made on localhost:9000/
@@ -43,15 +44,16 @@ class TaskController @Inject()(cc: ControllerComponents, fileRepo: FileRepositor
       errors =>
         Future.successful(BadRequest(Json.obj("status" -> "Error:", "message" -> JsError.toJson(errors)))), //TODO - create object Error (extends DefaultHttpErrorHandler)
       task => {
-        val validationResult = scheduleValidator(task)
-        if(validationResult.isDefined)
-          Future.successful(BadRequest(JsArray(validationResult.get.map(error => Json.toJsObject(error)).toIndexedSeq)))
-        else{
-          println(task.startDateAndTime)
-          val taskDto: TaskDTO = TaskDTO(UUID.randomUUID().toString, task.startDateAndTime, task.fileName, task.taskType, task.periodType, task.period, task.endDateAndTime, task.occurrences, task.occurrences)
-          taskRepo.insertInTasksTable(taskDto)
-          scheduleTask(taskDto)
-          Future.successful(Ok("Task received."))
+        val taskValidator = new TaskValidator
+        val validationResult = taskValidator.scheduleValidator(task)
+        validationResult match{
+          case Left(errorList) =>
+            Future.successful(BadRequest(JsArray(errorList.map(error => Json.toJsObject(error)).toIndexedSeq)))
+          case Right(taskDto) =>
+            taskRepo.insertInTasksTable(taskDto)
+            val taskService = new TaskService
+            taskService.scheduleTask(taskDto)
+            Future.successful(Ok("Task received."))
         }
       }
     )

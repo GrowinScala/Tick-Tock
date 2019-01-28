@@ -5,9 +5,7 @@ import java.util.UUID
 import akka.actor.FSM.Failure
 import akka.actor.Status.Success
 import api.dtos.TaskDTO
-import database.mappings.TaskMappings
-import database.mappings.TaskMappings.TaskRow
-import database.mappings.TaskMappings._
+import slick.dbio.DBIO
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -64,22 +62,22 @@ trait TaskRepository {
     *
     * @param id - the identifier of the task we want to select.
     */
-  def decrementCurrentOccurrencesByTaskId(id: String): Unit
+  def decrementCurrentOccurrencesByTaskId(id: String): Future[Unit]
 
   /**
     * Deletes all tasks from the tasks table on the database.
     */
-  def deleteAllTasks: Unit
+  def deleteAllTasks: Future[Int]
 
   /**
     * Creates the tasks table on the database.
     */
-  def createTasksTable: Unit
+  def createTasksTable: Future[Unit]
 
   /**
     * Drops the tasks table on the database.
     */
-  def dropTasksTable: Unit
+  def dropTasksTable: Future[Unit]
 
   /**
     * Inserts a task (row) on the tasks table on the database.

@@ -5,17 +5,17 @@ import java.text.SimpleDateFormat
 import java.util.{Calendar, Date}
 
 import api.validators.Error
-import api.validators.Error.{fileNameNotFound, invalidDateValue}
-import database.repositories.slick.FileRepositoryImpl
+import database.repositories.{FileRepository, FileRepositoryImpl}
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 import scala.concurrent.duration._
 import database.utils.DatabaseUtils._
+import javax.inject.{Inject, Singleton}
 
-object DateUtils {
 
-  val fileRepo = new FileRepositoryImpl(DEFAULT_DB)
+object DateUtils{
+
   implicit val ec = ExecutionContext.global
 
   //---------------------------------------------------------
@@ -69,6 +69,18 @@ object DateUtils {
   def dateToStringFormat(date: Date, format: String): String ={
     val sdf = new SimpleDateFormat(format)
     sdf.format(date)
+  }
+
+  /**
+    * Tries do parse a String and convert it into a Date with a valid format. (see dateFormatsList above)
+    * @param date String specifying the date to be parsed.
+    * @return Some(Date) if the date could be parsed. None otherwise
+    */
+  def parseDate(date: String): Option[Date] = {
+    dateFormatsList.flatMap { format =>
+      format.setLenient(false)
+      Try(Some(format.parse(date))).getOrElse(None)
+    }.headOption
   }
 
   /**

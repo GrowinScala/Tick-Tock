@@ -12,14 +12,14 @@ import play.api.libs.json._
 import java.util.UUID._
 
 import api.dtos.FileDTO
+import api.utils.DateUtils._
 
 import scala.concurrent.{ExecutionContext, Future}
-import api.utils.DateUtils._
-import database.repositories.{FileRepository, TaskRepository}
-import database.repositories.slick.{FileRepositoryImpl, TaskRepositoryImpl}
+import database.repositories.{FileRepository, TaskRepository, TaskRepositoryImpl}
+import api.validators.Error._
 
 @Singleton
-class FileController @Inject()(cc: ControllerComponents, fileRepo: FileRepository, taskRepo: TaskRepository)(implicit exec: ExecutionContext) extends AbstractController(cc){
+class FileController @Inject()(cc: ControllerComponents)(implicit exec: ExecutionContext, implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository) extends AbstractController(cc) {
 
   def index = Action {
     Ok("It works!")
@@ -29,12 +29,12 @@ class FileController @Inject()(cc: ControllerComponents, fileRepo: FileRepositor
     request.body.asMultipartFormData.get.file("file").map{
       file =>
         if(FilenameUtils.getExtension(file.filename) == "jar") {
-          //val storageName = Paths.get(file.filename).getFileName.toString
+          val storageName = file.filename
           val uuid = randomUUID().toString
           val fileName = request.body.asMultipartFormData.get.dataParts.head._2.head
           val uploadDate = getCurrentDateTimestamp
           fileRepo.existsCorrespondingFileName(fileName).map{elem =>
-            if(elem) Future.successful(BadRequest("File name already exists."))
+            if(elem) Future.successful(BadRequest(Json.toJsObject(invalidUploadFileName)))
           }
           val initialFilePath = Paths.get(s"C:/Users/Pedro/Desktop/$uuid")
           val finalFilePath = Paths.get(s"app/filestorage/$uuid" + ".jar")
@@ -43,9 +43,9 @@ class FileController @Inject()(cc: ControllerComponents, fileRepo: FileRepositor
           fileRepo.insertInFilesTable(FileDTO(uuid, fileName, uploadDate))
           Future.successful(Ok("File uploaded successfully => fileId: " + uuid + ", fileName: " + fileName + ", uploadDate: " + uploadDate))
         }
-        else Future.successful(BadRequest("File had the wrong extension."))
+        else Future.successful(BadRequest(Json.toJsObject(invalidFileExtension)))
     }.getOrElse {
-      Future.successful(BadRequest("File upload went wrong."))
+      Future.successful(BadRequest(Json.toJsObject(invalidUploadFormat)))
     }
   }
     /*request.asMfile("file").map { file =>
@@ -87,10 +87,7 @@ class FileController @Inject()(cc: ControllerComponents, fileRepo: FileRepositor
     * @return the file corresponding to the id given
     */
   def getFileById(id: String): Action[AnyContent] = Action.async {
-    fileRepo.selectFileById(id).map { seq =>
-      val result = JsArray(seq.map(tr => Json.toJsObject(tr)))
-      Ok(result)
-    }
+    fileRepo.selectFileById(id).map(tr => Ok(Json.toJsObject(tr)))
   }
 
   /**

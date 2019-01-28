@@ -10,8 +10,9 @@ import java.time.Duration._
 
 import api.services.SchedulingType
 import api.utils.DateUtils._
-import database.repositories.slick.{FileRepositoryImpl, TaskRepositoryImpl}
+import database.repositories.{FileRepository, TaskRepository, TaskRepositoryImpl}
 import database.utils.DatabaseUtils._
+import javax.inject.Inject
 
 import scala.concurrent.{Await, ExecutionContext}
 
@@ -25,11 +26,9 @@ import scala.concurrent.{Await, ExecutionContext}
   * @param datetime Date of when the file is run. (If Periodic, it represents the first execution)
   * @param interval Time interval between each execution. (Only applicable in a Periodic task)
   */
-class ExecutionJob(taskId: String, fileId: String, schedulingType: SchedulingType, startDate: Date, interval: Option[Duration] = Some(ZERO), endDate: Option[Date] = None) {
+class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: SchedulingType, startDate: Date, interval: Option[Duration] = Some(ZERO), endDate: Option[Date] = None)(implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository) {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
-  val fileRepo = new FileRepositoryImpl(DEFAULT_DB)
-  val taskRepo = new TaskRepositoryImpl(DEFAULT_DB)
 
   /**
     * Actor and Runnable that handles file executions.

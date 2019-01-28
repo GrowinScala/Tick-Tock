@@ -4,12 +4,8 @@ import java.util.UUID
 
 import akka.actor.Cancellable
 import api.dtos.{FileDTO, TaskDTO}
-import api.services.TaskService._
-import database.repositories.slick.{FileRepositoryImpl, TaskRepositoryImpl}
 import slick.jdbc.MySQLProfile.api._
-import api.utils.DateUtils._
-import database.mappings.FileMappings.FileRow
-import database.repositories.{FileRepository, TaskRepository}
+import database.repositories.{FileRepository, FileRepositoryImpl, TaskRepository, TaskRepositoryImpl}
 import database.utils.DatabaseUtils._
 import slick.dbio
 
@@ -23,8 +19,6 @@ import scala.util.Success
 object TickTock {
 
   implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
-  val fileRepo = new FileRepositoryImpl(DEFAULT_DB)
-  val taskRepo = new TaskRepositoryImpl(DEFAULT_DB)
 
   val taskMap: Map[String, Cancellable] = Map[String, Cancellable]()
 

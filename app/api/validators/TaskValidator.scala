@@ -2,14 +2,14 @@ package api.validators
 
 import java.nio.file.{FileSystems, Files}
 import java.text.{DateFormat, SimpleDateFormat}
-import java.util.Date
+import java.util.{Date, UUID}
 
 import api.dtos.{CreateTaskDTO, FileDTO, TaskDTO}
-import play.api.libs.json._
-import api.dtos.TaskDTO._
-import api.services.SchedulingType
-import api.validators.Error._
 import api.utils.DateUtils._
+import api.validators.Error._
+import database.repositories.{FileRepository, FileRepositoryImpl}
+import database.utils.DatabaseUtils.DEFAULT_DB
+import javax.inject.{Inject, Singleton}
 
 import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
@@ -18,23 +18,36 @@ import scala.util.Try
 /**
   * Object that handles the validation for the received JSON's on the HTTP request controller classes.
   */
-object Validator {
+@Singleton
+class TaskValidator @Inject() (implicit val fileRepo: FileRepository){
+
+
+  implicit val ec = ExecutionContext.global
 
   //---------------------------------------------------------
   //# TASK VALIDATORS
   //---------------------------------------------------------
 
-  def scheduleValidator(task: CreateTaskDTO): Option[List[Error]] = {
+  def scheduleValidator(task: CreateTaskDTO): Either[List[Error],TaskDTO] = {
+    val startDate = isValidStartDateFormat(task.startDateAndTime)
+    val endDate = isValidEndDateFormat(task.endDateAndTime)
     val errorList = List(
-      //(isValidDateValue(task.startDateAndTime), invalidDateValue),
+      (isValidTask(task), invalidScheduleFormat),
+      (startDate.isDefined, invalidStartDateFormat),
+      (isValidStartDateValue(startDate), invalidStartDateValue),
       (isValidFileName(task.fileName), invalidFileName),
-      //(isValidTaskFormat(task), invalidTaskFormat)
+      (isValidTaskType(task.taskType), invalidTaskType),
+      (isValidPeriodType(task.periodType), invalidPeriodType),
+      (isValidPeriod(task.period), invalidPeriod),
+      (task.endDateAndTime.isEmpty || endDate.isDefined, invalidEndDateFormat),
+      (isValidEndDateValue(startDate, endDate), invalidEndDateValue),
+      (isValidOccurrences(task.occurrences), invalidOccurrences)
     ).filter(!_._1)
-    if(errorList.isEmpty) None
-    else Some(errorList.unzip._2)
+    if(errorList.isEmpty) Right(TaskDTO(UUID.randomUUID().toString, startDate.get, task.fileName, task.taskType, task.periodType, task.period, endDate, task.occurrences, task.occurrences))
+    else Left(errorList.unzip._2)
   }
 
-  /**
+  /*/**
     * Method that validates a String representing a date and verifies if it follows any
     * of the permitted formats in the dateFormatsList and attempts to parse it accordingly.
     * @param date Date in a string format.
@@ -46,6 +59,24 @@ object Validator {
       format.setLenient(false)
       Try(Some(format.parse(date))).getOrElse(None)
     }.headOption
+  }*/
+
+  private def isValidTask(task: CreateTaskDTO): Boolean ={
+    task.taskType match{
+      case "RunOnce" =>
+        task.periodType.isEmpty ||
+        task.period.isEmpty ||
+        task.endDateAndTime.isEmpty ||
+        task.occurrences.isEmpty
+      case "Periodic" =>
+        task.periodType.isDefined && task.period.isDefined &&
+          ((task.endDateAndTime.isDefined && task.occurrences.isEmpty) || (task.endDateAndTime.isEmpty && task.occurrences.isDefined))
+      case _ => false
+    }
+  }
+
+  private def isValidStartDateFormat(date: String): Option[Date] ={
+    parseDate(date)
   }
 
   /**
@@ -53,17 +84,50 @@ object Validator {
     * @param date The Date to be checked
     * @return Returns a ValidationError if its not valid. None otherwise.
     */
-  private def isValidDateValue(date: Date): Boolean = {
-    date.after(getCurrentDate)
+  private def isValidStartDateValue(startDate: Option[Date]): Boolean = {
+    if(startDate.isDefined) startDate.get.after(getCurrentDate)
+    else true
   }
 
   /**
-    * Checks if the given fileName exists.
+    * Checks if the file with the given fileName exists.
     * @param fileName The fileName to be checked.
     * @return Returns a ValidationError if its not valid. None otherwise.
     */
   private def isValidFileName(fileName: String): Boolean = {
-    Await.result(fileRepo.existsCorrespondingFileName(fileName), 5 seconds)
+    Await.result(fileRepo.existsCorrespondingFileName(fileName), Duration.Inf)
+  }
+
+  private def isValidTaskType(taskType: String): Boolean = {
+    taskType.equals("RunOnce") || taskType.equals("Periodic")
+  }
+
+  private def isValidPeriodType(periodType: Option[String]): Boolean = {
+    periodType.isEmpty ||
+    periodType.get.equals("Minutely") ||
+    periodType.get.equals("Hourly") ||
+    periodType.get.equals("Daily") ||
+    periodType.get.equals("Weekly") ||
+    periodType.get.equals("Monthly") ||
+    periodType.get.equals("Yearly")
+  }
+
+  private def isValidPeriod(period: Option[Int]): Boolean ={
+    period.isEmpty || period.get > 0
+  }
+
+  private def isValidEndDateFormat(endDate: Option[String]): Option[Date] = {
+    if(endDate.isDefined) parseDate(endDate.get)
+    else None
+  }
+
+  private def isValidEndDateValue(startDate: Option[Date], endDate: Option[Date]): Boolean = {
+    if(startDate.isDefined && endDate.isDefined) endDate.isEmpty || endDate.get.after(startDate.get)
+    else true
+  }
+
+  private def isValidOccurrences(occurrences: Option[Int]): Boolean = {
+    occurrences.isEmpty || occurrences.get > 0
   }
 
   /*private def isValidTaskFormat(task: CreateTaskDTO): Boolean = {

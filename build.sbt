@@ -19,6 +19,7 @@ libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.7.0-a
 libraryDependencies += "com.typesafe.slick" %% "slick-hikaricp" % "3.2.3"
 libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.13"
 libraryDependencies += "commons-io" % "commons-io" % "2.6"
+libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.5.19" % Test
 
 //mainClass in (Compile, run) := Some("api.services.TickTock")
 //mainClass in run := Some("api.services.TickTock.main")

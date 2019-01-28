@@ -5,34 +5,30 @@ import java.text.SimpleDateFormat
 import java.util.{Date, TimeZone, UUID}
 
 import database.utils.DatabaseUtils._
-import akka.japi
 import api.services.PeriodType.PeriodType
 import api.services.SchedulingType.SchedulingType
-import slick.jdbc.MySQLProfile.api._
 import play.api.libs.json._
 import play.api.libs.json.Reads._
 import play.api.libs.functional.syntax._
-import api.utils.DateUtils._
-import database.repositories.slick.FileRepositoryImpl
+import database.repositories.FileRepositoryImpl
 
 import scala.concurrent.{ExecutionContext, Future}
 
 case class CreateTaskDTO(
-                     startDateAndTime: Date,
+                     startDateAndTime: String,
                      fileName: String,
                      taskType: SchedulingType,
                      periodType: Option[PeriodType] = None,
                      period: Option[Int] = None,
-                     endDateAndTime: Option[Date] = None,
+                     endDateAndTime: Option[String] = None,
                      occurrences: Option[Int] = None
                    )
 
 object CreateTaskDTO {
 
   implicit val ec = ExecutionContext.global
-  val fileRepo = new FileRepositoryImpl(DEFAULT_DB)
 
-  /**
+  /*/**
     * Method that constructs the TaskDTO giving strings as dates and making the date format validation and conversion from string to date.
     * @param startDateAndTime Date and time of when the task is executed in a String format.
     * @param fileName Name of the file that is executed.
@@ -47,7 +43,7 @@ object CreateTaskDTO {
     }
     else CreateTaskDTO.apply(startDate, fileName, taskType, periodType, period, None, occurrences)
 
-  }
+  }*/
 
   /**
     * Implicit that defines how a CreateTaskDTO is read from the JSON request.
@@ -61,7 +57,7 @@ object CreateTaskDTO {
       (JsPath \ "period").readNullable[Int] and
       (JsPath \ "endDateAndTime").readNullable[String] and
       (JsPath \ "occurrences").readNullable[Int]
-    ) (CreateTaskDTO.construct _)
+    ) (CreateTaskDTO.apply _)
 
   /**
     * Implicit that defines how a CreateTaskDTO is written to a JSON format.

@@ -9,19 +9,19 @@ import java.time.Duration
 
 import api.dtos.TaskDTO
 import api.services.PeriodType.PeriodType
-import database.repositories.slick.{FileRepositoryImpl, TaskRepositoryImpl}
+import database.repositories.{FileRepository, TaskRepository, TaskRepositoryImpl}
 import database.utils.DatabaseUtils._
+import javax.inject.{Inject, Singleton}
 
 import scala.concurrent.ExecutionContext
 
 /**
   * Object that contains all methods for the task scheduling related to the service layer.
   */
-object TaskService {
+@Singleton
+class TaskService @Inject()(implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository) {
 
   implicit val ec = ExecutionContext.global
-  val fileRepo = new FileRepositoryImpl(DEFAULT_DB)
-  val taskRepo = new TaskRepositoryImpl(DEFAULT_DB)
 
   /**
     * Schedules a task by giving the storageName to be executed once immediately.
@@ -31,7 +31,7 @@ object TaskService {
     fileRepo.selectFileIdFromFileName(task.fileName).map{ fileId =>
       task.taskType match{
         case SchedulingType.RunOnce =>
-          new ExecutionJob(task.taskId, fileId, SchedulingType.RunOnce, task.startDateAndTime).start // run once
+          new ExecutionJob(task.taskId, fileId, SchedulingType.RunOnce, task.startDateAndTime)
         case SchedulingType.Periodic =>
           task.periodType.get match {
             case PeriodType.Minutely =>

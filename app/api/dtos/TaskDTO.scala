@@ -10,8 +10,7 @@ import api.services.SchedulingType.SchedulingType
 import slick.jdbc.MySQLProfile.api._
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
-import api.utils.DateUtils._
-import database.repositories.slick.FileRepositoryImpl
+import database.repositories.FileRepositoryImpl
 
 import scala.concurrent.{ExecutionContext, Future}
 

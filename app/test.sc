@@ -1,7 +1,8 @@
 import java.util.Date
-import database.repositories.slick.{FileRepositoryImpl, TaskRepositoryImpl}
+
 import slick.jdbc.MySQLProfile.api._
 import api.utils.DateUtils._
+import database.repositories.{FileRepositoryImpl, TaskRepositoryImpl}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}

@@ -2,13 +2,11 @@ package database.mappings
 
 import java.sql.Timestamp
 import java.util.Date
-import java.util.UUID
 
-import api.services.SchedulingType.SchedulingType
-import slick.jdbc.MySQLProfile.api._
-import database.mappings.FileMappings._
 import play.api.libs.json.{Json, OFormat}
 import slick.dbio.Effect
+import slick.jdbc.MySQLProfile
+import slick.jdbc.MySQLProfile.api._
 import slick.sql.FixedSqlAction
 
 
@@ -33,7 +31,7 @@ object TaskMappings {
                       currentOccurrences: Option[Int]
                     )
 
-  //TODO - separate TaskRow
+
   implicit val taskRowFormat: OFormat[TaskRow] = Json.format[TaskRow]
 
   //---------------------------------------------------------
@@ -62,29 +60,18 @@ object TaskMappings {
   private def dateToTimestamp(date: Date): Timestamp = new Timestamp(date.getTime)
   private def timestampToDate(timestamp: Timestamp): Date = new Date(timestamp.getTime)
 
-  /*implicit val uuidColumnType: BaseColumnType[UUID] = MappedColumnType.base[UUID, String](uuidToString, stringToUUID)
+  /*
+  implicit val uuidColumnType: BaseColumnType[UUID] = MappedColumnType.base[UUID, String](uuidToString, stringToUUID)
   private def uuidToString(uuid: UUID): String = uuid.toString
   private def stringToUUID(string: String): UUID = UUID.fromString(string)
   */
+
   //---------------------------------------------------------
   //# QUERY EXTENSIONS
   //---------------------------------------------------------
   lazy val tasksTable = TableQuery[TasksTable]
   val createTasksTableAction = tasksTable.schema.create
-  /*val createTasksTableActionSQL = sqlu"""
-    CREATE TABLE `ticktock`.`tasks` (
-    `taskId` VARCHAR(36) NOT NULL,
-    `fileId` VARCHAR(36) NOT NULL,
-    `startDateAndTime` TIMESTAMP NOT NULL,
-    PRIMARY KEY (`taskId`),
-    INDEX `fileId_idx` (`fileId` ASC) VISIBLE,
-    CONSTRAINT `fileIdFK`
-    FOREIGN KEY (`fileId`)
-    REFERENCES `ticktock`.`files` (`fileId`)
-    ON DELETE CASCADE
-    ON UPDATE RESTRICT);"""*/
   val dropTasksTableAction = tasksTable.schema.drop
-  //val dropTasksTableActionSQL = sqlu"DROP TABLE `ticktock`.`tasks`;"
   val selectAllFromTasksTable = tasksTable
   val deleteAllFromTasksTable = tasksTable.delete
 
@@ -125,63 +112,63 @@ object TaskMappings {
     tasksTable += task
   }
 
-  def updateTaskByTaskId(taskId: String, task: TaskRow) = {
+  def updateTaskByTaskId(taskId: String, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.taskId === taskId).update(task)
   }
 
-  def updateTaskByFileId(fileId: String, task: TaskRow) = {
+  def updateTaskByFileId(fileId: String, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.fileId === fileId).update(task)
   }
 
-  def updateTaskByPeriod(period: Int, task: TaskRow) = {
+  def updateTaskByPeriod(period: Int, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.period === period).update(task)
   }
 
-  def updateTaskByStartDateAndTime(startDateAndTime: Date, task: TaskRow) = {
+  def updateTaskByStartDateAndTime(startDateAndTime: Date, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.startDateAndTime === startDateAndTime).update(task)
   }
 
-  def updateTaskByEndDateAndTime(endDateAndTime: Date, task: TaskRow) = {
+  def updateTaskByEndDateAndTime(endDateAndTime: Date, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.endDateAndTime === endDateAndTime).update(task)
   }
 
-  def updateTaskByTotalOccurrences(totalOccurrences: Int, task: TaskRow) = {
+  def updateTaskByTotalOccurrences(totalOccurrences: Int, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.totalOccurrences === totalOccurrences).update(task)
   }
 
-  def updateTaskByCurrentOccurrences(currentOccurrences: Int, task: TaskRow) = {
+  def updateTaskByCurrentOccurrences(currentOccurrences: Int, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.currentOccurrences === currentOccurrences).update(task)
   }
 
-  def deleteByTaskId(id: String) = {
+  def deleteByTaskId(id: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.taskId === id).delete
   }
 
-  def deleteByFileId(id: String) = {
+  def deleteByFileId(id: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.fileId === id).delete
   }
 
-  def deleteByPeriod(period: Int) = {
+  def deleteByPeriod(period: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.period === period).delete
   }
 
-  def deleteByValue(value: Int) = {
+  def deleteByValue(value: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.value === value).delete
   }
 
-  def deleteByStartDateAndTime(startDateAndTime: Date) = {
+  def deleteByStartDateAndTime(startDateAndTime: Date): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.startDateAndTime === startDateAndTime).delete
   }
 
-  def deleteByEndDateAndTime(endDateAndTime: Date) = {
+  def deleteByEndDateAndTime(endDateAndTime: Date): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.endDateAndTime === endDateAndTime).delete
   }
 
-  def deleteByTotalOccurrences(totalOccurrences: Int) = {
+  def deleteByTotalOccurrences(totalOccurrences: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.totalOccurrences === totalOccurrences).delete
   }
 
-  def deleteByCurrentOccurrences(currentOccurrences: Int) = {
+  def deleteByCurrentOccurrences(currentOccurrences: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.currentOccurrences === currentOccurrences).delete
   }
 
