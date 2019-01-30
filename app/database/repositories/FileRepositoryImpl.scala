@@ -3,7 +3,6 @@ package database.repositories
 import api.dtos.FileDTO
 import database.mappings.FileMappings._
 import javax.inject.Inject
-import slick.dbio.DBIO
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -12,7 +11,7 @@ class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository{
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
-  private def fileRowToFileDTO(file: FileRow) = {
+  private def fileRowToFileDTO(file: FileRow): FileDTO = {
     FileDTO(file.fileId, file.fileName, file.uploadDate)
   }
 
@@ -29,8 +28,11 @@ class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository{
   /**
     *
     */
-  def selectFileById(id: String): Future[FileDTO] = {
-    dtbase.run(selectById(id).result).map(seq => fileRowToFileDTO(seq.head))
+  def selectFileById(id: String): Future[Option[FileDTO]] = {
+    dtbase.run(selectById(id).result).map{seq =>
+      if(seq.isEmpty) None
+      else Some(fileRowToFileDTO(seq.head))
+    }
   }
 
   /**

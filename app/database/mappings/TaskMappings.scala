@@ -25,7 +25,7 @@ object TaskMappings {
                       fileId: String,
                       period: Int,
                       value: Option[Int],
-                      startDateAndTime: Date,
+                      startDateAndTime: Option[Date],
                       endDateAndTime: Option[Date],
                       totalOccurrences: Option[Int],
                       currentOccurrences: Option[Int]
@@ -42,7 +42,7 @@ object TaskMappings {
     def fileId = column[String]("fileId", O.Length(36))
     def period = column[Int]("period")
     def value = column[Option[Int]]("value")
-    def startDateAndTime = column[Date]("startDateAndTime")
+    def startDateAndTime = column[Option[Date]]("startDateAndTime")
     def endDateAndTime = column[Option[Date]]("endDateAndTime")
     def totalOccurrences = column[Option[Int]]("totalOccurrences")
     def currentOccurrences = column[Option[Int]]("currentOccurrences")

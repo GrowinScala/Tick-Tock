@@ -3,8 +3,6 @@ package database.repositories
 import java.util.UUID
 
 import api.dtos.FileDTO
-import slick.dbio.DBIO
-
 import scala.concurrent.Future
 
 trait FileRepository {
@@ -12,24 +10,26 @@ trait FileRepository {
   /**
     * Selects all rows from the files table on the database.
     *
-    * @return
+    * @return all files in the database
     */
   def selectAllFiles: Future[Seq[FileDTO]]
 
   /**
+    * Selects a file from the database given an id
     *
+    * @return A fileDTO containing the selected file
     */
-  def selectFileById(id: String): Future[FileDTO]
+  def selectFileById(id: String): Future[Option[FileDTO]]
 
   /**
     * Deletes all rows from the files table on the database.
     *
-    * @return
+    * @return An Int representing the number of rows deleted.
     */
   def deleteAllFiles: Future[Int]
 
   /**
-    *
+    * Deletes a single file from the database given its id
     */
   def deleteFileById(id: String): Future[Int]
 
@@ -73,21 +73,6 @@ trait FileRepository {
     */
   def selectFileNameFromFileId(fileId: String): Future[String]
 
-  /*
-  /**
-    * Retrieves a storageName of a row on the database by providing the fileName.
-    *
-    * @param fileName Name of the file given by the user on the database.
-    */
-  def selectStorageNameFromFileName(fileName: String): Future[String]
-
-  /**
-    * Retrieves a fileName of a row on the database by providing the storageName.
-    *
-    * @param storageName Name of the file on the storage folder on the database.
-    */
-  def selectFileNameFromStorageName(storageName: String): Future[String]
-  */
   /**
     * Method that inserts a file (row) on the files table on the database.
     *

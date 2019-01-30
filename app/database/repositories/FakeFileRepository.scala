@@ -4,7 +4,6 @@ import java.util.UUID
 
 import api.dtos.FileDTO
 import api.utils.DateUtils._
-import slick.dbio.DBIO
 
 import scala.concurrent.Future
 
@@ -19,17 +18,17 @@ class FakeFileRepository extends FileRepository{
     */
   def selectAllFiles: Future[Seq[FileDTO]] = {
     Future.successful(Seq(
-      FileDTO("asd1", "test1", getCurrentDateTimestamp),
-      FileDTO("asd2", "test2", getCurrentDateTimestamp),
-      FileDTO("asd3", "test3", getCurrentDateTimestamp)
+      FileDTO("asd1", "test1", stringToDateFormat("01-01-2018 12:00:00", "dd-MM-yyyy HH:mm:ss")),
+      FileDTO("asd2", "test2", stringToDateFormat("01-01-2018 12:00:00", "dd-MM-yyyy HH:mm:ss")),
+      FileDTO("asd3", "test3", stringToDateFormat("01-01-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))
     ))
   }
 
   /**
     *
     */
-  def selectFileById(id: String): Future[FileDTO] = {
-    Future.successful(FileDTO("asd1", "test1", getCurrentDateTimestamp))
+  def selectFileById(id: String): Future[Option[FileDTO]] = {
+    Future.successful(Some(FileDTO("asd1", "test1", stringToDateFormat("01-01-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))))
   }
 
   /**

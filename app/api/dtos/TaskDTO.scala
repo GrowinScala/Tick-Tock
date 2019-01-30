@@ -21,9 +21,9 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 case class TaskDTO(
                     taskId: String,
-                    startDateAndTime: Date,
                     fileName: String,
                     taskType: SchedulingType,
+                    startDateAndTime: Option[Date],
                     periodType: Option[PeriodType] = None,
                     period: Option[Int] = None,
                     endDateAndTime: Option[Date] = None,

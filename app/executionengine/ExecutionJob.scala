@@ -3,7 +3,7 @@ package executionengine
 import java.text.SimpleDateFormat
 import java.util.{Date, TimeZone}
 
-import akka.actor.{Actor, ActorSystem, PoisonPill, Props}
+import akka.actor.{Actor, ActorRef, ActorSystem, PoisonPill, Props}
 import api.services.SchedulingType._
 import java.time.Duration
 import java.time.Duration._
@@ -14,8 +14,7 @@ import database.repositories.{FileRepository, TaskRepository, TaskRepositoryImpl
 import database.utils.DatabaseUtils._
 import javax.inject.Inject
 
-import scala.concurrent.{Await, ExecutionContext}
-
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor}
 
 /**
   * Class that handles independent scheduling jobs and calls the ExecutionManager
@@ -26,7 +25,7 @@ import scala.concurrent.{Await, ExecutionContext}
   * @param datetime Date of when the file is run. (If Periodic, it represents the first execution)
   * @param interval Time interval between each execution. (Only applicable in a Periodic task)
   */
-class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: SchedulingType, startDate: Date, interval: Option[Duration] = Some(ZERO), endDate: Option[Date] = None)(implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository) {
+class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: SchedulingType, startDate: Option[Date] = None, interval: Option[Duration] = Some(ZERO), endDate: Option[Date] = None)(implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository) {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
@@ -69,7 +68,8 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
       */
     def receive= { //TODO - if both dateTime and interval are optional, maybe we can't do this this way? (datetime.get)
       case 0 =>
-          println(getSpecificCurrentTime + " Ran file " + fileId + " scheduled at " + dateToStringFormat(startDate, "yyyy-MM-dd HH:mm:ss") + ".")
+        if(startDate.isDefined) println("Ran file " + fileId + " scheduled to run at " + dateToStringFormat(startDate.get, "yyyy-MM-dd HH:mm:ss") + ".")
+        else println("Ran file " + fileId + " scheduled to run immediately.")
       case _ => println("Failed to run file: " + fileId)
     }
     //TODO: Error handling / handle Option[Date] better when its None.
@@ -103,9 +103,9 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
   private final val MAX_DELAY_SECONDS = 21474835 //max delay handled by the akka.actor.Actor system.
 
   val system = ActorSystem("SchedulerSystem")
-  val schedulerActor = system.actorOf(Props(ExecutionActor), "SchedulerActor")
-  val delayerActor = system.actorOf(Props(DelayerActor), "DelayerActor")
-  implicit val sd = system.dispatcher
+  val schedulerActor: ActorRef = system.actorOf(Props(ExecutionActor), "SchedulerActor")
+  val delayerActor: ActorRef = system.actorOf(Props(DelayerActor), "DelayerActor")
+  implicit val sd: ExecutionContextExecutor = system.dispatcher
 
   /**
     * Method that is called when a scheduling is made. It checks for the time delay until the task is supposed to be executed
@@ -138,12 +138,15 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
     * @param datetime Date given to calculate the delay between now and then.
     * @return Duration object holding the calculated delay.
     */
-  def calculateDelay(datetime: Date): Duration = {
-    val now = new Date()
-    val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-    sdf.setTimeZone(TimeZone.getTimeZone("Portugal"))
-    val currentTime = sdf.parse(sdf.format(now)).getTime
-    val scheduledTime = sdf.parse(sdf.format(datetime)).getTime
-    Duration.ofMillis(scheduledTime - currentTime)
+  def calculateDelay(datetime: Option[Date]): Duration = {
+    if(datetime.isEmpty) ZERO
+    else {
+      val now = new Date()
+      val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+      sdf.setTimeZone(TimeZone.getTimeZone("Portugal"))
+      val currentTime = sdf.parse(sdf.format(now)).getTime
+      val scheduledTime = sdf.parse(sdf.format(datetime)).getTime
+      Duration.ofMillis(scheduledTime - currentTime)
+    }
   }
 }

@@ -2,6 +2,7 @@ package api.controllers
 
 import java.util.UUID
 
+import akka.actor.ActorSystem
 import api.dtos.{CreateTaskDTO, TaskDTO}
 import api.services.TaskService
 import javax.inject.{Inject, Singleton}
@@ -15,7 +16,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * This controller handles the HTTP requests that are related to task scheduling.
-  *
   *
   * @param cc standard controller components
   */
@@ -32,7 +32,7 @@ class TaskController @Inject()(cc: ControllerComponents)(implicit exec: Executio
   }
 
   /**
-    * Method that runs when a POST request is made on localhost:9000/task and a JSON body is sent.
+    * Method that runs when a POST request is made on localhost:9000/schedule and a JSON body is sent.
     * This method is used to handle a schedule task request on a particular file.
     *
     * @return HTTP Response with an OK, meaning all went well.
@@ -42,7 +42,7 @@ class TaskController @Inject()(cc: ControllerComponents)(implicit exec: Executio
     val jsonResult = request.body.validate[CreateTaskDTO]
     jsonResult.fold(
       errors =>
-        Future.successful(BadRequest(Json.obj("status" -> "Error:", "message" -> JsError.toJson(errors)))), //TODO - create object Error (extends DefaultHttpErrorHandler)
+        Future.successful(BadRequest(Json.obj("status" -> "Error:", "message" -> JsError.toJson(errors)))),
       task => {
         val taskValidator = new TaskValidator
         val validationResult = taskValidator.scheduleValidator(task)
@@ -75,28 +75,42 @@ class TaskController @Inject()(cc: ControllerComponents)(implicit exec: Executio
     * Method that gets the task with the id given
     *
     * @param id - identifier of the task we are looking for
-    * @return the task corresponding to the given idl
+    * @return the task corresponding to the given id
     */
   def getScheduleById(id: String): Action[AnyContent] = Action.async { //TODO - Error handling ID
-    taskRepo.selectTaskByTaskId(id).map { elem =>
-      //val result = JsArray(seq.map(tr => Json.toJsObject(tr)))
-      Ok(Json.toJsObject(elem))
-    }
+    taskRepo.selectTaskByTaskId(id).map(tr => Ok(Json.toJsObject(tr)))
   }
 
+
   /**
-    * Method that runs when a PATCH request is made on localhost:9000/task and a JSON body is sent.
-    * This method is used to handle updates on a particular scheduled task by giving its id.
+    * This method updates a Task given its ID and a JSON is passed with the information to be
+    * altered
     *
-    * @param id taskId of the task to be updated.
-    * @return HTTP Response with an OK, meaning all went well.
-    *         HTTP Response with a BadRequest, meaning something went wrong and returns the errors.
+    * @param id - identifier of the task to be modified
+    * @return An HTTP response that is Ok if the task was updated or BadRequest if there was an error
     */
   def updateTask(id: String): Action[JsValue] = Action(parse.json).async { request: Request[JsValue] =>
     val jsonResult = request.body.validate[TaskDTO]
-    jsonResult.fold( //TODO - create new DTO, rename taskDTO to CreateTaskDTO
+    jsonResult.fold( //TODO - Validate the file id given
       errors => Future.successful(BadRequest("Error updating scheduled task: \n" + errors)),
-      task => Future.successful(Ok("Something"))
+      task =>  taskRepo.updateTaskById(id, task).map { i =>
+        if (i > 0) Ok("Task with id = " + id + " was updated")
+        else BadRequest("Task does not exist")
+      }
     )
+  } //TODO - implement exception when periodicity is implemented
+
+  /**
+    * This method deletes a task according to its ID
+    *
+    * @param id - identifier of the task to be deleted
+    * @return An HTTP response that is Ok if the corresponding task was deleted or BadRequest if
+    *         it wasn't.
+    */
+  def deleteTask(id: String): Action[AnyContent] = Action.async {
+    taskRepo.deleteTaskById(id).map { i =>
+      if (i > 0) Ok("Task with id = " + id + " was deleted")
+      else BadRequest("Error deleting file with given id")
+    }
   }
 }

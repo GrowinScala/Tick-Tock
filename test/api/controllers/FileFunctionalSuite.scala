@@ -1,37 +1,131 @@
 package api.controllers
 
+import java.util.UUID
+
+import akka.actor.ActorSystem
+import akka.stream.{ActorMaterializer, Materializer}
+import api.dtos.FileDTO
+import api.utils.DateUtils.{getCurrentDateTimestamp, stringToDateFormat}
+import com.google.inject.Guice
+import database.repositories.{FileRepository, TaskRepository}
+import database.utils.DatabaseUtils.TEST_DB
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.test.Helpers
-import play.test.Helpers._
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.test.Helpers._
+import play.api.test._
+import slick.jdbc.meta.MTable
 
-class FileFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite {
+import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.duration.Duration
 
-  /*"FileController#file" should {
+class FileFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll with BeforeAndAfterEach {
 
-    "receive a POST request with a .jar file and fileName correctly." in {
-      val tempFile = java.io.File.createTempFile("testFile", "jar")
-      tempFile.deleteOnExit()
-      //val files = Seq[FilePart[TemporaryFile]](FilePart("file", "UploadServiceSpec.scala", None, TemporaryFile("file", "spec")))
-      //val multipartBody = MultipartFormData(Map[String, Seq[String]](), files, Seq[BadPart](), Seq[MissingFilePart]())
-      val fakeRequest = Helpers.fakeRequest(POST, s"/file")
-        .withHeaders(HOST -> "localhost:9000")        .withMultipartFormDataBody(files)
+  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+
+  lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
+  Guice.createInjector(appBuilder.applicationModule).injectMembers(this)
+  implicit val fileRepo: FileRepository = appBuilder.injector.instanceOf[FileRepository]
+  implicit val taskRepo: TaskRepository = appBuilder.injector.instanceOf[TaskRepository]
+  implicit val actorSystem: ActorSystem = ActorSystem()
+  implicit val mat: Materializer = ActorMaterializer()
+
+  val LOCALHOST = "localhost:9000"
+
+  val fileUUID1: String = UUID.randomUUID().toString
+  val fileUUID2: String = UUID.randomUUID().toString
+  val fileUUID3: String = UUID.randomUUID().toString
+  val fileUUID4: String = UUID.randomUUID().toString
+
+  override def beforeAll = {
+    val result = for {
+      _ <- fileRepo.createFilesTable
+      _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", stringToDateFormat("01-01-2018 12:00:00", "dd-MM-yyyy HH:mm:ss")))
+      _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID2, "test2", stringToDateFormat("01-02-2018 12:00:00", "dd-MM-yyyy HH:mm:ss")))
+      _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID3, "test3", stringToDateFormat("01-03-2018 12:00:00", "dd-MM-yyyy HH:mm:ss")))
+      res <- fileRepo.insertInFilesTable(FileDTO(fileUUID4, "test4", stringToDateFormat("01-04-2018 12:00:00", "dd-MM-yyyy HH:mm:ss")))
+    } yield res
+    Await.result(result, Duration.Inf)
+
+  }
+
+  override def beforeEach = {
+
+  }
+
+  override def afterAll = {
+    Await.result(fileRepo.dropFilesTable, Duration.Inf)
+  }
+
+  override def afterEach = {
+
+  }
+
+  /*val routeOption = route(app, fakeRequest)
+  val result = for{
+    routeResult <- routeOption.get
+    selectResult <- taskRepo.selectAllTasks
+  } yield (routeResult, selectResult)
+  result.map(tuple => tuple._2.size mustBe 1)
+  status(routeOption.get) mustBe OK*/
+
+  "FileController#GETfile" should {
+    "receive a GET request" in {
+      val fakeRequest = FakeRequest(GET, s"/file")
+        .withHeaders(HOST -> "localhost:9000")
       val result = route(app, fakeRequest)
+      val bodyText = contentAsString(result.get)
       status(result.get) mustBe OK
+      bodyText mustBe """[{"fileId":""" + "\"" + fileUUID1 + "\"" +
+        ""","fileName":"test1","uploadDate":1514808000000},{"fileId":""" + "\"" + fileUUID2 + "\"" +
+        ""","fileName":"test2","uploadDate":1517486400000},{"fileId":""" + "\"" + fileUUID3 + "\"" +
+        ""","fileName":"test3","uploadDate":1519905600000},{"fileId":""" + "\"" + fileUUID4 + "\"" + ""","fileName":"test4","uploadDate":1522580400000}]"""
+    }
+  }
+
+  "FileController#GETfileWithId" should {
+    "receive a GET request with a valid id" in {
+      val toGet = fileUUID2
+      val fakeRequest = FakeRequest(GET, s"/file/" + toGet)
+        .withHeaders(HOST -> "localhost:9000")
+      val result = route(app, fakeRequest)
+      val bodyText = contentAsString(result.get)
+      status(result.get) mustBe OK
+      bodyText mustBe """{"fileId":""" + "\"" + toGet + "\"" + ""","fileName":"test2","uploadDate":1517486400000}"""
     }
 
+    "receive a GET request with an invalid id" in {
+      val toGet = "asd"
+      val fakeRequest = FakeRequest(GET, s"/file/" + toGet)
+        .withHeaders(HOST -> "localhost:9000")
+      val result = route(app, fakeRequest)
+      val bodyText = contentAsString(result.get)
+      status(result.get) mustBe BAD_REQUEST
+      bodyText mustBe "File with id " + toGet + " does not exist."
+    }
+  }
 
-    "receive a POST request with a .jar file only. (missing fileName)" in {
-
+  "FileController#DELETEfileWithId" should {
+    "receive a DELETE request with a valid id" in {
+      val toDelete = fileUUID4
+      val fakeRequest = FakeRequest(DELETE, s"/file/" + toDelete)
+        .withHeaders(HOST -> "localhost:9000")
+      val result = route(app, fakeRequest)
+      val bodyText = contentAsString(result.get)
+      status(result.get) mustBe OK
+      bodyText mustBe "File with id = " + toDelete + " has been deleted."
+      Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID4, "test4", stringToDateFormat("01-04-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))), Duration.Inf)
     }
 
-    "receive a POST request with a file that isn't a .jar and a fileName. (wrong file extension)" in {
-
+    "receive a DELETE request with an invalid id" in {
+      val toDelete = "asd"
+      val fakeRequest = FakeRequest(DELETE, s"/file/" + toDelete)
+        .withHeaders(HOST -> "localhost:9000")
+      val result = route(app, fakeRequest)
+      val bodyText = contentAsString(result.get)
+      status(result.get) mustBe BAD_REQUEST
+      bodyText mustBe "File with id " + toDelete + " does not exist."
     }
-
-    "receive a POST request with a .jar file and a fileName that already exists. (given existing fileName)" in {
-
-    }
-
-  }*/
+  }
 }

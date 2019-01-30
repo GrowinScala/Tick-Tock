@@ -5,7 +5,8 @@ import java.util.UUID
 import akka.actor.FSM.Failure
 import akka.actor.Status.Success
 import api.dtos.TaskDTO
-import slick.dbio.DBIO
+import database.mappings.TaskMappings.TaskRow
+import scala.concurrent.Future
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -68,6 +69,22 @@ trait TaskRepository {
     * Deletes all tasks from the tasks table on the database.
     */
   def deleteAllTasks: Future[Int]
+
+  /**
+    * Given a an id deletes the corresponding task
+    *
+    * @param id - identifier of the task to be deleted
+    */
+  def deleteTaskById(id: String): Future[Int]
+
+  /**
+    * Updates a single task given its identifier
+    *
+    * @param id   - identifier of the task to be updated
+    * @param task - information to update the task with
+    * @return an Int with information of the updated task
+    */
+  def updateTaskById(id: String, task: TaskDTO): Future[Int]
 
   /**
     * Creates the tasks table on the database.

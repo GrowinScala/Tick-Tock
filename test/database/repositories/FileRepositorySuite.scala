@@ -69,11 +69,11 @@ class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
-        _ <- fileRepo.selectFileById(uuid1).map(file => assert(file.fileName.equals("test1")))
-        _ <- fileRepo.selectFileById(uuid3).map(file => assert(file.fileName.equals("test3")))
+        _ <- fileRepo.selectFileById(uuid1).map(file => assert(file.get.fileName.equals("test1")))
+        _ <- fileRepo.selectFileById(uuid3).map(file => assert(file.get.fileName.equals("test3")))
         elem <- fileRepo.selectFileById(uuid2)
       } yield elem
-      result.map(file => assert(file.fileName.equals("test2")))
+      result.map(file => assert(file.get.fileName.equals("test2")))
     }
   }
 

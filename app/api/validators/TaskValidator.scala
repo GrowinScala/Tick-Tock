@@ -43,7 +43,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository){
       (isValidEndDateValue(startDate, endDate), invalidEndDateValue),
       (isValidOccurrences(task.occurrences), invalidOccurrences)
     ).filter(!_._1)
-    if(errorList.isEmpty) Right(TaskDTO(UUID.randomUUID().toString, startDate.get, task.fileName, task.taskType, task.periodType, task.period, endDate, task.occurrences, task.occurrences))
+    if(errorList.isEmpty) Right(TaskDTO(UUID.randomUUID().toString, task.fileName, task.taskType, startDate, task.periodType, task.period, endDate, task.occurrences, task.occurrences))
     else Left(errorList.unzip._2)
   }
 
@@ -75,8 +75,9 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository){
     }
   }
 
-  private def isValidStartDateFormat(date: String): Option[Date] ={
-    parseDate(date)
+  private def isValidStartDateFormat(startDate: Option[String]): Option[Date] ={
+    if(startDate.isDefined) parseDate(startDate.get)
+    else None
   }
 
   /**

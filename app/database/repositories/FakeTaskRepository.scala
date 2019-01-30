@@ -3,8 +3,6 @@ package database.repositories
 import api.dtos.TaskDTO
 import api.services.{PeriodType, SchedulingType}
 import api.utils.DateUtils._
-import javax.inject.Inject
-import slick.dbio.DBIO
 
 import scala.concurrent.Future
 
@@ -12,9 +10,9 @@ class FakeTaskRepository extends TaskRepository{
 
   def selectAllTasks: Future[Seq[TaskDTO]] = {
     Future.successful(Seq(
-      TaskDTO("asd1", getCurrentDateTimestamp, "test1", SchedulingType.RunOnce),
-      TaskDTO("asd2", getCurrentDateTimestamp, "test2", SchedulingType.Periodic, Some(PeriodType.Minutely), Some(2), Some(getCurrentDateTimestamp)),
-      TaskDTO("asd3", getCurrentDateTimestamp, "test3", SchedulingType.Periodic, Some(PeriodType.Hourly), Some(1), None, Some(5), Some(5))
+      TaskDTO("asd1", "test1", SchedulingType.RunOnce, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss"))),
+      TaskDTO("asd2", "test2", SchedulingType.Periodic, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")), Some(PeriodType.Minutely), Some(2), Some(getCurrentDateTimestamp)),
+      TaskDTO("asd3", "test3", SchedulingType.Periodic, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")), Some(PeriodType.Hourly), Some(1), None, Some(5), Some(5))
     ))
   }
 
@@ -25,7 +23,7 @@ class FakeTaskRepository extends TaskRepository{
     * @return a TaskDTO of the selected task.
     */
   def selectTaskByTaskId(id: String): Future[TaskDTO] = {
-    Future.successful(TaskDTO("asd1", getCurrentDateTimestamp, "test1", SchedulingType.RunOnce))
+    Future.successful(TaskDTO("asd1", "test1", SchedulingType.RunOnce, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss"))))
   }
 
   /**
@@ -67,6 +65,26 @@ class FakeTaskRepository extends TaskRepository{
     */
   def decrementCurrentOccurrencesByTaskId(id: String): Future[Unit] = {
     Future.successful((): Unit)
+  }
+
+  /**
+    * Given a an id deletes the corresponding task
+    *
+    * @param id - identifier of the task to be deleted
+    */
+  def deleteTaskById(id: String): Future[Int] = {
+    Future.successful(1)
+  }
+
+  /**
+    * Updates a single task given its identifier
+    *
+    * @param id   - identifier of the task to be updated
+    * @param task - information to update the task with
+    * @return an Int with information of the updated task
+    */
+  def updateTaskById(id: String, task: TaskDTO): Future[Int] = {
+    Future.successful(1)
   }
 
   /**

@@ -63,15 +63,60 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
     }
   }
 
-  /*"TaskController#getSchedule (GET /task)" should {
+  /*"FileController#getAllFiles" should {
+    "receive a GET request" in {
+      val fakeRequest = FakeRequest(GET, s"/file")
+        .withHeaders(HOST -> "localhost:9000")
+      val fileController = new FileController(cc)
+      val result = fileController.getAllFiles.apply(fakeRequest)
+      val bodyText = contentAsString(result)
+      bodyText mustBe """[{"fileId":"asd1","fileName":"test1","uploadDate":1514808000000},{"fileId":"asd2","fileName":"test2","uploadDate":1514808000000},{"fileId":"asd3","fileName":"test3","uploadDate":1514808000000}]"""
+    }
+  }
 
+  "FileController#getFileById" should {
+    "receive a GET request." in {
+      val fakeRequest = FakeRequest(GET, s"/file/asd1")
+        .withHeaders(HOST -> "localhost:9000")
+      val fileController = new FileController(cc)
+      val result = fileController.getFileById("asd1").apply(fakeRequest)
+      val bodyText = contentAsString(result)
+      bodyText mustBe """{"fileId":"asd1","fileName":"test1","uploadDate":1514808000000}"""
+    }
+  }
+
+  "FileController#deleteFile" should {
+    "receive a DELETE request." in {
+      val fakeRequest = FakeRequest(DELETE, s"/file/asd1")
+        .withHeaders(HOST -> "localhost:9000")
+      val fileController = new FileController(cc)
+      val result = fileController.deleteFile("asd1").apply(fakeRequest)
+      val bodyText = contentAsString(result)
+      bodyText mustBe "File with id = asd1 as been deleted."
+    }
+  }*/
+
+  "TaskController#getSchedule (GET /task)" should {
+    val fakeRequest = FakeRequest(GET, s"/task")
+      .withHeaders(HOST -> "localhost:9000")
+    val fileController = new FileController(cc)
+    val result = fileController.getAllFiles.apply(fakeRequest)
+    val bodyText = contentAsString(result)
   }
 
   "TaskController#getScheduleById (GET /task/:id)" should {
-
+    val fakeRequest = FakeRequest(GET, s"/task/asd1")
+      .withHeaders(HOST -> "localhost:9000")
+    val fileController = new FileController(cc)
+    val result = fileController.getAllFiles.apply(fakeRequest)
+    val bodyText = contentAsString(result)
   }
 
   "TaskController#updateTask (PATCH /task)" should {
-
-  }*/
+    val fakeRequest = FakeRequest(GET, s"/task")
+      .withHeaders(HOST -> "localhost:9000")
+    val fileController = new FileController(cc)
+    val result = fileController.getAllFiles.apply(fakeRequest)
+    val bodyText = contentAsString(result)
+  }
 }

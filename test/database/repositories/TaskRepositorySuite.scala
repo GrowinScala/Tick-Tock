@@ -84,8 +84,8 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
     "insert rows into the Tasks table on the database and select all rows" in {
       val result = for{
         _ <- taskRepo.selectAllTasks.map(seq => assert(seq.isEmpty))
-        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, getCurrentDateTimestamp, "test1", SchedulingType.RunOnce))
-        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, getCurrentDateTimestamp, "test2", SchedulingType.RunOnce))
+        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
+        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         resultSeq <- taskRepo.selectAllTasks
       } yield resultSeq
       result.map(seq => assert(seq.size == 2))
@@ -95,8 +95,8 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
   "DBTasksTable#deleteAllTasks" should {
     "insert several rows and then delete them all from the Tasks table on the database." in {
       val result = for{
-        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, getCurrentDateTimestamp, "test1", SchedulingType.RunOnce))
-        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, getCurrentDateTimestamp, "test2", SchedulingType.RunOnce))
+        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
+        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.selectAllTasks.map(seq => assert(seq.size == 2))
         _ <- taskRepo.deleteAllTasks
         resultSeq <- taskRepo.selectAllTasks
@@ -108,8 +108,8 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
   "DBTasksTable#selectTaskByTaskId" should {
     "insert several rows and select a specific task by giving its taskId" in {
       val result = for{
-        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, getCurrentDateTimestamp, "test1", SchedulingType.RunOnce))
-        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, getCurrentDateTimestamp, "test2", SchedulingType.RunOnce))
+        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
+        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.selectTaskByTaskId(taskUUID1).map(dto => assert(dto.fileName == "test1"))
         task <- taskRepo.selectTaskByTaskId(taskUUID2)
       } yield task
@@ -120,8 +120,8 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
   "DBTasksTable#selectFileIdByTaskId" should {
     "inserts several rows and select a specific fileId from a task by giving its taskId" in {
       val result = for{
-        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, getCurrentDateTimestamp, "test1", SchedulingType.RunOnce))
-        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, getCurrentDateTimestamp, "test2", SchedulingType.RunOnce))
+        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
+        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.selectFileIdByTaskId(taskUUID1).map(fileId => assert(fileId == fileUUID1))
         elem <- taskRepo.selectFileIdByTaskId(taskUUID2)
       } yield elem
@@ -133,10 +133,10 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
     "inserts several rows and select the totalOccurrences from a task by giving its taskId" in {
       val date = stringToDateFormat("01-07-2019 00:00:00", "dd-MM-yyyy HH:mm:ss")
       val result = for {
-        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, getCurrentDateTimestamp, "test1", SchedulingType.Periodic, Some(PeriodType.Minutely), Some(2), None, Some(5)))
-        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, getCurrentDateTimestamp, "test2", SchedulingType.Periodic, Some(PeriodType.Hourly), Some(1), Some(date)))
-        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID3, getCurrentDateTimestamp, "test3", SchedulingType.RunOnce))
-        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID4, getCurrentDateTimestamp, "test4", SchedulingType.Periodic, Some(PeriodType.Monthly), Some(3), None, Some(3)))
+        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Minutely), Some(2), None, Some(5)))
+        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Hourly), Some(1), Some(date)))
+        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID3, "test3", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
+        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID4, "test4", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Monthly), Some(3), None, Some(3)))
         _ <- taskRepo.selectTotalOccurrencesByTaskId(taskUUID1).map(totalOccurrences => assert(totalOccurrences.contains(5)))
         _ <- taskRepo.selectTotalOccurrencesByTaskId(taskUUID4).map(totalOccurrences => assert(totalOccurrences.contains(3)))
         _ <- taskRepo.selectTotalOccurrencesByTaskId(taskUUID3).map(totalOccurrences => assert(totalOccurrences.isEmpty))
@@ -150,10 +150,10 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
     "insert several rows and select the currentOccurrences from a task by giving its taskId" in {
       val date = stringToDateFormat("01-07-2019 00:00:00", "dd-MM-yyyy HH:mm:ss")
       val result = for {
-        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, getCurrentDateTimestamp, "test1", SchedulingType.Periodic, Some(PeriodType.Hourly), Some(1), Some(date)))
-        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, getCurrentDateTimestamp, "test2", SchedulingType.RunOnce))
-        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID3, getCurrentDateTimestamp, "test3", SchedulingType.Periodic, Some(PeriodType.Monthly), Some(3), None, Some(3), Some(3)))
-        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID4, getCurrentDateTimestamp, "test4", SchedulingType.Periodic, Some(PeriodType.Minutely), Some(2), None, Some(5), Some(5)))
+        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Hourly), Some(1), Some(date)))
+        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
+        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID3, "test3", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Monthly), Some(3), None, Some(3), Some(3)))
+        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID4, "test4", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Minutely), Some(2), None, Some(5), Some(5)))
         _ <- taskRepo.selectCurrentOccurrencesByTaskId(taskUUID3).map(currentOccurrences => assert(currentOccurrences.contains(3)))
         _ <- taskRepo.selectCurrentOccurrencesByTaskId(taskUUID4).map(currentOccurrences => assert(currentOccurrences.contains(5)))
         _ <- taskRepo.selectCurrentOccurrencesByTaskId(taskUUID2).map(currentOccurrences => assert(currentOccurrences.isEmpty))
@@ -165,10 +165,9 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
 
   "DBTasksTable#decrementCurrentOccurrencesByTaskId" should {
     "insert several rows and decrement the currentOccurrences field by 1 from a task by giving its taskId" in {
-
       val result = for {
-        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, getCurrentDateTimestamp, "test1", SchedulingType.Periodic, Some(PeriodType.Monthly), Some(3), None, Some(3), Some(3)))
-        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, getCurrentDateTimestamp, "test2", SchedulingType.Periodic, Some(PeriodType.Minutely), Some(2), None, Some(5), Some(5)))
+        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Monthly), Some(3), None, Some(3), Some(3)))
+        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Minutely), Some(2), None, Some(5), Some(5)))
         _ <- taskRepo.selectCurrentOccurrencesByTaskId(taskUUID1).map(currentOccurrences => assert(currentOccurrences.contains(3)))
         _ <- taskRepo.decrementCurrentOccurrencesByTaskId(taskUUID1)
         _ <- taskRepo.selectCurrentOccurrencesByTaskId(taskUUID1).map(currentOccurrences => assert(currentOccurrences.contains(2)))

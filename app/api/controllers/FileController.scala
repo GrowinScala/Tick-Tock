@@ -29,7 +29,6 @@ class FileController @Inject()(cc: ControllerComponents)(implicit exec: Executio
     request.body.asMultipartFormData.get.file("file").map{
       file =>
         if(FilenameUtils.getExtension(file.filename) == "jar") {
-          val storageName = file.filename
           val uuid = randomUUID().toString
           val fileName = request.body.asMultipartFormData.get.dataParts.head._2.head
           val uploadDate = getCurrentDateTimestamp
@@ -48,25 +47,6 @@ class FileController @Inject()(cc: ControllerComponents)(implicit exec: Executio
       Future.successful(BadRequest(Json.toJsObject(invalidUploadFormat)))
     }
   }
-    /*request.asMfile("file").map { file =>
-      if(FilenameUtils.getExtension(file.filename) == "jar") {
-        //val storageName = Paths.get(file.filename).getFileName.toString
-        val uuid = randomUUID().toString
-        val fileName = request.body.dataParts.head._2.head
-        val jarName = Paths.get(file.filename).getFileName
-        val uploadDate = getCurrentDateTimestamp
-        fileRepo.existsCorrespondingFileName(fileName).map{elem =>
-          if(elem) BadRequest("File name already exists.")
-        }
-        file.ref.moveTo(Paths.get(s"app/filestorage/$uuid" + ".jar"), replace = false)
-        fileRepo.insertInFilesTable(FileDTO(uuid, fileName, uploadDate))
-        Ok("File uploaded successfully => fileId: " + uuid + ", fileName: " + fileName + ", uploadDate: " + uploadDate)
-      }
-      else BadRequest("File had the wrong extension.")
-    }.getOrElse {
-      BadRequest("File upload went wrong.")
-    }*/
-
 
   /**
     * Method that retrieves all files in the database
@@ -87,7 +67,10 @@ class FileController @Inject()(cc: ControllerComponents)(implicit exec: Executio
     * @return the file corresponding to the id given
     */
   def getFileById(id: String): Action[AnyContent] = Action.async {
-    fileRepo.selectFileById(id).map(tr => Ok(Json.toJsObject(tr)))
+    fileRepo.selectFileById(id).map{ tr =>
+      if(tr.isDefined) Ok(Json.toJsObject(tr.get))
+      else BadRequest("File with id " + id + " does not exist.")
+    }
   }
 
   /**
@@ -97,11 +80,12 @@ class FileController @Inject()(cc: ControllerComponents)(implicit exec: Executio
     * @return HTTP response Ok if the file was deleted and BadRequest if not
     */
   def deleteFile(id: String): Action[AnyContent] = Action.async {
-    fileRepo.deleteFileById(id). map { i =>
+    fileRepo.deleteFileById(id).map { i =>
       if(i > 0) { //TODO - Create file exists and check first
-        Ok("File with id = " + id + " as been deleted.")
+        Ok("File with id = " + id + " has been deleted.")
       } else BadRequest("File with id " + id + " does not exist.")
     }
   }
+
 
 }

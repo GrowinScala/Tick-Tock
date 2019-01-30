@@ -24,13 +24,13 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
   private def taskRowToTaskDTO(task: TaskRow): Future[TaskDTO] = {
     dtbase.run(selectById(task.fileId).map(_.fileName).result.head).map{ name =>
       task.period match{
-        case 0 /*RunOnce*/=> TaskDTO(task.taskId, task.startDateAndTime, name, SchedulingType.RunOnce)
-        case 1 /*Minutely*/=> TaskDTO(task.taskId, task.startDateAndTime, name, SchedulingType.Periodic, Some(PeriodType.Minutely), task.value, task.endDateAndTime, task.currentOccurrences)
-        case 2 /*Hourly*/=> TaskDTO(task.taskId, task.startDateAndTime, name, SchedulingType.Periodic, Some(PeriodType.Hourly), task.value, task.endDateAndTime, task.currentOccurrences)
-        case 3 /*Daily*/=> TaskDTO(task.taskId, task.startDateAndTime, name, SchedulingType.Periodic, Some(PeriodType.Daily), task.value, task.endDateAndTime, task.currentOccurrences)
-        case 4 /*Weekly*/=> TaskDTO(task.taskId, task.startDateAndTime, name, SchedulingType.Periodic, Some(PeriodType.Weekly), task.value, task.endDateAndTime, task.currentOccurrences)
-        case 5 /*Monthly*/=> TaskDTO(task.taskId, task.startDateAndTime, name, SchedulingType.Periodic, Some(PeriodType.Monthly), task.value, task.endDateAndTime, task.currentOccurrences)
-        case 6 /*Yearly*/=> TaskDTO(task.taskId, task.startDateAndTime, name, SchedulingType.Periodic, Some(PeriodType.Yearly), task.value, task.endDateAndTime, task.currentOccurrences)
+        case 0 /*RunOnce*/=> TaskDTO(task.taskId, name, SchedulingType.RunOnce, task.startDateAndTime)
+        case 1 /*Minutely*/=> TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Minutely), task.value, task.endDateAndTime, task.currentOccurrences)
+        case 2 /*Hourly*/=> TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Hourly), task.value, task.endDateAndTime, task.currentOccurrences)
+        case 3 /*Daily*/=> TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Daily), task.value, task.endDateAndTime, task.currentOccurrences)
+        case 4 /*Weekly*/=> TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Weekly), task.value, task.endDateAndTime, task.currentOccurrences)
+        case 5 /*Monthly*/=> TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Monthly), task.value, task.endDateAndTime, task.currentOccurrences)
+        case 6 /*Yearly*/=> TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Yearly), task.value, task.endDateAndTime, task.currentOccurrences)
       }
     }
   }
@@ -71,13 +71,13 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
         seq.map { elem =>
           dtbase.run(selectById(elem.fileId).map(_.fileName).result.head).map{ name =>
             elem.period match{
-              case 0 /*RunOnce*/=> TaskDTO(elem.taskId, elem.startDateAndTime, name, SchedulingType.RunOnce)
-              case 1 /*Minutely*/=> TaskDTO(elem.taskId, elem.startDateAndTime, name, SchedulingType.Periodic, Some(PeriodType.Minutely), elem.value, elem.endDateAndTime, elem.currentOccurrences)
-              case 2 /*Hourly*/=> TaskDTO(elem.taskId, elem.startDateAndTime, name, SchedulingType.Periodic, Some(PeriodType.Hourly), elem.value, elem.endDateAndTime, elem.currentOccurrences)
-              case 3 /*Daily*/=> TaskDTO(elem.taskId, elem.startDateAndTime, name, SchedulingType.Periodic, Some(PeriodType.Daily), elem.value, elem.endDateAndTime, elem.currentOccurrences)
-              case 4 /*Weekly*/=> TaskDTO(elem.taskId, elem.startDateAndTime, name, SchedulingType.Periodic, Some(PeriodType.Weekly), elem.value, elem.endDateAndTime, elem.currentOccurrences)
-              case 5 /*Monthly*/=> TaskDTO(elem.taskId, elem.startDateAndTime, name, SchedulingType.Periodic, Some(PeriodType.Monthly), elem.value, elem.endDateAndTime, elem.currentOccurrences)
-              case 6 /*Yearly*/=> TaskDTO(elem.taskId, elem.startDateAndTime, name, SchedulingType.Periodic, Some(PeriodType.Yearly), elem.value, elem.endDateAndTime, elem.currentOccurrences)
+              case 0 /*RunOnce*/=> TaskDTO(elem.taskId, name, SchedulingType.RunOnce, elem.startDateAndTime)
+              case 1 /*Minutely*/=> TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Minutely), elem.value, elem.endDateAndTime, elem.currentOccurrences)
+              case 2 /*Hourly*/=> TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Hourly), elem.value, elem.endDateAndTime, elem.currentOccurrences)
+              case 3 /*Daily*/=> TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Daily), elem.value, elem.endDateAndTime, elem.currentOccurrences)
+              case 4 /*Weekly*/=> TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Weekly), elem.value, elem.endDateAndTime, elem.currentOccurrences)
+              case 5 /*Monthly*/=> TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Monthly), elem.value, elem.endDateAndTime, elem.currentOccurrences)
+              case 6 /*Yearly*/=> TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Yearly), elem.value, elem.endDateAndTime, elem.currentOccurrences)
             }
           }
         }
@@ -113,6 +113,26 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
     selectCurrentOccurrencesByTaskId(id).map{
       elem => Await.result(dtbase.run(selectByTaskId(id).map(_.currentOccurrences).update(Some(elem.get - 1))), 5 seconds)
     }
+  }
+
+  /**
+    * Deletes a single task from the table on the database
+    *
+    * @param id - identifier of the task to be deleted
+    */
+  def deleteTaskById(id: String): Future[Int] = {
+    dtbase.run(deleteByTaskId(id))
+  }
+
+  /**
+    * Updates a single task given its identifier
+    *
+    * @param id   - identifier of the task to be updated
+    * @param task - information to update the task with
+    * @return an Int with information of the updated task
+    */
+  def updateTaskById(id: String, task: TaskDTO): Future[Int] = {
+    taskDTOToTaskRow(task).flatMap(elem => dtbase.run(updateTaskByTaskId(id, elem)))
   }
 
   /**

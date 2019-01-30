@@ -15,9 +15,9 @@ import database.repositories.FileRepositoryImpl
 import scala.concurrent.{ExecutionContext, Future}
 
 case class CreateTaskDTO(
-                     startDateAndTime: String,
                      fileName: String,
                      taskType: SchedulingType,
+                     startDateAndTime: Option[String],
                      periodType: Option[PeriodType] = None,
                      period: Option[Int] = None,
                      endDateAndTime: Option[String] = None,
@@ -50,9 +50,9 @@ object CreateTaskDTO {
     * This implicit is used on the TaskController when Play's "validate" method is called.
     */
   implicit val createTaskReads: Reads[CreateTaskDTO] = (
-      (JsPath \ "startDateAndTime").read[String] and
       (JsPath \ "fileName").read[String] and
       (JsPath \ "taskType").read[String] and
+      (JsPath \ "startDateAndTime").readNullable[String] and
       (JsPath \ "periodType").readNullable[String] and
       (JsPath \ "period").readNullable[Int] and
       (JsPath \ "endDateAndTime").readNullable[String] and

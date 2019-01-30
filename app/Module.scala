@@ -1,3 +1,4 @@
+import akka.actor.ActorSystem
 import com.google.inject.AbstractModule
 import database.repositories.{FileRepository, FileRepositoryImpl, TaskRepository, TaskRepositoryImpl}
 import database.utils.DatabaseUtils._
