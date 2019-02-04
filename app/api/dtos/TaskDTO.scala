@@ -23,7 +23,7 @@ case class TaskDTO(
                     taskId: String,
                     fileName: String,
                     taskType: SchedulingType,
-                    startDateAndTime: Option[Date],
+                    startDateAndTime: Option[Date] = None,
                     periodType: Option[PeriodType] = None,
                     period: Option[Int] = None,
                     endDateAndTime: Option[Date] = None,

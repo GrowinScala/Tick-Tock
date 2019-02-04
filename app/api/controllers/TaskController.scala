@@ -5,6 +5,7 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import api.dtos.{CreateTaskDTO, TaskDTO}
 import api.services.TaskService
+import api.utils.UUIDGenerator
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
 import play.api.mvc._
@@ -20,7 +21,7 @@ import scala.concurrent.{ExecutionContext, Future}
   * @param cc standard controller components
   */
 @Singleton
-class TaskController @Inject()(cc: ControllerComponents)(implicit exec: ExecutionContext, implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository) extends AbstractController(cc){
+class TaskController @Inject()(cc: ControllerComponents)(implicit exec: ExecutionContext, implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository, implicit val UUIDGen: UUIDGenerator) extends AbstractController(cc){
 
   /**
     * Method that runs when a GET request is made on localhost:9000/

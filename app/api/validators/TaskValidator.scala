@@ -6,7 +6,9 @@ import java.util.{Date, UUID}
 
 import api.dtos.{CreateTaskDTO, FileDTO, TaskDTO}
 import api.utils.DateUtils._
+import api.utils.UUIDGenerator
 import api.validators.Error._
+import com.sun.org.apache.bcel.internal.generic.INSTANCEOF
 import database.repositories.{FileRepository, FileRepositoryImpl}
 import database.utils.DatabaseUtils.DEFAULT_DB
 import javax.inject.{Inject, Singleton}
@@ -19,7 +21,7 @@ import scala.util.Try
   * Object that handles the validation for the received JSON's on the HTTP request controller classes.
   */
 @Singleton
-class TaskValidator @Inject() (implicit val fileRepo: FileRepository){
+class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit val UUIDGen: UUIDGenerator){
 
 
   implicit val ec = ExecutionContext.global
@@ -33,7 +35,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository){
     val endDate = isValidEndDateFormat(task.endDateAndTime)
     val errorList = List(
       (isValidTask(task), invalidScheduleFormat),
-      (startDate.isDefined, invalidStartDateFormat),
+      (task.startDateAndTime.isEmpty || startDate.isDefined, invalidStartDateFormat),
       (isValidStartDateValue(startDate), invalidStartDateValue),
       (isValidFileName(task.fileName), invalidFileName),
       (isValidTaskType(task.taskType), invalidTaskType),
@@ -43,7 +45,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository){
       (isValidEndDateValue(startDate, endDate), invalidEndDateValue),
       (isValidOccurrences(task.occurrences), invalidOccurrences)
     ).filter(!_._1)
-    if(errorList.isEmpty) Right(TaskDTO(UUID.randomUUID().toString, task.fileName, task.taskType, startDate, task.periodType, task.period, endDate, task.occurrences, task.occurrences))
+    if(errorList.isEmpty) Right(TaskDTO(UUIDGen.generateUUID, task.fileName, task.taskType, startDate, task.periodType, task.period, endDate, task.occurrences, task.occurrences))
     else Left(errorList.unzip._2)
   }
 
@@ -123,7 +125,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository){
   }
 
   private def isValidEndDateValue(startDate: Option[Date], endDate: Option[Date]): Boolean = {
-    if(startDate.isDefined && endDate.isDefined) endDate.isEmpty || endDate.get.after(startDate.get)
+    if(startDate.isDefined && endDate.isDefined) endDate.isEmpty || (endDate.get.after(startDate.get) && endDate.get.after(getCurrentDate))
     else true
   }
 

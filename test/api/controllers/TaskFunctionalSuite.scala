@@ -5,7 +5,6 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
 import api.dtos.{FileDTO, TaskDTO}
-import api.services.SchedulingType
 import database.repositories.{FileRepository, FileRepositoryImpl, TaskRepository, TaskRepositoryImpl}
 import org.scalatest.{AsyncWordSpec, BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.PlaySpec
@@ -17,15 +16,14 @@ import play.api.libs.json.Json
 import api.utils.DateUtils._
 import play.api.test.FakeRequest
 import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
+import api.validators.Error._
+import play.api.libs.json.JsArray
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.Duration
 import com.google.inject.{AbstractModule, Guice}
 import database.utils.DatabaseUtils.TEST_DB
-import play.mvc.Result
-import play.api.test.Helpers.{route, _}
-import play.api.test._
-import play.mvc.Http._
+import play.api.test.Helpers._
 import slick.jdbc.meta.MTable
 
 
@@ -98,13 +96,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
   }
 
   "POST /task" should {
-    "receive a POST request with a JSON body with the correct data and insert it into the database. (yyyy-MM-dd HH:mm:ss date format)" in {
+    "receive a POST request with a JSON body with the correct data and insert it into the database. (no date)" in {
       val fakeRequest = FakeRequest(POST, "/task")
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-07-01 00:00:00",
-            "fileName": "test1",
+            "fileName": "test4",
             "taskType": "RunOnce"
           }
         """))
@@ -113,8 +110,32 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received."
+    }
+
+    "receive a POST request with a JSON body with the correct data and insert it into the database. (yyyy-MM-dd HH:mm:ss date format)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "RunOnce",
+            "startDateAndTime": "2019-07-01 00:00:00"
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for{
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received."
+
     }
 
     "receive a POST request with a JSON body with the correct data and insert it into the database. (dd-MM-yyyy HH:mm:ss date format)" in {
@@ -122,9 +143,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "01-07-2019 00:00:00",
             "fileName": "test2",
-            "taskType": "RunOnce"
+            "taskType": "RunOnce",
+            "startDateAndTime": "01-07-2019 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -132,8 +153,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received."
     }
 
     "receive a POST request with a JSON body with the correct data and insert it into the database. (yyyy/MM/dd HH:mm:ss date format)" in {
@@ -141,9 +164,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019/07/01 00:00:00",
             "fileName": "test3",
-            "taskType": "RunOnce"
+            "taskType": "RunOnce",
+            "startDateAndTime": "2019/07/01 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -151,8 +174,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received."
+
     }
 
     "receive a POST request with a JSON body with the correct data and insert it into the database. (dd/MM/yyyy HH:mm:ss date format)" in {
@@ -160,9 +186,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "01/07/2019 00:00:00",
             "fileName": "test4",
-            "taskType": "RunOnce"
+            "taskType": "RunOnce",
+            "startDateAndTime": "01/07/2019 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -170,8 +196,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received."
     }
 
     "receive a POST request with a JSON body with the correct data and insert it into the database. (max delay exceeded)" in {
@@ -179,9 +207,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2030-01-01 00:00:00",
             "fileName": "test1",
-            "taskType": "RunOnce"
+            "taskType": "RunOnce",
+            "startDateAndTime": "2030-01-01 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -189,8 +217,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received."
     }
 
     "receive a POST request with a JSON body with incorrect data. (wrong file name)" in {
@@ -198,9 +228,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-07-01 00:00:00",
             "fileName": "Unknown",
-            "taskType": "RunOnce"
+            "taskType": "RunOnce",
+            "startDateAndTime": "2019-07-01 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -208,8 +238,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidFileName).toString + "]"
     }
 
     "receive a POST request with a JSON body with incorrect data. (wrong date format)" in {
@@ -217,9 +249,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "01:07:2019 00:00:00",
             "fileName": "test2",
-            "taskType": "RunOnce"
+            "taskType": "RunOnce",
+            "startDateAndTime": "01:07:2019 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -227,8 +259,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidStartDateFormat).toString + "]"
     }
 
     "receive a POST request with a JSON body with incorrect data. (wrong date values)" in {
@@ -236,9 +270,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-14-01 00:00:00",
             "fileName": "test3",
-            "taskType": "RunOnce"
+            "taskType": "RunOnce",
+            "startDateAndTime": "2019-14-01 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -246,8 +280,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidStartDateFormat).toString + "]"
     }
 
     "receive a POST request with a JSON body with incorrect data. (wrong time values)" in {
@@ -255,9 +291,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-07-01 25:00:00",
             "fileName": "test4",
-            "taskType": "RunOnce"
+            "taskType": "RunOnce",
+            "startDateAndTime": "2019-07-01 25:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -265,8 +301,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidStartDateFormat).toString + "]"
     }
 
     "receive a POST request with a JSON body with incorrect data. (given date already happened)" in {
@@ -274,9 +312,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2015-01-01 00:00:00",
             "fileName": "test1",
-            "taskType": "RunOnce"
+            "taskType": "RunOnce",
+            "startDateAndTime": "2015-01-01 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -284,8 +322,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidStartDateValue).toString + "]"
     }
 
     "receive a POST request with a JSON body with correct periodic task data and insert it into the database. (with endDateAndTime) (Minutely) (yyyy-MM-dd HH:mm:ss date format)" in {
@@ -293,9 +333,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-07-01 00:00:00",
             "fileName": "test2",
             "taskType": "Periodic",
+            "startDateAndTime": "2019-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 2,
             "endDateAndTime": "2020-01-01 00:00:00"
@@ -306,8 +346,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received."
     }
 
     "receive a POST request with a JSON body with correct periodic task data and insert it into the database. (with occurrences) (Minutely)" in {
@@ -315,9 +357,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-07-01 00:00:00",
             "fileName": "test3",
             "taskType": "Periodic",
+            "startDateAndTime": "2019-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 2,
             "occurrences": 5
@@ -328,8 +370,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received."
     }
 
     "receive a POST request with a JSON body with correct periodic task data and insert it into the database. (Hourly)" in {
@@ -337,9 +381,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-07-01 00:00:00",
             "fileName": "test4",
             "taskType": "Periodic",
+            "startDateAndTime": "2019-07-01 00:00:00",
             "periodType": "Hourly",
             "period": 2,
             "occurrences": 5
@@ -350,8 +394,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received."
     }
 
     "receive a POST request with a JSON body with correct periodic task data and insert it into the database. (Daily)" in {
@@ -359,9 +405,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-07-01 00:00:00",
             "fileName": "test1",
             "taskType": "Periodic",
+            "startDateAndTime": "2019-07-01 00:00:00",
             "periodType": "Daily",
             "period": 2,
             "occurrences": 5
@@ -372,8 +418,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received."
     }
 
     "receive a POST request with a JSON body with correct periodic task data and insert it into the database. (Weekly)" in {
@@ -381,9 +429,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-07-01 00:00:00",
             "fileName": "test2",
             "taskType": "Periodic",
+            "startDateAndTime": "2019-07-01 00:00:00",
             "periodType": "Weekly",
             "period": 2,
             "occurrences": 5
@@ -394,8 +442,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received."
     }
 
     "receive a POST request with a JSON body with correct periodic task data and insert it into the database. (Monthly)" in {
@@ -403,9 +453,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-07-01 00:00:00",
             "fileName": "test3",
             "taskType": "Periodic",
+            "startDateAndTime": "2019-07-01 00:00:00",
             "periodType": "Monthly",
             "period": 2,
             "occurrences": 5
@@ -416,8 +466,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received."
     }
 
     "receive a POST request with a JSON body with correct periodic task data and insert it into the database. (Yearly)" in {
@@ -425,9 +477,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-07-01 00:00:00",
             "fileName": "test4",
             "taskType": "Periodic",
+            "startDateAndTime": "2019-07-01 00:00:00",
             "periodType": "Yearly",
             "period": 2,
             "occurrences": 5
@@ -438,8 +490,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received."
     }
 
     "receive a POST request with a JSON body with correct periodic task data and insert it into the database. (dd-MM-yyyy HH:mm:ss endDate format)" in {
@@ -447,9 +501,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-07-01 00:00:00",
             "fileName": "test1",
             "taskType": "Periodic",
+            "startDateAndTime": "2019-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 2,
             "endDateAndTime": "01-01-2020 00:00:00"
@@ -460,8 +514,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received."
     }
 
     "receive a POST request with a JSON body with correct periodic task data and insert it into the database. (yyyy/MM/dd HH:mm:ss endDate format)" in {
@@ -469,9 +525,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-07-01 00:00:00",
             "fileName": "test2",
             "taskType": "Periodic",
+            "startDateAndTime": "2019-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 2,
             "endDateAndTime": "2020/01/01 00:00:00"
@@ -482,8 +538,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received."
     }
 
     "receive a POST request with a JSON body with correct periodic task data and insert it into the database. (dd/MM/yyyy HH:mm:ss endDate format)" in {
@@ -491,9 +549,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-07-01 00:00:00",
             "fileName": "test3",
             "taskType": "Periodic",
+            "startDateAndTime": "2019-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 2,
             "endDateAndTime": "01/01/2020 00:00:00"
@@ -504,8 +562,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received."
     }
 
     "receive a POST request with a JSON body with incorrect periodic task data. (missing Periodic fields)" in {
@@ -513,9 +573,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-07-01 00:00:00",
-            "fileName": "test4",
-            "taskType": "Periodic"
+            "fileName": "test3",
+            "taskType": "Periodic",
+            "startDateAndTime": "2019-07-01 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -523,8 +583,31 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidScheduleFormat).toString + "]"
+    }
+
+    "receive a POST request with a JSON body with incorrect periodic task data. (invalid task type)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test4",
+            "taskType": "Unknown",
+            "startDateAndTime": "2019-07-01 00:00:00"
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for{
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidScheduleFormat).toString + "," + Json.toJsObject(invalidTaskType).toString + "]"
     }
 
     "receive a POST request with a JSON body with incorrect periodic task data. (negative period)" in {
@@ -532,9 +615,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-07-01 00:00:00",
             "fileName": "test1",
             "taskType": "Periodic",
+            "startDateAndTime": "2019-07-01 00:00:00",
             "periodType": "Minutely",
             "period": -1,
             "occurrences": 5
@@ -545,8 +628,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidPeriod).toString + "]"
     }
 
     "receive a POST request with a JSON body with incorrect periodic task data. (wrong endDate format)" in {
@@ -554,9 +639,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-07-01 00:00:00",
             "fileName": "test2",
             "taskType": "Periodic",
+            "startDateAndTime": "2019-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 2,
             "endDateAndTime": "2020:01:01 00:00:00"
@@ -567,8 +652,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidEndDateFormat).toString + "]"
     }
 
     "receive a POST request with a JSON body with incorrect periodic task data. (given endDate already happened)" in {
@@ -576,9 +663,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-01-01 00:00:00",
             "fileName": "test3",
             "taskType": "Periodic",
+            "startDateAndTime": "2019-01-01 00:00:00",
             "periodType": "Minutely",
             "period": 2,
             "endDateAndTime": "2019-01-15 00:00:00"
@@ -589,8 +676,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidStartDateValue).toString + "," + Json.toJsObject(invalidEndDateValue).toString + "]"
     }
 
     "receive a POST request with a JSON body with incorrect periodic task data. (given endDate happens before startDate)" in {
@@ -598,9 +687,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-07-01 00:00:00",
             "fileName": "test4",
             "taskType": "Periodic",
+            "startDateAndTime": "2019-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 2,
             "endDateAndTime": "2019-06-15 00:00:00"
@@ -611,8 +700,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidEndDateValue).toString + "]"
     }
 
     "receive a POST request with a JSON body with incorrect periodic task data. (negative occurrences)" in {
@@ -620,9 +711,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-07-01 00:00:00",
+
             "fileName": "test1",
             "taskType": "Periodic",
+            "startDateAndTime": "2019-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 2,
             "occurrences": -1
@@ -633,8 +725,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidOccurrences).toString + "]"
     }
 
     "receive a POST request with a JSON body with incorrect periodic task data. (missing periodType field)" in {
@@ -642,9 +736,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-07-01 00:00:00",
             "fileName": "test2",
             "taskType": "Periodic",
+            "startDateAndTime": "2019-07-01 00:00:00",
             "period": 2,
             "occurrences": 5
           }
@@ -654,8 +748,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidScheduleFormat).toString + "]"
     }
 
     "receive a POST request with a JSON body with incorrect periodic task data. (missing period field)" in {
@@ -663,9 +759,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-07-01 00:00:00",
             "fileName": "test3",
             "taskType": "Periodic",
+            "startDateAndTime": "2019-07-01 00:00:00",
             "periodType": "Minutely",
             "occurrences": 5
           }
@@ -675,8 +771,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidScheduleFormat).toString + "]"
     }
 
     "receive a POST request with a JSON body with incorrect periodic task data. (missing endDate/occurrences)" in {
@@ -684,9 +782,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withJsonBody(Json.parse("""
           {
-            "startDateAndTime": "2019-07-01 00:00:00",
             "fileName": "test4",
             "taskType": "Periodic",
+            "startDateAndTime": "2019-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 2
           }
@@ -696,8 +794,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidScheduleFormat).toString + "]"
     }
   }
 

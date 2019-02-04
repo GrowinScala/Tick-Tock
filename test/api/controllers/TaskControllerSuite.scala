@@ -2,6 +2,7 @@ package api.controllers
 
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
+import api.utils.{FakeUUIDGenerator, UUIDGenerator}
 import com.google.inject.Guice
 import database.repositories.{FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
@@ -24,6 +25,7 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
   implicit val fileRepo: FileRepository = new FakeFileRepository
   implicit val taskRepo: TaskRepository = new FakeTaskRepository
+  implicit val UUIDGen: UUIDGenerator = new FakeUUIDGenerator
   val cc: ControllerComponents = injector.instanceOf[ControllerComponents]
   implicit val actorSystem: ActorSystem = ActorSystem()
   implicit val mat: Materializer = ActorMaterializer()

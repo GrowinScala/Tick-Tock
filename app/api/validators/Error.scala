@@ -40,20 +40,6 @@ object Error{
     location = header
   )
 
-  /*lazy val invalidStartDateFormat = Error(
-    message = """
-        |startDateAndTime has the wrong format.
-        |Here are the supported formats:
-        |- yyyy-MM-dd HH:mm:ss
-        |- dd-MM-yyyy HH:mm:ss
-        |- yyyy/MM/dd HH:mm:ss
-        |- dd/MM/yyyy HH:mm:ss
-      """.stripMargin,
-    reason = Error.invalid,
-    locationType = Some("startDateAndTime"),
-    location = param
-  )*/
-
   lazy val invalidStartDateFormat = Error(
     message = s"startDateAndTime has the wrong format. The date format must be yyyy-MM-dd HH:mm:ss",
     reason = Error.invalid,
