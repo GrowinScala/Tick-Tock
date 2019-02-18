@@ -23,7 +23,6 @@ import scala.util.Try
 @Singleton
 class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit val UUIDGen: UUIDGenerator){
 
-
   implicit val ec = ExecutionContext.global
 
   //---------------------------------------------------------

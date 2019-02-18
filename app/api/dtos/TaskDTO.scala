@@ -28,7 +28,8 @@ case class TaskDTO(
                     period: Option[Int] = None,
                     endDateAndTime: Option[Date] = None,
                     totalOccurrences: Option[Int] = None,
-                    currentOccurrences: Option[Int] = None
+                    currentOccurrences: Option[Int] = None,
+                    timezone: Option[String] = None
                   )
 
 /**
