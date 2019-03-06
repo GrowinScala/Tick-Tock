@@ -3,7 +3,7 @@ package api.controllers
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import api.dtos.{CreateTaskDTO, TaskDTO}
+import api.dtos.{CreateTaskDTO, TaskDTO, UpdateTaskDTO}
 import api.services.TaskService
 import api.utils.UUIDGenerator
 import javax.inject.{Inject, Singleton}
@@ -11,6 +11,7 @@ import play.api.libs.json._
 import play.api.mvc._
 import database.repositories.{FileRepository, TaskRepository}
 import api.validators.TaskValidator
+import api.validators.Error._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -79,26 +80,38 @@ class TaskController @Inject()(cc: ControllerComponents)(implicit exec: Executio
     * @return the task corresponding to the given id
     */
   def getScheduleById(id: String): Action[AnyContent] = Action.async { //TODO - Error handling ID
-    taskRepo.selectTaskByTaskId(id).map(tr => Ok(Json.toJsObject(tr)))
+    taskRepo.selectTaskByTaskId(id).map{tr =>
+      if(tr.isDefined) Ok(Json.toJsObject(tr.get))
+      else BadRequest(Json.toJsObject(invalidEndpointId))
+    }
   }
-
 
   /**
     * This method updates a Task given its ID and a JSON is passed with the information to be
-    * altered
+    * altered.
     *
     * @param id - identifier of the task to be modified
     * @return An HTTP response that is Ok if the task was updated or BadRequest if there was an error
     */
   def updateTask(id: String): Action[JsValue] = Action(parse.json).async { request: Request[JsValue] =>
-    val jsonResult = request.body.validate[TaskDTO]
-    jsonResult.fold( //TODO - Validate the file id given
-      errors => Future.successful(BadRequest("Error updating scheduled task: \n" + errors)),
-      task =>  taskRepo.updateTaskById(id, task).map { i =>
-        if (i > 0) Ok("Task with id = " + id + " was updated")
-        else BadRequest("Task does not exist")
+    val jsonResult = request.body.validate[UpdateTaskDTO]
+    jsonResult.fold(
+      errors => Future.successful(BadRequest("Error replacing scheduled task : \n" + errors)),
+      task => {
+        val taskValidator = new TaskValidator
+        val validationResult = taskValidator.updateValidator(id, task)
+        validationResult match{
+          case Left(errorList) =>
+            Future.successful(BadRequest(JsArray(errorList.map(error => Json.toJsObject(error)).toIndexedSeq)))
+          case Right(taskDto) =>
+            taskRepo.updateTaskById(id, taskDto)
+            val taskService = new TaskService
+            taskService.replaceTask(id, taskDto)
+            Future.successful(Ok("Task received."))
+        }
       }
     )
+
   } //TODO - implement exception when periodicity is implemented
 
   /**
@@ -113,5 +126,26 @@ class TaskController @Inject()(cc: ControllerComponents)(implicit exec: Executio
       if (i > 0) Ok("Task with id = " + id + " was deleted")
       else BadRequest("Error deleting file with given id")
     }
+  }
+
+  def replaceTask(id: String): Action[JsValue] = Action(parse.json).async { request: Request[JsValue] =>
+    val jsonResult = request.body.validate[CreateTaskDTO]
+    jsonResult.fold(
+      errors =>
+        Future.successful(BadRequest(Json.obj("status" -> "Error:", "message" -> JsError.toJson(errors)))),
+      task => {
+        val taskValidator = new TaskValidator
+        val validationResult = taskValidator.scheduleValidator(task)
+        validationResult match{
+          case Left(errorList) =>
+            Future.successful(BadRequest(JsArray(errorList.map(error => Json.toJsObject(error)).toIndexedSeq)))
+          case Right(taskDto) =>
+            taskRepo.updateTaskById(id, taskDto)
+            val taskService = new TaskService
+            taskService.replaceTask(id, taskDto)
+            Future.successful(Ok("Task received."))
+        }
+      }
+    )
   }
 }

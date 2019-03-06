@@ -28,13 +28,29 @@ case class TaskDTO(
                     period: Option[Int] = None,
                     endDateAndTime: Option[Date] = None,
                     totalOccurrences: Option[Int] = None,
-                    currentOccurrences: Option[Int] = None
+                    currentOccurrences: Option[Int] = None,
+                    timezone: Option[String] = None,
+                    exclusions: Option[List[ExclusionDTO]] = None,
+                    schedulings: Option[List[SchedulingDTO]] = None
+
                   )
 
 /**
   * Companion object for the TaskDTO
   */
 object TaskDTO {
+
+  /*implicit val taskWrites: Writes[TaskDTO] = (
+      (JsPath \ "taskId").write[String] and
+      (JsPath \ "fileName").write[String] and
+      (JsPath \ "taskType").write[String] and
+      (JsPath \ "startDateAndTime").writeNullable[Date] and
+      (JsPath \ "periodType").writeNullable[String] and
+      (JsPath \ "period").writeNullable[Int] and
+      (JsPath \ "endDateAndTime").writeNullable[Date] and
+      (JsPath \ "totalOccurrences").writeNullable[Int] and
+      (JsPath \ "currentOccurrences").writeNullable[Int]
+    )(unlift(TaskDTO.unapply))*/
 
   /**
     * Implicit that defines how a TaskDTO is written and read.

@@ -2,6 +2,9 @@ package api.controllers
 
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
+import api.dtos.TaskDTO
+import api.services.SchedulingType
+import api.utils.DateUtils.stringToDateFormat
 import api.utils.{FakeUUIDGenerator, UUIDGenerator}
 import com.google.inject.Guice
 import database.repositories.{FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository}
@@ -30,6 +33,8 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
   implicit val actorSystem: ActorSystem = ActorSystem()
   implicit val mat: Materializer = ActorMaterializer()
 
+  val LOCALHOST = "localhost:9000"
+
   override def beforeAll(): Unit = {
 
   }
@@ -49,10 +54,10 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
   "TaskController#schedule (POST /task)" should {
     "should be valid in" in {
       val fakeRequest = FakeRequest(POST, "/task")
-        .withHeaders(HOST -> "localhost:9000", CONTENT_TYPE -> "application/json")
+        .withHeaders(HOST -> LOCALHOST, CONTENT_TYPE -> "application/json")
         .withBody(Json.parse("""
           {
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2020-07-01 00:00:00",
             "fileName": "test1",
             "taskType": "RunOnce"
           }
@@ -64,6 +69,70 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
       bodyText mustBe "Task received."
     }
   }
+
+  "TaskController#getSchedule (GET /task)" should {
+    "should be valid in" in {
+      val fakeRequest = FakeRequest(GET, s"/task")
+        .withHeaders(HOST -> LOCALHOST)
+      val taskController = new TaskController(cc)
+      val result = taskController.getSchedule.apply(fakeRequest)
+      val bodyText = contentAsString(result)
+      bodyText mustBe "[{\"taskId\":\"asd1\",\"fileName\":\"test1\",\"taskType\":\"RunOnce\",\"startDateAndTime\":1893499200000}," +
+        "{\"taskId\":\"asd2\",\"fileName\":\"test2\",\"taskType\":\"Periodic\",\"startDateAndTime\":1893499200000,\"periodType\":\"Minutely\",\"period\":2,\"endDateAndTime\":2524651200000}," +
+        "{\"taskId\":\"asd3\",\"fileName\":\"test3\",\"taskType\":\"Periodic\",\"startDateAndTime\":1893499200000,\"periodType\":\"Hourly\",\"period\":1,\"totalOccurrences\":5,\"currentOccurrences\":5}]"
+    }
+  }
+
+  "TaskController#getScheduleById (GET /task/:id)" should {
+    "should be valid in" in {
+      val id = "asd1"
+      val fakeRequest = FakeRequest(GET, s"/task/" + id)
+        .withHeaders(HOST -> LOCALHOST)
+      val taskController = new TaskController(cc)
+      val result = taskController.getScheduleById(id).apply(fakeRequest)
+      val bodyText = contentAsString(result)
+      bodyText mustBe "{\"taskId\":\"asd1\",\"fileName\":\"test1\",\"taskType\":\"RunOnce\",\"startDateAndTime\":1893499200000}"
+    }
+  }
+
+  "TaskController#updateTask (PATCH /task/:id" should {
+    "should be valid in" in {
+      val id = "asd1"
+      val fakeRequest = FakeRequest(PATCH, s"/task/" + id)
+        .withHeaders(HOST -> LOCALHOST, CONTENT_TYPE -> "application/json")
+        .withBody(Json.parse("""
+          {
+            "startDateAndTime": "2020-07-01 00:00:00",
+            "fileName": "test1",
+            "taskType": "RunOnce"
+          }
+        """))
+      val taskController = new TaskController(cc)
+      val result = taskController.updateTask(id).apply(fakeRequest)
+      val bodyText = contentAsString(result)
+      bodyText mustBe "Task received."
+    }
+  }
+
+  "TaskController#replaceTask (PUT /task/:id)" should {
+    "should be valid in" in {
+      val id = "asd1"
+      val fakeRequest = FakeRequest(PUT, s"/task/" + id)
+        .withHeaders(HOST -> LOCALHOST)
+        .withBody(Json.parse("""
+          {
+            "startDateAndTime": "2020-07-01 00:00:00",
+            "fileName": "test1",
+            "taskType": "RunOnce"
+          }
+        """))
+      val taskController = new TaskController(cc)
+      val result = taskController.replaceTask(id).apply(fakeRequest)
+      val bodyText = contentAsString(result)
+      bodyText mustBe "Task received."
+    }
+  }
+
 
   /*"FileController#getAllFiles" should {
     "receive a GET request" in {
@@ -114,7 +183,7 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
     val bodyText = contentAsString(result)
   }
 
-  "TaskController#updateTask (PATCH /task)" should {
+  "TaskController#replaceTask (PUT /task/:id)" should {
     val fakeRequest = FakeRequest(GET, s"/task")
       .withHeaders(HOST -> "localhost:9000")
     val fileController = new FileController(cc)

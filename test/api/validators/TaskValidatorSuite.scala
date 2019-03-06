@@ -29,37 +29,6 @@ class TaskValidatorSuite extends PlaySpec{
   val validator = new TaskValidator
   val calendar = Calendar.getInstance()
 
-  /*                  fileName: String,
-                     taskType: SchedulingType,
-                     startDateAndTime: Option[String],
-                     periodType: Option[PeriodType] = None,
-                     period: Option[Int] = None,
-                     endDateAndTime: Option[String] = None,
-                     occurrences: Option[Int] = None*/
-
-  /*FileDTO("asd1", "test1", stringToDateFormat("01-01-2018 12:00:00", "dd-MM-yyyy HH:mm:ss")),
-      FileDTO("asd2", "test2", stringToDateFormat("01-01-2018 12:00:00", "dd-MM-yyyy HH:mm:ss")),
-      FileDTO("asd3", "test3", stringToDateFormat("01-01-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))*/
-
-  /*def scheduleValidator(task: CreateTaskDTO): Either[List[Error],TaskDTO] = {
-    val startDate = isValidStartDateFormat(task.startDateAndTime)
-    val endDate = isValidEndDateFormat(task.endDateAndTime)
-    val errorList = List(
-      (isValidTask(task), invalidScheduleFormat),
-      (task.startDateAndTime.isEmpty || startDate.isDefined, invalidStartDateFormat),
-      (isValidStartDateValue(startDate), invalidStartDateValue),
-      (isValidFileName(task.fileName), invalidFileName),
-      (isValidTaskType(task.taskType), invalidTaskType),
-      (isValidPeriodType(task.periodType), invalidPeriodType),
-      (isValidPeriod(task.period), invalidPeriod),
-      (task.endDateAndTime.isEmpty || endDate.isDefined, invalidEndDateFormat),
-      (isValidEndDateValue(startDate, endDate), invalidEndDateValue),
-      (isValidOccurrences(task.occurrences), invalidOccurrences)
-    ).filter(!_._1)
-    if(errorList.isEmpty) Right(TaskDTO(UUID.randomUUID().toString, task.fileName, task.taskType, startDate, task.periodType, task.period, endDate, task.occurrences, task.occurrences))
-    else Left(errorList.unzip._2)
-  }*/
-
   "TaskValidator#scheduleValidator" should {
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (RunOnce task with no startDate)" in {
       val dto = CreateTaskDTO("test1", SchedulingType.RunOnce)
@@ -130,27 +99,27 @@ class TaskValidatorSuite extends PlaySpec{
 
     "receive an invalid CreateTaskDTO with missing fields. (Periodic task without any other fields)" in {
       val dto = CreateTaskDTO("test1", SchedulingType.Periodic)
-      validator.scheduleValidator(dto).toString mustBe Left(List(invalidScheduleFormat)).toString
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidCreateTaskFormat)).toString
     }
 
     "receive an invalid CreateTaskDTO with missing fields. (Periodic task without period type or period)" in {
       val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), None, None, Some("2040-01-01 12:00:00"))
-      validator.scheduleValidator(dto).toString mustBe Left(List(invalidScheduleFormat)).toString
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidCreateTaskFormat)).toString
     }
 
     "receive an invalid CreateTaskDTO with missing fields. (Periodic task without period type)" in {
       val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), None, Some(3), Some("2040-01-01 12:00:00"))
-      validator.scheduleValidator(dto).toString mustBe Left(List(invalidScheduleFormat)).toString
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidCreateTaskFormat)).toString
     }
 
     "receive an invalid CreateTaskDTO with missing fields. (Periodic task without period)" in {
       val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), None, Some("2040-01-01 12:00:00"))
-      validator.scheduleValidator(dto).toString mustBe Left(List(invalidScheduleFormat)).toString
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidCreateTaskFormat)).toString
     }
 
     "receive an invalid CreateTaskDTO with missing fields. (Periodic task without endDate or occurrences)" in {
       val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Monthly), Some(2))
-      validator.scheduleValidator(dto).toString mustBe Left(List(invalidScheduleFormat)).toString
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidCreateTaskFormat)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid startDate format." in {
@@ -178,7 +147,7 @@ class TaskValidatorSuite extends PlaySpec{
 
     "receive an invalid CreateTaskDTO with invalid task type." in {
       val dto = CreateTaskDTO("test1", "Unknown")
-      validator.scheduleValidator(dto).toString mustBe Left(List(invalidScheduleFormat, invalidTaskType)).toString
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidCreateTaskFormat, invalidTaskType)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid period type." in {

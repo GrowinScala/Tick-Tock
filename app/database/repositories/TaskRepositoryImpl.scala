@@ -1,6 +1,6 @@
 package database.repositories
 
-import api.dtos.TaskDTO
+import api.dtos.{TaskDTO, UpdateTaskDTO}
 import api.services.{PeriodType, SchedulingType}
 import database.mappings.FileMappings._
 import database.mappings.TaskMappings._
@@ -91,13 +91,17 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
     * @param id - the identifier of the task we want to select
     * @return the selected task according to the id given
     */
-  def selectTaskByTaskId(id: String): Future[TaskDTO] = {
-    dtbase.run(selectByTaskId(id).result).flatMap(seq => taskRowToTaskDTO(seq.head))
+  def selectTaskByTaskId(id: String): Future[Option[TaskDTO]] = {
+    dtbase.run(selectByTaskId(id).result).flatMap{seq =>
+      if(seq.isEmpty) Future.successful(None)
+      else taskRowToTaskDTO(seq.head).map(elem => Some(elem))
+    }
   }
 
-  def selectFileIdByTaskId(id: String): Future[String] = {
-    selectTaskByTaskId(id).flatMap{
-      elem => dtbase.run(selectByFileName(elem.fileName).result.head.map(_.fileId)) //TODO: Improve implementation.
+  def selectFileIdByTaskId(id: String): Future[Option[String]] = {
+    selectTaskByTaskId(id).flatMap{ elem =>
+      if(elem.isDefined) dtbase.run(selectByFileName(elem.get.fileName).result.head.map(_.fileId)).map(item => Some(item))//TODO: Improve implementation.
+      else Future.successful(None)
     }
   }
 
