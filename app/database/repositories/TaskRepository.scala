@@ -4,10 +4,10 @@ import java.util.UUID
 
 import akka.actor.FSM.Failure
 import akka.actor.Status.Success
-import api.dtos.TaskDTO
+import api.dtos.{TaskDTO, UpdateTaskDTO}
 import database.mappings.TaskMappings.TaskRow
-import scala.concurrent.Future
 
+import scala.concurrent.Future
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,7 +30,7 @@ trait TaskRepository {
     * @param id - the identifier of the task.
     * @return a TaskDTO of the selected task.
     */
-  def selectTaskByTaskId(id: String): Future[TaskDTO]
+  def selectTaskByTaskId(id: String): Future[Option[TaskDTO]]
 
   /**
     *
@@ -39,7 +39,7 @@ trait TaskRepository {
     * @param id - the identifier of the task.
     * @return a String containing the fileId.
     */
-  def selectFileIdByTaskId(id: String): Future[String]
+  def selectFileIdByTaskId(id: String): Future[Option[String]]
 
   /**
     * Select the totalOccurrences from a task on the database by giving its id.
@@ -78,7 +78,7 @@ trait TaskRepository {
   def deleteTaskById(id: String): Future[Int]
 
   /**
-    * Updates a single task given its identifier
+    * Updates a single task given its identifier.
     *
     * @param id   - identifier of the task to be updated
     * @param task - information to update the task with

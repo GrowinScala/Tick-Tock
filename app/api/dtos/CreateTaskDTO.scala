@@ -22,8 +22,9 @@ case class CreateTaskDTO(
                      period: Option[Int] = None,
                      endDateAndTime: Option[String] = None,
                      occurrences: Option[Int] = None,
-                     schedulings: Option[List[CreateSchedulingDTO]] = None,
-                     timezone: Option[String] = None
+                     timezone: Option[String] = None,
+                     exclusions: Option[List[CreateExclusionDTO]] = None,
+                     schedulings: Option[List[CreateSchedulingDTO]] = None
                    )
 
 object CreateTaskDTO {
@@ -42,12 +43,13 @@ object CreateTaskDTO {
       (JsPath \ "period").readNullable[Int] and
       (JsPath \ "endDateAndTime").readNullable[String] and
       (JsPath \ "occurrences").readNullable[Int] and
-      (JsPath \ "schedulings").readNullable[List[CreateSchedulingDTO]] and
-      (JsPath \ "timezone").readNullable[String]
+      (JsPath \ "timezone").readNullable[String] and
+      (JsPath \ "exclusions").readNullable[List[CreateExclusionDTO]] and
+      (JsPath \ "schedulings").readNullable[List[CreateSchedulingDTO]]
     ) (CreateTaskDTO.apply _)
 
   /**
     * Implicit that defines how a CreateTaskDTO is written to a JSON format.
     */
-  implicit val createTaskWrites: OWrites[CreateTaskDTO] = Json.writes[CreateTaskDTO]
+  implicit val createTaskFormat: OWrites[CreateTaskDTO] = Json.writes[CreateTaskDTO]
 }

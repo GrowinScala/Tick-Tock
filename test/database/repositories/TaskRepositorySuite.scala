@@ -110,10 +110,10 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
       val result = for{
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
-        _ <- taskRepo.selectTaskByTaskId(taskUUID1).map(dto => assert(dto.fileName == "test1"))
+        _ <- taskRepo.selectTaskByTaskId(taskUUID1).map(dto => assert(dto.get.fileName == "test1"))
         task <- taskRepo.selectTaskByTaskId(taskUUID2)
       } yield task
-      result.map(dto => assert(dto.fileName == "test2"))
+      result.map(dto => assert(dto.get.fileName == "test2"))
     }
   }
 
@@ -122,10 +122,10 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
       val result = for{
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
-        _ <- taskRepo.selectFileIdByTaskId(taskUUID1).map(fileId => assert(fileId == fileUUID1))
+        _ <- taskRepo.selectFileIdByTaskId(taskUUID1).map(fileId => assert(fileId.get == fileUUID1))
         elem <- taskRepo.selectFileIdByTaskId(taskUUID2)
       } yield elem
-      result.map(fileId => assert(fileId == fileUUID2))
+      result.map(fileId => assert(fileId.get == fileUUID2))
     }
   }
 

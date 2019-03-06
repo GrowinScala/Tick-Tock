@@ -8,6 +8,7 @@ GET     /task/:id              api.controllers.TaskController.getScheduleById(id
 PATCH   /task/:id              api.controllers.TaskController.updateTask(id: String)
 POST    /task                  api.controllers.TaskController.schedule
 DELETE  /task/:id              api.controllers.TaskController.deleteTask(id: String)
+PUT     /task/:id              api.controllers.TaskController.replaceTask(id: String)
 
 GET     /file                  api.controllers.FileController.getAllFiles
 GET     /file/:id              api.controllers.FileController.getFileById(id: String)

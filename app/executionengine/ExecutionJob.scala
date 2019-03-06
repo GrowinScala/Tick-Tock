@@ -1,20 +1,20 @@
 package executionengine
 
 import java.text.SimpleDateFormat
-import java.util.{Date, TimeZone}
+import java.util.{Calendar, Date, TimeZone}
 
-import akka.actor.{Actor, ActorRef, ActorSystem, PoisonPill, Props}
+import akka.actor.{Actor, ActorRef, ActorSystem, Cancellable, Props}
 import api.services.SchedulingType._
 import java.time.Duration
 import java.time.Duration._
 
 import api.services.SchedulingType
 import api.utils.DateUtils._
-import database.repositories.{FileRepository, TaskRepository, TaskRepositoryImpl}
-import database.utils.DatabaseUtils._
+import database.repositories.{FileRepository, TaskRepository}
 import javax.inject.Inject
 
-import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor}
+import scala.collection.mutable.Queue
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
 /**
   * Class that handles independent scheduling jobs and calls the ExecutionManager
@@ -25,9 +25,10 @@ import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor}
   * @param datetime Date of when the file is run. (If Periodic, it represents the first execution)
   * @param interval Time interval between each execution. (Only applicable in a Periodic task)
   */
-class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: SchedulingType, startDate: Option[Date] = None, interval: Option[Duration] = Some(ZERO), endDate: Option[Date] = None)(implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository) {
+class ExecutionJob @Inject()(taskId: String, fileId: String, schedulingType: SchedulingType, startDate: Option[Date] = None, interval: Option[Duration] = Some(ZERO), endDate: Option[Date] = None, timezone: Option[String], schedulings: Option[Queue[Date]], exclusions: Option[Queue[Date]])(implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository) {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+  val calendar = Calendar.getInstance
 
   /**
     * Actor and Runnable that handles file executions.
@@ -38,24 +39,35 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
       * Inherited method from the Runnable trait that is used when the scheduling job fires.
       */
     def run(): Unit = {
-      if(schedulingType == SchedulingType.RunOnce) schedulerActor ! ExecutionManager.runFile(fileId)
-      else { //if it's not a RunOnce task, its a periodic one, so it has to have either endDate or occurrences
-        if(endDate.isDefined){
-          if(endDate.get.before(getCurrentDate)){
-            system.terminate
-          }
-          else{
-            schedulerActor ! ExecutionManager.runFile(fileId)
-          }
-        }
-        else{ //if it doesn't have endDate, it has occurrences.
-          taskRepo.selectCurrentOccurrencesByTaskId(taskId).map{ occurrences =>
-            if (occurrences.get == 0) {
+      val currentDate = removeTimeFromDate(new Date())
+      if(!isExcluded(currentDate)){
+        if(schedulingType == SchedulingType.RunOnce) schedulerActor ! ExecutionManager.runFile(fileId)
+        else { //if it's not a RunOnce task, its a periodic one, so it has to have either endDate or occurrences
+          if (endDate.isDefined) {
+            if (endDate.get.before(getCurrentDate)) {
               system.terminate
             }
             else {
-              taskRepo.decrementCurrentOccurrencesByTaskId(taskId)
               schedulerActor ! ExecutionManager.runFile(fileId)
+              if(schedulings.isDefined && schedulings.get.nonEmpty){
+                val nextDateDelay = calculateDelay(Some(schedulings.get.dequeue))
+                system.scheduler.scheduleOnce(nextDateDelay, ExecutionActor)
+              }
+            }
+          }
+          else { //if it doesn't have endDate, it has occurrences.
+            taskRepo.selectCurrentOccurrencesByTaskId(taskId).map { occurrences =>
+              if (occurrences.get == 0) {
+                system.terminate
+              }
+              else {
+                taskRepo.decrementCurrentOccurrencesByTaskId(taskId)
+                schedulerActor ! ExecutionManager.runFile(fileId)
+                if(schedulings.isDefined && schedulings.get.nonEmpty){
+                  val nextDateDelay = calculateDelay(Some(schedulings.get.dequeue))
+                  system.scheduler.scheduleOnce(nextDateDelay, ExecutionActor)
+                }
+              }
             }
           }
         }
@@ -116,10 +128,9 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
     * - If it doesn't exceed the maximum delay and its date is in the future, it is scheduled to execute the file with the
     * ExecutionActor depending on the schedulingType.
     */
-  def start: Unit ={
+  def start: Cancellable ={
     val delay = calculateDelay(startDate)
-    if(delay.toMillis < 0) return
-    else if(delay.getSeconds > MAX_DELAY_SECONDS){
+    if(delay.getSeconds > MAX_DELAY_SECONDS && delay.toMillis >= 0){
       system.scheduler.scheduleOnce(Duration.ofSeconds(MAX_DELAY_SECONDS), DelayerActor)
     }
     else {
@@ -128,6 +139,9 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
           system.scheduler.scheduleOnce(delay, ExecutionActor)
         case Periodic =>
           system.scheduler.schedule(delay, interval.get, ExecutionActor)
+        case Personalized =>
+          val nextDateDelay = calculateDelay(Some(schedulings.get.dequeue))
+          system.scheduler.scheduleOnce(nextDateDelay, ExecutionActor)
       }
     }
   }
@@ -143,10 +157,35 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
     else {
       val now = new Date()
       val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-      sdf.setTimeZone(TimeZone.getTimeZone("Portugal"))
       val currentTime = sdf.parse(sdf.format(now)).getTime
       val scheduledTime = sdf.parse(sdf.format(datetime)).getTime
       Duration.ofMillis(scheduledTime - currentTime)
     }
   }
+
+  def isExcluded(date: Date): Boolean = {
+    def iter: Boolean = {
+      val exclusion = exclusions.get.dequeue
+      if(exclusion.before(date)) iter
+      else exclusion.equals(date)
+    }
+    if(exclusions.isDefined && exclusions.get.nonEmpty) iter
+    else false
+
+  }
+
+  /**
+    * Checks if there are schedulings left to run (only applicable to Personalized tasks). If that's the case,
+    * it calculates the delay for the next date and then schedules it.
+    * @param date
+    * @return
+    */
+  def runNextScheduling: Unit = {
+    if(schedulings.isDefined && schedulings.get.nonEmpty){
+      val nextDateDelay = calculateDelay(Some(schedulings.get.dequeue))
+      system.scheduler.scheduleOnce(nextDateDelay, ExecutionActor)
+    }
+  }
+
+
 }

@@ -2,7 +2,8 @@ package api.utils
 
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
-import java.util.{Calendar, Date}
+import java.time.LocalDate
+import java.util.{Calendar, Date, TimeZone}
 
 import api.validators.Error
 import database.repositories.{FileRepository, FileRepositoryImpl}
@@ -48,6 +49,12 @@ object DateUtils{
     new Timestamp(getCurrentDate.getTime)
   }
 
+  def getDayOfWeekFromDate(date:Date): Int = { // 1- Sun, 2- Mon, 3- Tue, 4- Wed, 5- Thu, 6- Fri, 7- Sat
+    val calendar = Calendar.getInstance
+    calendar.setTime(date)
+    calendar.get(Calendar.DAY_OF_WEEK)
+  }
+
   /**
     * Converts a String to a Date by providing the Date and a String specifying the date format.
     *
@@ -59,6 +66,18 @@ object DateUtils{
     val sdf = new SimpleDateFormat(format)
     sdf.parse(date)
   }
+
+  def dateToDayTypeString(date: Date): String = ???
+
+  def dateToDayOfWeekInt(date: Date): Int = ???
+
+  def removeTimeFromDate(date: Date): Date = {
+    val sdf = new SimpleDateFormat("yyyy-MM-dd")
+    val string = sdf.format(date)
+    sdf.parse(string)
+  }
+
+  def isLeapYear(year: Int): Boolean = year % 4 == 0
 
   /**
     * Converts a Date to a String by providing the Date and a String specifying the date format.
@@ -81,6 +100,10 @@ object DateUtils{
       format.setLenient(false)
       Try(Some(format.parse(date))).getOrElse(None)
     }.headOption
+  }
+
+  def parseTimezone(timezone: String): Option[TimeZone] = {
+    Try(Some(TimeZone.getTimeZone(timezone))).getOrElse(None)
   }
 
   /**

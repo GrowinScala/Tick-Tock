@@ -11,7 +11,7 @@ class FakeTaskRepository extends TaskRepository{
   def selectAllTasks: Future[Seq[TaskDTO]] = {
     Future.successful(Seq(
       TaskDTO("asd1", "test1", SchedulingType.RunOnce, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss"))),
-      TaskDTO("asd2", "test2", SchedulingType.Periodic, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")), Some(PeriodType.Minutely), Some(2), Some(getCurrentDateTimestamp)),
+      TaskDTO("asd2", "test2", SchedulingType.Periodic, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")), Some(PeriodType.Minutely), Some(2), Some(stringToDateFormat("01-01-2050 12:00:00", "dd-MM-yyyy HH:mm:ss"))),
       TaskDTO("asd3", "test3", SchedulingType.Periodic, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")), Some(PeriodType.Hourly), Some(1), None, Some(5), Some(5))
     ))
   }
@@ -22,8 +22,8 @@ class FakeTaskRepository extends TaskRepository{
     * @param id - the identifier of the task.
     * @return a TaskDTO of the selected task.
     */
-  def selectTaskByTaskId(id: String): Future[TaskDTO] = {
-    Future.successful(TaskDTO("asd1", "test1", SchedulingType.RunOnce, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss"))))
+  def selectTaskByTaskId(id: String): Future[Option[TaskDTO]] = {
+    Future.successful(Some(TaskDTO("asd1", "test1", SchedulingType.RunOnce, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")))))
   }
 
   /**
@@ -33,8 +33,8 @@ class FakeTaskRepository extends TaskRepository{
     * @param id - the identifier of the task.
     * @return a String containing the fileId.
     */
-  def selectFileIdByTaskId(id: String): Future[String] = {
-    Future.successful("asd1")
+  def selectFileIdByTaskId(id: String): Future[Option[String]] = {
+    Future.successful(Some("asd1"))
   }
 
   /**

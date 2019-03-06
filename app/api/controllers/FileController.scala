@@ -13,13 +13,14 @@ import java.util.UUID._
 
 import api.dtos.FileDTO
 import api.utils.DateUtils._
+import api.utils.UUIDGenerator
 
 import scala.concurrent.{ExecutionContext, Future}
 import database.repositories.{FileRepository, TaskRepository, TaskRepositoryImpl}
 import api.validators.Error._
 
 @Singleton
-class FileController @Inject()(cc: ControllerComponents)(implicit exec: ExecutionContext, implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository) extends AbstractController(cc) {
+class FileController @Inject()(cc: ControllerComponents)(implicit exec: ExecutionContext, implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository, implicit val UUIDGen: UUIDGenerator) extends AbstractController(cc) {
 
   def index = Action {
     Ok("It works!")
@@ -29,7 +30,7 @@ class FileController @Inject()(cc: ControllerComponents)(implicit exec: Executio
     request.body.asMultipartFormData.get.file("file").map{
       file =>
         if(FilenameUtils.getExtension(file.filename) == "jar") {
-          val uuid = randomUUID().toString
+          val uuid = UUIDGen.generateUUID
           val fileName = request.body.asMultipartFormData.get.dataParts.head._2.head
           val uploadDate = getCurrentDateTimestamp
           fileRepo.existsCorrespondingFileName(fileName).map{elem =>
