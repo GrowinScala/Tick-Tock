@@ -124,7 +124,7 @@ class TaskController @Inject()(cc: ControllerComponents)(implicit exec: Executio
   def deleteTask(id: String): Action[AnyContent] = Action.async {
     taskRepo.deleteTaskById(id).map { i =>
       if (i > 0) Ok("Task with id = " + id + " was deleted")
-      else BadRequest("Error deleting file with given id")
+      else BadRequest(Json.toJsObject(invalidEndpointId))
     }
   }
 
@@ -147,5 +147,6 @@ class TaskController @Inject()(cc: ControllerComponents)(implicit exec: Executio
         }
       }
     )
+
   }
 }

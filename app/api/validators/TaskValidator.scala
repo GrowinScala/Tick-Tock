@@ -36,8 +36,8 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
 
   def scheduleValidator(task: CreateTaskDTO): Either[List[Error], TaskDTO] = {
     val taskId = UUIDGen.generateUUID
-    val startDate = isValidStartDateFormat(task.startDateAndTime)
-    val endDate = isValidEndDateFormat(task.endDateAndTime)
+    val startDate = isValidStartDateFormat(task.startDateAndTime, task.timezone)
+    val endDate = isValidEndDateFormat(task.endDateAndTime, task.timezone)
     val exclusions = isValidExclusionFormat(task.exclusions, taskId)
     val schedulings = isValidSchedulingFormat(task.schedulings, taskId)
     val errorList: List[(Boolean, Error)] = (List(
@@ -64,8 +64,8 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
   def updateValidator(id: String, task: UpdateTaskDTO): Either[List[Error], TaskDTO] = {
     val oldDTO = Await.result(taskRepo.selectTaskByTaskId(id), 5 seconds)
     if (oldDTO.isDefined) {
-      val startDate = isValidStartDateFormat(task.startDateAndTime)
-      val endDate = isValidEndDateFormat(task.endDateAndTime)
+      val startDate = isValidStartDateFormat(task.startDateAndTime, task.timezone)
+      val endDate = isValidEndDateFormat(task.endDateAndTime, task.timezone)
       val exclusions = isValidUpdateExclusionFormat(oldDTO.get.exclusions, task.exclusions, id)
       val schedulings = isValidUpdateSchedulingFormat(oldDTO.get.schedulings, task.schedulings, id)
       val errorList: List[(Boolean, Error)] = (List(
@@ -98,18 +98,18 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
 
       if (errorList.isEmpty) {
         Right(TaskDTO(
-          task.taskId.getOrElse(oldDTO.get.taskId),
-          task.fileName.getOrElse(oldDTO.get.fileName),
-          task.taskType.getOrElse(oldDTO.get.taskType),
-          if (startDate.isDefined) startDate else oldStartDate,
-          if (task.periodType.isDefined) task.periodType else oldPeriodType,
-          if (task.period.isDefined) task.period else oldPeriod,
-          if (endDate.isDefined) endDate else oldEndDate,
-          if (task.occurrences.isDefined) task.occurrences else oldTotalOccurrences,
-          if (task.occurrences.isDefined) task.occurrences else oldCurrentOccurrences,
-          if (task.timezone.isDefined) task.timezone else oldTimezone,
-          if (task.exclusions.isDefined) exclusions else oldExclusions,
-          if (task.schedulings.isDefined) schedulings else oldSchedulings
+          task.taskId.getOrElse(oldDTO.get.taskId), //taskId
+          task.fileName.getOrElse(oldDTO.get.fileName), //fileName
+          task.taskType.getOrElse(oldDTO.get.taskType), //taskType
+          if (startDate.isDefined) startDate else oldStartDate, //startDate
+          if (task.periodType.isDefined) task.periodType else oldPeriodType, //periodType
+          if (task.period.isDefined) task.period else oldPeriod, //period
+          if (task.occurrences.isDefined && oldEndDate.isDefined) None else if (endDate.isDefined) endDate else oldEndDate, //endDate
+          if (endDate.isDefined && oldTotalOccurrences.isDefined) None else if (task.occurrences.isDefined) task.occurrences else oldTotalOccurrences, //totalOccurrences
+          if (endDate.isDefined && oldCurrentOccurrences.isDefined) None else if (task.occurrences.isDefined) task.occurrences else oldCurrentOccurrences, //currentOccurrences
+          if (task.timezone.isDefined) task.timezone else oldTimezone, //timezone
+          if (task.exclusions.isDefined) exclusions else oldExclusions, //exclusions
+          if (task.schedulings.isDefined) schedulings else oldSchedulings //schedulings
         ))
       }
       else Left(errorList.unzip._2)
@@ -139,8 +139,9 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
         (task.endDateAndTime.isDefined || oldTask.endDateAndTime.isDefined || task.occurrences.isDefined || oldTask.totalOccurrences.isDefined)
     }
     else{
-      task.taskId.isDefined || task.fileName.isDefined || task.taskType.isDefined || task.startDateAndTime.isDefined ||
-        task.periodType.isDefined || task.period.isDefined || task.endDateAndTime.isDefined || task.occurrences.isDefined
+      (task.taskId.isDefined || task.fileName.isDefined || task.taskType.isDefined || task.startDateAndTime.isDefined ||
+        task.periodType.isDefined || task.period.isDefined || task.endDateAndTime.isDefined || task.occurrences.isDefined) &&
+        !(task.endDateAndTime.isDefined && task.occurrences.isDefined)
     }
 
   }
@@ -153,8 +154,11 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
     else true
   }
 
-  private def isValidStartDateFormat(startDate: Option[String]): Option[Date] = {
-    if (startDate.isDefined) parseDate(startDate.get)
+  private def isValidStartDateFormat(startDate: Option[String], timezone: Option[String]): Option[Date] = {
+    if (startDate.isDefined){
+      if(timezone.isDefined && isValidTimezone(timezone)) parseDateWithTimezone(startDate.get, timezone.get)
+      else parseDate(startDate.get)
+    }
     else None
   }
 
@@ -199,8 +203,11 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
     period.isEmpty || period.get > 0
   }
 
-  private def isValidEndDateFormat(endDate: Option[String]): Option[Date] = {
-    if (endDate.isDefined) parseDate(endDate.get)
+  private def isValidEndDateFormat(endDate: Option[String], timezone: Option[String]): Option[Date] = {
+    if (endDate.isDefined){
+      if(timezone.isDefined && isValidTimezone(timezone)) parseDateWithTimezone(endDate.get, timezone.get)
+      else parseDate(endDate.get)
+    }
     else None
   }
 

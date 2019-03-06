@@ -28,7 +28,8 @@ object TaskMappings {
                       startDateAndTime: Option[Date],
                       endDateAndTime: Option[Date],
                       totalOccurrences: Option[Int],
-                      currentOccurrences: Option[Int]
+                      currentOccurrences: Option[Int],
+                      timezone: Option[String]
                     )
 
 
@@ -46,11 +47,12 @@ object TaskMappings {
     def endDateAndTime = column[Option[Date]]("endDateAndTime")
     def totalOccurrences = column[Option[Int]]("totalOccurrences")
     def currentOccurrences = column[Option[Int]]("currentOccurrences")
+    def timezone = column[Option[String]]("timezone")
 
     /*def fileIdFK =
       foreignKey("fileId", fileId, filesTable)(_.fileId, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Cascade)*/
 
-    def * = (taskId, fileId, period, value, startDateAndTime, endDateAndTime, totalOccurrences, currentOccurrences) <> (TaskRow.tupled, TaskRow.unapply)
+    def * = (taskId, fileId, period, value, startDateAndTime, endDateAndTime, totalOccurrences, currentOccurrences, timezone) <> (TaskRow.tupled, TaskRow.unapply)
   }
 
   //---------------------------------------------------------
@@ -108,6 +110,10 @@ object TaskMappings {
     tasksTable.filter(_.currentOccurrences === currentOccurrences)
   }
 
+  def selectByTimezone(timezone: String): Query[TasksTable, TaskRow, Seq] = {
+    tasksTable.filter(_.timezone === timezone)
+  }
+
   def insertTask(task: TaskRow): FixedSqlAction[Int, NoStream, Effect.Write] = {
     tasksTable += task
   }
@@ -140,6 +146,10 @@ object TaskMappings {
     tasksTable.filter(_.currentOccurrences === currentOccurrences).update(task)
   }
 
+  def updateTaskByTimezone(timezone: String, task: TaskRow):  MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    tasksTable.filter(_.timezone === timezone).update(task)
+  }
+
   def deleteByTaskId(id: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.taskId === id).delete
   }
@@ -170,6 +180,10 @@ object TaskMappings {
 
   def deleteByCurrentOccurrences(currentOccurrences: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     tasksTable.filter(_.currentOccurrences === currentOccurrences).delete
+  }
+
+  def deleteByTimezone(timezone: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    tasksTable.filter(_.timezone === timezone).delete
   }
 
 }

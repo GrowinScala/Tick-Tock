@@ -35,7 +35,8 @@ object Error{
         |The json format is not valid. Json must contain:
         |- the String fields "startDateAndTime", "fileName" and "taskType" in that order.
         |- the remaining fields "periodType"(String), "period"(Int), "endDateAndTime"(String) and "occurrences"(Int) (in that order) only when taskType is "Periodic".
-        |- either an "endDateAndTime" or "occurrences" field but not both.""".stripMargin,
+        |- either an "endDateAndTime" or "occurrences" field but not both.
+        |- if this is a PUT request, the task introduced must not have a taskId. (the taskId is introduced in the endpoint)""".stripMargin,
     reason = Error.invalid,
     locationType = None,
     location = header
@@ -144,7 +145,9 @@ object Error{
   )
 
   lazy val invalidEndpointId = Error(
-    message = s"The id introduced in the endpoint request does not exist for any task.",
+    message = """
+        |The id introduced in the endpoint request does not exist for any task.
+      """.stripMargin,
     reason = Error.invalid,
     locationType = None,
     location = endpoint

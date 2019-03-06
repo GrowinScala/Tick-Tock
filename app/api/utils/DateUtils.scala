@@ -102,6 +102,14 @@ object DateUtils{
     }.headOption
   }
 
+  def parseDateWithTimezone(date: String, timezone: String): Option[Date] = {
+    dateFormatsList.flatMap { format =>
+      format.setLenient(false)
+      format.setTimeZone(parseTimezone(timezone).get)
+      Try(Some(format.parse(date))).getOrElse(None)
+    }.headOption
+  }
+
   def parseTimezone(timezone: String): Option[TimeZone] = {
     Try(Some(TimeZone.getTimeZone(timezone))).getOrElse(None)
   }

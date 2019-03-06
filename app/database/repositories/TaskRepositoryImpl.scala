@@ -25,12 +25,12 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
     dtbase.run(selectById(task.fileId).map(_.fileName).result.head).map{ name =>
       task.period match{
         case 0 /*RunOnce*/=> TaskDTO(task.taskId, name, SchedulingType.RunOnce, task.startDateAndTime)
-        case 1 /*Minutely*/=> TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Minutely), task.value, task.endDateAndTime, task.currentOccurrences)
-        case 2 /*Hourly*/=> TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Hourly), task.value, task.endDateAndTime, task.currentOccurrences)
-        case 3 /*Daily*/=> TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Daily), task.value, task.endDateAndTime, task.currentOccurrences)
-        case 4 /*Weekly*/=> TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Weekly), task.value, task.endDateAndTime, task.currentOccurrences)
-        case 5 /*Monthly*/=> TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Monthly), task.value, task.endDateAndTime, task.currentOccurrences)
-        case 6 /*Yearly*/=> TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Yearly), task.value, task.endDateAndTime, task.currentOccurrences)
+        case 1 /*Minutely*/=> TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Minutely), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
+        case 2 /*Hourly*/=> TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Hourly), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
+        case 3 /*Daily*/=> TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Daily), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
+        case 4 /*Weekly*/=> TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Weekly), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
+        case 5 /*Monthly*/=> TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Monthly), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
+        case 6 /*Yearly*/=> TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Yearly), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
       }
     }
   }
@@ -39,21 +39,21 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
     dtbase.run(selectByFileName(task.fileName).result.head.map(_.fileId)).map { fileId =>
       task.taskType match {
         case SchedulingType.RunOnce =>
-          TaskRow(task.taskId, fileId, 0, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences)
+          TaskRow(task.taskId, fileId, 0, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
         case SchedulingType.Periodic =>
           task.periodType.get match {
             case PeriodType.Minutely =>
-              TaskRow(task.taskId, fileId, 1, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences)
+              TaskRow(task.taskId, fileId, 1, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
             case PeriodType.Hourly =>
-              TaskRow(task.taskId, fileId, 2, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences)
+              TaskRow(task.taskId, fileId, 2, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
             case PeriodType.Daily =>
-              TaskRow(task.taskId, fileId, 3, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences)
+              TaskRow(task.taskId, fileId, 3, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
             case PeriodType.Weekly =>
-              TaskRow(task.taskId, fileId, 4, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences)
+              TaskRow(task.taskId, fileId, 4, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
             case PeriodType.Monthly =>
-              TaskRow(task.taskId, fileId, 5, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences)
+              TaskRow(task.taskId, fileId, 5, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
             case PeriodType.Yearly =>
-              TaskRow(task.taskId, fileId, 6, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences)
+              TaskRow(task.taskId, fileId, 6, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
           }
       }
 
@@ -72,12 +72,12 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
           dtbase.run(selectById(elem.fileId).map(_.fileName).result.head).map{ name =>
             elem.period match{
               case 0 /*RunOnce*/=> TaskDTO(elem.taskId, name, SchedulingType.RunOnce, elem.startDateAndTime)
-              case 1 /*Minutely*/=> TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Minutely), elem.value, elem.endDateAndTime, elem.currentOccurrences)
-              case 2 /*Hourly*/=> TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Hourly), elem.value, elem.endDateAndTime, elem.currentOccurrences)
-              case 3 /*Daily*/=> TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Daily), elem.value, elem.endDateAndTime, elem.currentOccurrences)
-              case 4 /*Weekly*/=> TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Weekly), elem.value, elem.endDateAndTime, elem.currentOccurrences)
-              case 5 /*Monthly*/=> TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Monthly), elem.value, elem.endDateAndTime, elem.currentOccurrences)
-              case 6 /*Yearly*/=> TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Yearly), elem.value, elem.endDateAndTime, elem.currentOccurrences)
+              case 1 /*Minutely*/=> TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Minutely), elem.value, elem.endDateAndTime, elem.totalOccurrences, elem.currentOccurrences, elem.timezone)
+              case 2 /*Hourly*/=> TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Hourly), elem.value, elem.endDateAndTime, elem.totalOccurrences, elem.currentOccurrences, elem.timezone)
+              case 3 /*Daily*/=> TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Daily), elem.value, elem.endDateAndTime, elem.totalOccurrences, elem.currentOccurrences, elem.timezone)
+              case 4 /*Weekly*/=> TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Weekly), elem.value, elem.endDateAndTime, elem.totalOccurrences, elem.currentOccurrences, elem.timezone)
+              case 5 /*Monthly*/=> TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Monthly), elem.value, elem.endDateAndTime, elem.totalOccurrences, elem.currentOccurrences, elem.timezone)
+              case 6 /*Yearly*/=> TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Yearly), elem.value, elem.endDateAndTime, elem.totalOccurrences, elem.currentOccurrences, elem.timezone)
             }
           }
         }

@@ -1003,7 +1003,6 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       task.map{ elem =>
         elem.isDefined mustBe true
         val resultDto = TaskDTO(id, "test2", SchedulingType.RunOnce, Some(stringToDateFormat("2020-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Daily), Some(2), Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")))
-        //task.get mustBe Json.toJsObject(resultDto).toString
         elem.get mustBe resultDto
       }
 
@@ -1066,15 +1065,20 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      Await.result(routeOption.get, Duration.Inf)
+      val task = for {
+        _ <- routeOption.get
+        res <- taskRepo.selectTaskByTaskId(id)
+      } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received."
-      val task = Await.result(taskRepo.selectTaskByTaskId(id), Duration.Inf)
-      task.isDefined mustBe true
-      val resultDto = TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(stringToDateFormat("2019-07-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Hourly), Some(1), Some(stringToDateFormat("2020-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
-      task.get mustBe resultDto
+      task.map { elem =>
+        elem.isDefined mustBe true
+        val resultDto = TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(stringToDateFormat("2019-07-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Hourly), Some(1), Some(stringToDateFormat("2020-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
+        elem.get mustBe resultDto
+      }
+
     }
 
     "receive a PATCH request changing the startDate of a task." in {
@@ -1096,15 +1100,19 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      Await.result(routeOption.get, Duration.Inf)
+      val task = for {
+        _ <- routeOption.get
+        res <- taskRepo.selectTaskByTaskId(id)
+      } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received."
-      val task = Await.result(taskRepo.selectTaskByTaskId(id), Duration.Inf)
-      task.isDefined mustBe true
-      val resultDto = dto2.copy(startDateAndTime = Some(stringToDateFormat("2019-07-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
-      task.get mustBe resultDto
+      task.map { elem =>
+        elem.isDefined mustBe true
+        val resultDto = dto2.copy(startDateAndTime = Some(stringToDateFormat("2019-07-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
+        elem.get mustBe resultDto
+      }
     }
 
     "receive a PATCH request changing the periodType of a task." in {
@@ -1126,15 +1134,19 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      Await.result(routeOption.get, Duration.Inf)
+      val task = for {
+        _ <- routeOption.get
+        res <- taskRepo.selectTaskByTaskId(id)
+      } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received."
-      val task = Await.result(taskRepo.selectTaskByTaskId(id), Duration.Inf)
-      task.isDefined mustBe true
-      val resultDto = dto2.copy(periodType = Some(PeriodType.Hourly))
-      task.get mustBe resultDto
+      task.map { elem =>
+        elem.isDefined mustBe true
+        val resultDto = dto2.copy(periodType = Some(PeriodType.Hourly))
+        elem.get mustBe resultDto
+      }
     }
 
     "receive a PATCH request changing the period of a task." in {
@@ -1156,15 +1168,20 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      Await.result(routeOption.get, Duration.Inf)
+      val task = for {
+        _ <- routeOption.get
+        res <- taskRepo.selectTaskByTaskId(id)
+      } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received."
-      val task = Await.result(taskRepo.selectTaskByTaskId(id), Duration.Inf)
-      task.isDefined mustBe true
-      val resultDto = dto2.copy(period = Some(5))
-      task.get mustBe resultDto
+      task.map{ elem =>
+        elem.isDefined mustBe true
+        val resultDto = dto2.copy(period = Some(5))
+        elem.get mustBe resultDto
+      }
+
     }
 
     "receive a PATCH request changing the endDate of a task." in {
@@ -1186,18 +1203,23 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      Await.result(routeOption.get, Duration.Inf)
+      val task = for {
+        _ <- routeOption.get
+        res <- taskRepo.selectTaskByTaskId(id)
+      } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received."
-      val task = Await.result(taskRepo.selectTaskByTaskId(id), Duration.Inf)
-      task.isDefined mustBe true
-      val resultDto = dto2.copy(endDateAndTime = Some(stringToDateFormat("2050-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
-      task.get mustBe resultDto
+      task.map { elem =>
+        elem.isDefined mustBe true
+        val resultDto = dto2.copy(endDateAndTime = Some(stringToDateFormat("2050-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
+        elem.get mustBe resultDto
+      }
+
     }
 
-    "receive a PATCH request changing the endDate of a task that already has an occurrences field." in {
+    "receive a PATCH request changing the endDate of a task that already has an occurrences field. (replaces occurrences with the endDate)" in {
       val dto1 = TaskDTO("asd1", "test1", SchedulingType.RunOnce)
       val dto2 = TaskDTO("asd2", "test2", SchedulingType.Periodic, Some(stringToDateFormat("2020-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Daily), Some(2), Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")))
       val dto3 = TaskDTO("asd3", "test3", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Monthly), Some(1), None, Some(12), Some(12))
@@ -1216,14 +1238,19 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      Await.result(routeOption.get, Duration.Inf)
+      val task = for{
+        _ <- routeOption.get
+        res <- taskRepo.selectTaskByTaskId(id)
+      } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
-      status(routeOption.get) mustBe BAD_REQUEST
-      bodyText mustBe Json.toJsObject(invalidUpdateTaskFormat)
-      val task = Await.result(taskRepo.selectTaskByTaskId(id), Duration.Inf)
-      task.isDefined mustBe true
-      task.get mustBe Json.toJsObject(dto3).toString
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received."
+      task.map{ elem =>
+        elem.isDefined mustBe true
+        val resultDTO = dto3.copy(endDateAndTime = Some(stringToDateFormat("2050-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), totalOccurrences = None, currentOccurrences = None)
+        elem.get mustBe Json.toJsObject(resultDTO).toString
+      }
     }
 
 
@@ -1246,18 +1273,23 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      Await.result(routeOption.get, Duration.Inf)
+      val task = for{
+        _ <- routeOption.get
+        res <- taskRepo.selectTaskByTaskId(id)
+      } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received."
-      val task = Await.result(taskRepo.selectTaskByTaskId(id), Duration.Inf)
-      task.isDefined mustBe true
-      val resultDto = dto3.copy(totalOccurrences = Some(5), currentOccurrences = Some(5))
-      task.get mustBe Json.toJsObject(resultDto).toString
+      task.map { elem =>
+        elem.isDefined mustBe true
+        val resultDto = dto3.copy(totalOccurrences = Some(5), currentOccurrences = Some(5))
+        elem.get mustBe Json.toJsObject(resultDto).toString
+      }
+
     }
 
-    "receive a PATCH request changing the occurrences of a task that already has an endDate field." in {
+    "receive a PATCH request changing the occurrences of a task that already has an endDate field. (replaces endDate with the occurrences)" in {
       val dto1 = TaskDTO("asd1", "test1", SchedulingType.RunOnce)
       val dto2 = TaskDTO("asd2", "test2", SchedulingType.Periodic, Some(stringToDateFormat("2020-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Daily), Some(2), Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")))
       val dto3 = TaskDTO("asd3", "test3", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Monthly), Some(1), None, Some(12), Some(12))
@@ -1276,14 +1308,19 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      Await.result(routeOption.get, Duration.Inf)
+      val task = for {
+        _ <- routeOption.get
+        res <- taskRepo.selectTaskByTaskId(id)
+      } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
-      status(routeOption.get) mustBe BAD_REQUEST
-      bodyText mustBe Json.toJsObject(invalidUpdateTaskFormat)
-      val task = Await.result(taskRepo.selectTaskByTaskId(id), Duration.Inf)
-      task.isDefined mustBe true
-      task.get mustBe Json.toJsObject(dto2).toString
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received."
+      task.map{ elem =>
+        elem.isDefined mustBe true
+        val resultDTO = dto2.copy(endDateAndTime = None, totalOccurrences = Some(5), currentOccurrences = Some(5))
+        elem.get mustBe Json.toJsObject(dto2).toString
+      }
     }
 
     "receive a PATCH request changing multiple values of a RunOnce task." in {
@@ -1301,22 +1338,26 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
-            "taskId":"newUUID",
-            "fileName":"newFileName",
+            "taskId":"11231bd5-6f92-496c-9fe7-75bc180467b0",
+            "fileName":"test4",
             "taskType":"RunOnce",
             "startDateAndTime":"2050-01-01 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
-      Await.result(routeOption.get, Duration.Inf)
+      val task = for {
+        _ <- routeOption.get
+        res <- taskRepo.selectTaskByTaskId(id)
+      } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received."
-      val task = Await.result(taskRepo.selectTaskByTaskId(id), Duration.Inf)
-      task.isDefined mustBe true
-      val resultDto = TaskDTO("newUUID", "newFileName", SchedulingType.RunOnce, Some(stringToDateFormat("2050-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
-      task.get mustBe Json.toJsObject(resultDto).toString
+      task.map{ elem =>
+        elem.isDefined mustBe true
+        val resultDto = TaskDTO("11231bd5-6f92-496c-9fe7-75bc180467b0", "test4", SchedulingType.RunOnce, Some(stringToDateFormat("2050-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
+        elem.get mustBe Json.toJsObject(resultDto).toString
+      }
     }
 
     "receive a PATCH request changing multiple values of a Periodic task." in {
@@ -1334,8 +1375,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
-            "taskId":"newUUID",
-            "fileName":"newFileName",
+            "taskId":"11231bd5-6f92-496c-9fe7-75bc180467b0",
+            "fileName":"test4",
             "taskType":"Periodic",
             "startDateAndTime":"2050-01-01 00:00:00",
             "periodType":"Yearly",
@@ -1344,21 +1385,95 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      Await.result(routeOption.get, Duration.Inf)
+      val task = for{
+        _ <- routeOption.get
+        res <- taskRepo.selectTaskByTaskId(id)
+      } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received."
-      val task = Await.result(taskRepo.selectTaskByTaskId(id), Duration.Inf)
-      task.isDefined mustBe true
-      val resultDto = TaskDTO("newUUID", "newFileName", SchedulingType.Periodic, Some(stringToDateFormat("2050-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Yearly), Some(2), None, Some(6), Some(6))
-      task.get mustBe Json.toJsObject(resultDto).toString
+      task.map{ elem =>
+        elem.isDefined mustBe true
+        val resultDto = TaskDTO("11231bd5-6f92-496c-9fe7-75bc180467b0", "test4", SchedulingType.Periodic, Some(stringToDateFormat("2050-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Yearly), Some(2), None, Some(6), Some(6))
+        elem.get mustBe Json.toJsObject(resultDto).toString
+      }
+
     }
   }
 
   "PUT /task/:id" should {
 
-    "receive a PUT request with a non-existing id" in {
+    "receive a PUT request with a non-existing id and a given correct task" in {
+      val dto1 = TaskDTO("asd1", "test1", SchedulingType.RunOnce)
+      val dto2 = TaskDTO("asd2", "test2", SchedulingType.Periodic, Some(stringToDateFormat("2020-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Daily), Some(2), Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")))
+      val dto3 = TaskDTO("asd3", "test3", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Monthly), Some(1), None, Some(12), Some(12))
+      val result = for {
+        _ <- taskRepo.insertInTasksTable(dto1)
+        _ <- taskRepo.insertInTasksTable(dto2)
+        res <- taskRepo.insertInTasksTable(dto3)
+      } yield res
+      Await.result(result, Duration.Inf)
+      val id = "11231bd5-6f92-496c-9fe7-75bc180467b0"
+      val fakeRequest = FakeRequest(PUT, "/task/" + id)
+        .withHeaders(HOST -> LOCALHOST)
+        .withBody(Json.parse("""
+          {
+            "fileName": "test4",
+            "taskType": "Periodic",
+            "startDateAndTime": "2019-07-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2020-01-01 00:00:00"
+           }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val task = for{
+        _ <- routeOption.get
+        res <- taskRepo.selectTaskByTaskId("11231bd5-6f92-496c-9fe7-75bc180467b0")
+      } yield res
+      val bodyText = contentAsString(routeOption.get)
+      println(bodyText)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received."
+      task.map(elem => elem.isDefined mustBe true)
+    }
+
+    "receive a PUT request with a non-existing id and a given incorrect task. (missing endDate)" in {
+      val dto1 = TaskDTO("asd1", "test1", SchedulingType.RunOnce)
+      val dto2 = TaskDTO("asd2", "test2", SchedulingType.Periodic, Some(stringToDateFormat("2020-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Daily), Some(2), Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")))
+      val dto3 = TaskDTO("asd3", "test3", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Monthly), Some(1), None, Some(12), Some(12))
+      val result = for {
+        _ <- taskRepo.insertInTasksTable(dto1)
+        _ <- taskRepo.insertInTasksTable(dto2)
+        res <- taskRepo.insertInTasksTable(dto3)
+      } yield res
+      Await.result(result, Duration.Inf)
+      val id = "11231bd5-6f92-496c-9fe7-75bc180467b0"
+      val fakeRequest = FakeRequest(PUT, "/task/" + id)
+        .withHeaders(HOST -> LOCALHOST)
+        .withBody(Json.parse("""
+          {
+            "fileName": "test4",
+            "taskType": "Periodic",
+            "startDateAndTime": "2019-07-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5
+           }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val task = for{
+        _ <- routeOption.get
+        res <- taskRepo.selectTaskByTaskId("11231bd5-6f92-496c-9fe7-75bc180467b0")
+      } yield res
+      val bodyText = contentAsString(routeOption.get)
+      println(bodyText)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidCreateTaskFormat) + "]"
+      task.map(elem => elem.isDefined mustBe false)
+    }
+
+    "receive a PUT request with a non-existing id and a given incorrect task. (has taskId)" in {
       val dto1 = TaskDTO("asd1", "test1", SchedulingType.RunOnce)
       val dto2 = TaskDTO("asd2", "test2", SchedulingType.Periodic, Some(stringToDateFormat("2020-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Daily), Some(2), Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")))
       val dto3 = TaskDTO("asd3", "test3", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Monthly), Some(1), None, Some(12), Some(12))
@@ -1373,25 +1488,28 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
-            "taskId": "newUUID",
-            "fileName": "newFileName",
+            "taskId": "11231bd5-6f92-496c-9fe7-75bc180467b0",
+            "fileName": "test4",
             "taskType": "Periodic",
             "startDateAndTime": "2019-07-01 00:00:00",
             "periodType": "Minutely",
-            "period": 5,
-            "endDateAndTime": "2020-01-01 00:00:00"
+            "period": 5
            }
         """))
       val routeOption = route(app, fakeRequest)
-      Await.result(routeOption.get, Duration.Inf)
+      val tasks = for{
+        _ <- routeOption.get
+        task1 <- taskRepo.selectTaskByTaskId("11231bd5-6f92-496c-9fe7-75bc180467b0")
+        task2 <- taskRepo.selectTaskByTaskId("asd4")
+      } yield (task1, task2)
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe BAD_REQUEST
-      bodyText mustBe "[" + Json.toJsObject(invalidEndpointId) + "]"
-      val task1 = Await.result(taskRepo.selectTaskByTaskId("newUUID"), Duration.Inf)
-      task1.isDefined mustBe false
-      val task2 = Await.result(taskRepo.selectTaskByTaskId("asd4"), Duration.Inf)
-      task2.isDefined mustBe false
+      bodyText mustBe "[" + Json.toJsObject(invalidCreateTaskFormat) + "]"
+      tasks.map { elem =>
+        elem._1.isDefined mustBe false
+        elem._2.isDefined mustBe false
+      }
     }
 
     "receive a PUT request replacing a task with the given id with a given correct task." in {
@@ -1409,8 +1527,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
-            "taskId": "newUUID",
-            "fileName": "newFileName",
+            "taskId": "11231bd5-6f92-496c-9fe7-75bc180467b0",
+            "fileName": "test4",
             "taskType": "Periodic",
             "startDateAndTime": "2019-07-01 00:00:00",
             "periodType": "Minutely",
@@ -1419,15 +1537,19 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
            }
         """))
       val routeOption = route(app, fakeRequest)
-      Await.result(routeOption.get, Duration.Inf)
+      val task = for {
+        _ <- routeOption.get
+        res <- taskRepo.selectTaskByTaskId("11231bd5-6f92-496c-9fe7-75bc180467b0")
+      } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received."
-      val task = Await.result(taskRepo.selectTaskByTaskId("newUUID"), Duration.Inf)
-      task.isDefined mustBe true
-      val resultDto = TaskDTO("newUUID", "newFileName", SchedulingType.Periodic, Some(stringToDateFormat("2019-07-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2020-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
-      task.get mustBe Json.toJsObject(resultDto).toString
+      task.map { elem =>
+        elem.isDefined mustBe true
+        val resultDto = TaskDTO("11231bd5-6f92-496c-9fe7-75bc180467b0", "test4", SchedulingType.Periodic, Some(stringToDateFormat("2019-07-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2020-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
+        elem.get mustBe Json.toJsObject(resultDto).toString
+      }
     }
 
     "receive a PUT request replacing a task with the given id with a given incorrect task." in {
@@ -1445,8 +1567,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
-            "taskId": "newUUID",
-            "fileName": "newFileName",
+            "taskId": "11231bd5-6f92-496c-9fe7-75bc180467b0",
+            "fileName": "test4",
             "taskType": "Periodic",
             "startDateAndTime": "2019-07-01 00:00:00",
             "periodType": "Minutely",
@@ -1454,14 +1576,18 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
            }
         """))
       val routeOption = route(app, fakeRequest)
-      Await.result(routeOption.get, Duration.Inf)
+      val task = for{
+        _ <- routeOption.get
+        res <- taskRepo.selectTaskByTaskId("11231bd5-6f92-496c-9fe7-75bc180467b0")
+      } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe BAD_REQUEST
-      bodyText mustBe Json.toJsObject(invalidUpdateTaskFormat)
-      val task = Await.result(taskRepo.selectTaskByTaskId("newUUID"), Duration.Inf)
-      task.isDefined mustBe true
-      task.get mustBe Json.toJsObject(dto1).toString
+      bodyText mustBe "[" + Json.toJsObject(invalidCreateTaskFormat) + "]"
+      task.map { elem =>
+        elem.isDefined mustBe true
+        elem.get mustBe Json.toJsObject(dto1).toString
+      }
     }
   }
 
@@ -1476,13 +1602,15 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val fakeRequest = FakeRequest(DELETE, "/task/" + id)
         .withHeaders(HOST -> LOCALHOST)
       val routeOption = route(app, fakeRequest)
-      Await.result(routeOption.get, Duration.Inf)
+      val tasks = for {
+        _ <- routeOption.get
+        res <- taskRepo.selectAllTasks
+      } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe BAD_REQUEST
-      bodyText mustBe Json.toJsObject(invalidEndpointId)
-      val result = Await.result(taskRepo.selectAllTasks, Duration.Inf)
-      result.size mustBe 1
+      bodyText mustBe Json.toJsObject(invalidEndpointId).toString
+      tasks.map(elem => elem.size mustBe 1)
     }
 
     "receive a DELETE request to delete a task with the given id." in {
@@ -1494,13 +1622,15 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val fakeRequest = FakeRequest(DELETE, "/task/" + id)
         .withHeaders(HOST -> LOCALHOST)
       val routeOption = route(app, fakeRequest)
-      Await.result(routeOption.get, Duration.Inf)
+      val tasks = for{
+        _ <- routeOption.get
+        res <- taskRepo.selectAllTasks
+      } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task with id = " + id + " was deleted"
-      val result = Await.result(taskRepo.selectAllTasks, Duration.Inf)
-      result.size mustBe 0
+      tasks.map(elem => elem.size mustBe 0)
     }
   }
 
