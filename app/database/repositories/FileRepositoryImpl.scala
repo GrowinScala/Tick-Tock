@@ -64,6 +64,7 @@ class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository{
     dtbase.run(dropFilesTableAction)
   }
 
+  //TODO: "Don't code twice". This one could be implemented using "selectFileById"
   /**
     * Checks if a corresponding file row exists on the database by providing its fileId.
     * @param fileId Id of the file on the database.
