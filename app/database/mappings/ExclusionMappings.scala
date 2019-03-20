@@ -20,13 +20,13 @@ object ExclusionMappings {
   case class ExclusionRow(
                            exclusionId: String,
                            taskId: String,
-                           exclusionDate: Option[Date],
-                           day: Option[Int],
-                           dayOfWeek: Option[Int],
-                           dayType: Option[DayType],
-                           month: Option[Int],
-                           year: Option[Int],
-                           criteria: Option[Criteria]
+                           exclusionDate: Option[Date] = None,
+                           day: Option[Int] = None,
+                           dayOfWeek: Option[Int] = None,
+                           dayType: Option[DayType] = None,
+                           month: Option[Int] = None,
+                           year: Option[Int] = None,
+                           criteria: Option[Criteria] = None
                     )
 
   implicit val exclusionsRowFormat: OFormat[ExclusionRow] = Json.format[ExclusionRow]
@@ -37,7 +37,7 @@ object ExclusionMappings {
 
   class ExclusionsTable(tag: Tag) extends Table[ExclusionRow](tag, "exclusions"){
     def exclusionId = column[String]("exclusionId", O.PrimaryKey, O.Length(36))
-    def taskId = column[String]("taskId", O.Unique, O.Length(36))
+    def taskId = column[String]("taskId", O.Length(36))
     def exclusionDate = column[Option[Date]]("exclusionDate")
     def day = column[Option[Int]]("day")
     def dayOfWeek = column[Option[Int]]("dayOfWeek")
@@ -89,31 +89,117 @@ object ExclusionMappings {
   val selectAllFromExclusionsTable = exclusionsTable
   val deleteAllFromExclusionsTable = exclusionsTable.delete
 
-  def selectById(id: String): Query[ExclusionsTable, ExclusionRow, Seq] = {
-    exclusionsTable.filter(_.exclusionId === id)
+  def selectExclusionByExclusionId(exclusionId: String): Query[ExclusionsTable, ExclusionRow, Seq] = {
+    exclusionsTable.filter(_.exclusionId === exclusionId)
   }
 
-  /*def selectByFileName(name: String): Query[FilesTable, FileRow, Seq] = {
-    filesTable.filter(_.fileName === name)
+  def selectExclusionByTaskId(taskId: String): Query[ExclusionsTable, ExclusionRow, Seq] = {
+    exclusionsTable.filter(_.taskId === taskId)
   }
 
-  def insertFile(file: FileRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    filesTable += file
+  def selectExclusionByExclusionDate(exclusionDate: Date): Query[ExclusionsTable, ExclusionRow, Seq] = {
+    exclusionsTable.filter(_.exclusionDate === exclusionDate)
   }
 
-  def updateById(id: String, file: FileRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    filesTable.filter(_.fileId === id).update(file)
+  def selectExclusionByDay(day: Int): Query[ExclusionsTable, ExclusionRow, Seq] = {
+    exclusionsTable.filter(_.day === day)
   }
 
-  def updateByFileName(name: String, file: FileRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    filesTable.filter(_.fileName === name).update(file)
+  def selectExclusionByDayOfWeek(dayOfWeek: Int): Query[ExclusionsTable, ExclusionRow, Seq] = {
+    exclusionsTable.filter(_.dayOfWeek === dayOfWeek)
   }
 
-  def deleteById(id: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    filesTable.filter(_.fileId === id).delete
+  def selectExclusionByDayType(dayType: DayType): Query[ExclusionsTable, ExclusionRow, Seq] = {
+    exclusionsTable.filter(_.dayType === dayType)
   }
 
-  def deleteByFileName(name: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    filesTable.filter(_.fileName === name).delete
-  }*/
+  def selectExclusionByMonth(month: Int): Query[ExclusionsTable, ExclusionRow, Seq] = {
+    exclusionsTable.filter(_.month === month)
+  }
+
+  def selectExclusionByYear(year: Int): Query[ExclusionsTable, ExclusionRow, Seq] = {
+    exclusionsTable.filter(_.year === year)
+  }
+
+  def selectExclusionByCriteria(criteria: Criteria): Query[ExclusionsTable, ExclusionRow, Seq] = {
+    exclusionsTable.filter(_.criteria === criteria)
+  }
+
+  def insertExclusion(exclusion: ExclusionRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    exclusionsTable += exclusion
+  }
+
+  def updateExclusionByExclusionId(exclusionId: String, exclusion: ExclusionRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectExclusionByExclusionId(exclusionId).update(exclusion)
+  }
+
+  def updateExclusionByTaskId(taskId: String, exclusion: ExclusionRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectExclusionByTaskId(taskId).update(exclusion)
+  }
+
+  def updateExclusionByExclusionDate(exclusionDate: Date, exclusion: ExclusionRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectExclusionByExclusionDate(exclusionDate).update(exclusion)
+  }
+
+  def updateExclusionByDay(day: Int, exclusion: ExclusionRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectExclusionByDay(day).update(exclusion)
+  }
+
+  def updateExclusionByDayOfWeek(dayOfWeek: Int, exclusion: ExclusionRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectExclusionByDayOfWeek(dayOfWeek).update(exclusion)
+  }
+
+  def updateExclusionByDayType(dayType: DayType, exclusion: ExclusionRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectExclusionByDayType(dayType).update(exclusion)
+  }
+
+  def updateExclusionByMonth(month: Int, exclusion: ExclusionRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectExclusionByMonth(month).update(exclusion)
+  }
+
+  def updateExclusionByYear(year: Int, exclusion: ExclusionRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectExclusionByYear(year).update(exclusion)
+  }
+
+  def updateExclusionByCriteria(criteria: Criteria, exclusion: ExclusionRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectExclusionByCriteria(criteria).update(exclusion)
+  }
+
+  def deleteExclusionByExclusionId(exclusionId: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectExclusionByExclusionId(exclusionId).delete
+  }
+
+  def deleteExclusionByTaskId(taskId: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectExclusionByTaskId(taskId).delete
+  }
+
+  def deleteExclusionByExclusionDate(exclusionDate: Date): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectExclusionByExclusionDate(exclusionDate).delete
+  }
+
+  def deleteExclusionByDay(day: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectExclusionByDay(day).delete
+  }
+
+  def deleteExclusionByDayOfWeek(dayOfWeek: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectExclusionByDayOfWeek(dayOfWeek).delete
+  }
+
+  def deleteExclusionByDayType(dayType: DayType): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectExclusionByDayType(dayType).delete
+  }
+
+  def deleteExclusionByMonth(month: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectExclusionByMonth(month).delete
+  }
+
+  def deleteExclusionByYear(year: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectExclusionByYear(year).delete
+  }
+
+  def deleteExclusionByCriteria(criteria: Criteria): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectExclusionByCriteria(criteria).delete
+  }
+
+
 }

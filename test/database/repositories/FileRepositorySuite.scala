@@ -4,12 +4,14 @@ import java.util.UUID
 
 import api.dtos.FileDTO
 import api.utils.DateUtils._
-import database.utils.DatabaseUtils.TEST_DB
 import org.scalatest.{AsyncWordSpec, BeforeAndAfterAll, BeforeAndAfterEach}
 import play.api.Mode
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 import slick.jdbc.meta.MTable
+import slick.jdbc.MySQLProfile.api._
+import database.mappings.FileMappings._
+import database.mappings.TaskMappings._
 
 import scala.concurrent._
 import scala.concurrent.duration._
@@ -20,6 +22,7 @@ class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
   lazy val injector: Injector = appBuilder.injector()
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
   implicit val fileRepo: FileRepository = injector.instanceOf[FileRepository]
+  val dtbase: Database = injector.instanceOf[Database]
 
   val uuid1 = UUID.randomUUID().toString
   val uuid2 = UUID.randomUUID().toString
@@ -27,11 +30,11 @@ class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
   val uuid4 = UUID.randomUUID().toString
 
   override def beforeAll(): Unit = {
-    Await.result(fileRepo.createFilesTable, Duration.Inf)
+    Await.result(dtbase.run(createFilesTableAction), Duration.Inf)
   }
 
   override def afterAll(): Unit = {
-    Await.result(fileRepo.dropFilesTable, Duration.Inf)
+    Await.result(dtbase.run(createTasksTableAction), Duration.Inf)
   }
 
   override def afterEach(): Unit = {
@@ -41,11 +44,11 @@ class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
   "DBFilesTable#create/dropFilesTable" should {
     "create and then drop the Files table on the database." in {
       val result = for{
-        _ <- TEST_DB.run(MTable.getTables).map(item => assert(item.head.name.name.equals("files")))
-        _ <- fileRepo.dropFilesTable
-        _ <- TEST_DB.run(MTable.getTables).map(item => assert(item.isEmpty))
-        _ <- fileRepo.createFilesTable
-        elem <- TEST_DB.run(MTable.getTables)
+        _ <- dtbase.run(MTable.getTables).map(item => assert(item.head.name.name.equals("files")))
+        _ <- dtbase.run(dropFilesTableAction)
+        _ <- dtbase.run(MTable.getTables).map(item => assert(item.isEmpty))
+        _ <- dtbase.run(createFilesTableAction)
+        elem <- dtbase.run(MTable.getTables)
       } yield elem
       result.map(item => assert(item.head.name.name.equals("files")))
     }
@@ -151,7 +154,6 @@ class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
       result.map(result => assert(result == uuid3))
     }
   }
-
 
   "DBFilesTable#selectFileNameFromFileId" should {
     "insert some rows into the Files table on the database and retrieve fileName's by giving FileId's." in {

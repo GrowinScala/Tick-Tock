@@ -29,7 +29,14 @@ class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository{
     *
     */
   def selectFileById(id: String): Future[Option[FileDTO]] = {
-    dtbase.run(selectById(id).result).map{seq =>
+    dtbase.run(selectFileByFileId(id).result).map{ seq =>
+      if(seq.isEmpty) None
+      else Some(fileRowToFileDTO(seq.head))
+    }
+  }
+
+  def selectFileByName(name: String): Future[Option[FileDTO]] = {
+    dtbase.run(selectFileByFileName(name).result).map{ seq =>
       if(seq.isEmpty) None
       else Some(fileRowToFileDTO(seq.head))
     }
@@ -47,10 +54,10 @@ class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository{
     *
     */
   def deleteFileById(id: String): Future[Int] = {
-    dtbase.run(deleteById(id))
+    dtbase.run(deleteFileByFileId(id))
   }
 
-  /**
+  /*/**
     * Creates the files table on the database.
     */
   def createFilesTable: Future[Unit] = {
@@ -62,7 +69,7 @@ class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository{
     */
   def dropFilesTable: Future[Unit] = {
     dtbase.run(dropFilesTableAction)
-  }
+  }*/
 
   //TODO: "Don't code twice". This one could be implemented using "selectFileById"
   /**
@@ -71,7 +78,7 @@ class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository{
     * @return true if row exists, false if not.
     */
   def existsCorrespondingFileId(fileId: String): Future[Boolean] = {
-    dtbase.run(selectById(fileId).exists.result)
+    selectFileById(fileId).map(elem => elem.isDefined)
   }
 
   /**
@@ -80,7 +87,7 @@ class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository{
     * @return true if row exists, false if not.
     */
   def existsCorrespondingFileName(fileName: String): Future[Boolean] = {
-    dtbase.run(selectByFileName(fileName).exists.result)
+    selectFileByName(fileName).map(elem => elem.isDefined)
   }
 
   /**
@@ -88,7 +95,7 @@ class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository{
     * @param fileName Name of the file given by the user on the database.
     */
   def selectFileIdFromFileName(fileName: String): Future[String] = {
-    dtbase.run(selectByFileName(fileName).result.head.map(_.fileId))
+    dtbase.run(selectFileByFileName(fileName).result.head.map(_.fileId))
   }
 
   /**
@@ -96,7 +103,7 @@ class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository{
     * @param fileId Id of the file on the database.
     */
   def selectFileNameFromFileId(fileId: String): Future[String] = {
-    dtbase.run(selectById(fileId).map(_.fileName).result.head)
+    dtbase.run(selectFileByFileId(fileId).map(_.fileName).result.head)
   }
 
   /**
@@ -105,13 +112,6 @@ class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository{
     */
   def insertInFilesTable(file: FileDTO): Future[Boolean] = {
     dtbase.run(insertFile(FileRow(file.fileId, file.fileName, file.uploadDate)).map(i => i == 1))
-
-    /*exec(insertFile(FileRow(file.fileId, file.fileName, file.uploadDate)))*/
-
-    /*fileRepo.existsCorrespondingFileName(task.fileName).flatMap {exists =>
-      if(exists) taskDTOToTaskRow(task).flatMap(elem => exec(insertTask(elem)).map(i => i == 1))
-      else Future.successful(false)
-    }*/
   }
 
 }

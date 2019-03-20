@@ -8,14 +8,14 @@ import akka.stream.{ActorMaterializer, Materializer}
 import api.dtos.{FileDTO, TaskDTO}
 import api.services.{PeriodType, SchedulingType}
 import api.utils.DateUtils._
-import database.utils.DatabaseUtils._
-import javax.inject.Inject
 import org.scalatest._
 import database.mappings.FileMappings._
+import database.mappings.TaskMappings._
 import play.api.Mode
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 import slick.jdbc.meta.MTable
+import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
@@ -28,6 +28,7 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
   implicit val fileRepo: FileRepository = injector.instanceOf[FileRepository]
   implicit val taskRepo: TaskRepository = injector.instanceOf[TaskRepository]
+  val dtbase: Database = injector.instanceOf[Database]
   implicit val actorSystem: ActorSystem = ActorSystem()
   implicit val mat: Materializer = ActorMaterializer()
 
@@ -45,22 +46,22 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
 
   override def beforeAll = {
     val result = for {
-      _ <- fileRepo.createFilesTable
+      _ <- dtbase.run(createFilesTableAction)
       _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", getCurrentDateTimestamp))
       _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID2, "test2", getCurrentDateTimestamp))
       _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID3, "test3", getCurrentDateTimestamp))
       res <- fileRepo.insertInFilesTable(FileDTO(fileUUID4, "test4", getCurrentDateTimestamp))
     } yield res
     Await.result(result, Duration.Inf)
-    Await.result(taskRepo.createTasksTable, Duration.Inf)
+    Await.result(dtbase.run(createTasksTableAction), Duration.Inf)
 
     //validate beforeAll:
     //println(Await.result(fileRepo.exec(filesTable.length.result), Duration.Inf))
   }
 
   override def afterAll = {
-    Await.result(taskRepo.dropTasksTable, Duration.Inf)
-    Await.result(fileRepo.dropFilesTable, Duration.Inf)
+    Await.result(dtbase.run(dropTasksTableAction), Duration.Inf)
+    Await.result(dtbase.run(dropFilesTableAction), Duration.Inf)
   }
 
   override def afterEach = {
@@ -70,11 +71,11 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
   "DBTasksTable#drop/createTasksTable" should {
     "create and then drop the Tasks table on the database." in {
       val result = for {
-        _ <- TEST_DB.run(MTable.getTables).map(item => assert(item.head.name.name.equals("files") && item.tail.head.name.name.equals("tasks")))
-        _ <- taskRepo.dropTasksTable
-        _ <- TEST_DB.run(MTable.getTables).map(item => assert(item.head.name.name.equals("files")))
-        _ <- taskRepo.createTasksTable
-        elem <- TEST_DB.run(MTable.getTables)
+        _ <- dtbase.run(MTable.getTables).map(item => assert(item.head.name.name.equals("files") && item.tail.head.name.name.equals("tasks")))
+        _ <- dtbase.run(dropTasksTableAction)
+        _ <- dtbase.run(MTable.getTables).map(item => assert(item.head.name.name.equals("files")))
+        _ <- dtbase.run(createTasksTableAction)
+        elem <- dtbase.run(MTable.getTables)
       } yield elem
       result.map(item => assert(item.head.name.name.equals("files") && item.tail.head.name.name.equals("tasks")))
     }
@@ -110,8 +111,8 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
       val result = for{
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
-        _ <- taskRepo.selectTaskByTaskId(taskUUID1).map(dto => assert(dto.get.fileName == "test1"))
-        task <- taskRepo.selectTaskByTaskId(taskUUID2)
+        _ <- taskRepo.selectTask(taskUUID1).map(dto => assert(dto.get.fileName == "test1"))
+        task <- taskRepo.selectTask(taskUUID2)
       } yield task
       result.map(dto => assert(dto.get.fileName == "test2"))
     }

@@ -13,9 +13,13 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test._
+import api.validators.Error._
 import slick.jdbc.meta.MTable
+import slick.jdbc.MySQLProfile.api._
+import database.mappings.FileMappings._
 
 import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration.Duration
@@ -28,6 +32,7 @@ class FileFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
   Guice.createInjector(appBuilder.applicationModule).injectMembers(this)
   implicit val fileRepo: FileRepository = appBuilder.injector.instanceOf[FileRepository]
   implicit val taskRepo: TaskRepository = appBuilder.injector.instanceOf[TaskRepository]
+  val dtbase: Database = appBuilder.injector.instanceOf[Database]
   implicit val actorSystem: ActorSystem = ActorSystem()
   implicit val mat: Materializer = ActorMaterializer()
 
@@ -40,7 +45,7 @@ class FileFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
 
   override def beforeAll = {
     val result = for {
-      _ <- fileRepo.createFilesTable
+      _ <- dtbase.run(createFilesTableAction)
       _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", stringToDateFormat("01-01-2018 12:00:00", "dd-MM-yyyy HH:mm:ss")))
       _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID2, "test2", stringToDateFormat("01-02-2018 12:00:00", "dd-MM-yyyy HH:mm:ss")))
       _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID3, "test3", stringToDateFormat("01-03-2018 12:00:00", "dd-MM-yyyy HH:mm:ss")))
@@ -50,25 +55,9 @@ class FileFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
 
   }
 
-  override def beforeEach = {
-
-  }
-
   override def afterAll = {
-    Await.result(fileRepo.dropFilesTable, Duration.Inf)
+    Await.result(dtbase.run(dropFilesTableAction), Duration.Inf)
   }
-
-  override def afterEach = {
-
-  }
-
-  /*val routeOption = route(app, fakeRequest)
-  val result = for{
-    routeResult <- routeOption.get
-    selectResult <- taskRepo.selectAllTasks
-  } yield (routeResult, selectResult)
-  result.map(tuple => tuple._2.size mustBe 1)
-  status(routeOption.get) mustBe OK*/
 
   "FileController#GETfile" should {
     "receive a GET request" in {
@@ -102,7 +91,7 @@ class FileFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val result = route(app, fakeRequest)
       val bodyText = contentAsString(result.get)
       status(result.get) mustBe BAD_REQUEST
-      bodyText mustBe "File with id " + toGet + " does not exist."
+      bodyText mustBe Json.toJsObject(invalidFileName).toString
     }
   }
 
@@ -113,8 +102,8 @@ class FileFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> "localhost:9000")
       val result = route(app, fakeRequest)
       val bodyText = contentAsString(result.get)
-      status(result.get) mustBe OK
-      bodyText mustBe "File with id = " + toDelete + " has been deleted."
+      status(result.get) mustBe NO_CONTENT
+      bodyText mustBe ""
       Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID4, "test4", stringToDateFormat("01-04-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))), Duration.Inf)
     }
 
@@ -125,7 +114,7 @@ class FileFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val result = route(app, fakeRequest)
       val bodyText = contentAsString(result.get)
       status(result.get) mustBe BAD_REQUEST
-      bodyText mustBe "File with id " + toDelete + " does not exist."
+      bodyText mustBe Json.toJsObject(invalidEndpointId).toString
     }
   }
 }

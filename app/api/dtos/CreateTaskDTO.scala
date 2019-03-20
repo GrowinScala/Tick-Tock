@@ -4,6 +4,7 @@ import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.{Date, TimeZone, UUID}
 
+import api.services.DayType.DayType
 import database.utils.DatabaseUtils._
 import api.services.PeriodType.PeriodType
 import api.services.SchedulingType.SchedulingType
@@ -39,7 +40,7 @@ object CreateTaskDTO {
       (JsPath \ "fileName").read[String] and
       (JsPath \ "taskType").read[String] and
       (JsPath \ "startDateAndTime").readNullable[String] and
-      (JsPath \ "periodType").readNullable[String] and
+      (JsPath \ "periodType").readNullable[PeriodType] and
       (JsPath \ "period").readNullable[Int] and
       (JsPath \ "endDateAndTime").readNullable[String] and
       (JsPath \ "occurrences").readNullable[Int] and

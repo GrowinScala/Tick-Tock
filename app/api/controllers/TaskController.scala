@@ -48,14 +48,15 @@ class TaskController @Inject()(cc: ControllerComponents)(implicit exec: Executio
       task => {
         val taskValidator = new TaskValidator
         val validationResult = taskValidator.scheduleValidator(task)
-        validationResult match{
+        validationResult match {
           case Left(errorList) =>
             Future.successful(BadRequest(JsArray(errorList.map(error => Json.toJsObject(error)).toIndexedSeq)))
           case Right(taskDto) =>
             taskRepo.insertInTasksTable(taskDto)
             val taskService = new TaskService
             taskService.scheduleTask(taskDto)
-            Future.successful(Ok("Task received."))
+            val url = routes.TaskController.getScheduleById(taskDto.taskId).absoluteURL(request.secure)(request).stripSuffix("/").trim
+            Future.successful(Ok("Task received => " + url))
         }
       }
     )
@@ -79,10 +80,10 @@ class TaskController @Inject()(cc: ControllerComponents)(implicit exec: Executio
     * @param id - identifier of the task we are looking for
     * @return the task corresponding to the given id
     */
-  def getScheduleById(id: String): Action[AnyContent] = Action.async { //TODO - Error handling ID
-    taskRepo.selectTaskByTaskId(id).map{tr =>
-      if(tr.isDefined) Ok(Json.toJsObject(tr.get))
-      else BadRequest(Json.toJsObject(invalidEndpointId))
+  def getScheduleById(id: String): Action[AnyContent] = Action.async {
+    taskRepo.selectTask(id).map{
+      case Some(task) => Ok(Json.toJsObject(task))
+      case None => BadRequest(Json.toJsObject(invalidEndpointId))
     }
   }
 
@@ -107,7 +108,8 @@ class TaskController @Inject()(cc: ControllerComponents)(implicit exec: Executio
             taskRepo.updateTaskById(id, taskDto)
             val taskService = new TaskService
             taskService.replaceTask(id, taskDto)
-            Future.successful(Ok("Task received."))
+            val url = routes.TaskController.getScheduleById(id).absoluteURL(request.secure)(request).stripSuffix("/").trim
+            Future.successful(Ok("Task received => " + url))
         }
       }
     )
@@ -122,9 +124,9 @@ class TaskController @Inject()(cc: ControllerComponents)(implicit exec: Executio
     *         it wasn't.
     */
   def deleteTask(id: String): Action[AnyContent] = Action.async {
-    taskRepo.deleteTaskById(id).map { i =>
-      if (i > 0) Ok("Task with id = " + id + " was deleted")
-      else BadRequest(Json.toJsObject(invalidEndpointId))
+    taskRepo.selectTask(id).map {
+      case Some(_) => taskRepo.deleteTaskById(id); NoContent
+      case None => BadRequest(Json.toJsObject(invalidEndpointId))
     }
   }
 
@@ -143,7 +145,8 @@ class TaskController @Inject()(cc: ControllerComponents)(implicit exec: Executio
             taskRepo.updateTaskById(id, taskDto)
             val taskService = new TaskService
             taskService.replaceTask(id, taskDto)
-            Future.successful(Ok("Task received."))
+            val url = routes.TaskController.getScheduleById(id).absoluteURL(request.secure)(request).stripSuffix("/").trim
+            Future.successful(Ok("Task received => " + url))
         }
       }
     )

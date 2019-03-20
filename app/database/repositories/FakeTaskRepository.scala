@@ -22,7 +22,7 @@ class FakeTaskRepository extends TaskRepository{
     * @param id - the identifier of the task.
     * @return a TaskDTO of the selected task.
     */
-  def selectTaskByTaskId(id: String): Future[Option[TaskDTO]] = {
+  def selectTask(id: String): Future[Option[TaskDTO]] = {
     Future.successful(Some(TaskDTO("asd1", "test1", SchedulingType.RunOnce, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")))))
   }
 

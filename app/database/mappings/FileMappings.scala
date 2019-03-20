@@ -1,5 +1,6 @@
 package database.mappings
 
+import java.net.FileNameMap
 import java.sql.Timestamp
 import java.util.Date
 
@@ -60,31 +61,43 @@ object FileMappings {
   val selectAllFromFilesTable = filesTable
   val deleteAllFromFilesTable = filesTable.delete
 
-  def selectById(id: String): Query[FilesTable, FileRow, Seq] = {
-    filesTable.filter(_.fileId === id)
+  def selectFileByFileId(fileId: String): Query[FilesTable, FileRow, Seq] = {
+    filesTable.filter(_.fileId === fileId)
   }
 
-  def selectByFileName(name: String): Query[FilesTable, FileRow, Seq] = {
-    filesTable.filter(_.fileName === name)
+  def selectFileByFileName(fileName: String): Query[FilesTable, FileRow, Seq] = {
+    filesTable.filter(_.fileName === fileName)
+  }
+
+  def selectFileByUploadDate(uploadDate: Date): Query[FilesTable, FileRow, Seq] = {
+    filesTable.filter(_.uploadDate === uploadDate)
   }
 
   def insertFile(file: FileRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     filesTable += file
   }
 
-  def updateById(id: String, file: FileRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    filesTable.filter(_.fileId === id).update(file)
+  def updateFileByFileId(fileId: String, file: FileRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectFileByFileId(fileId).update(file)
   }
 
-  def updateByFileName(name: String, file: FileRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    filesTable.filter(_.fileName === name).update(file)
+  def updateFileByFileName(fileName: String, file: FileRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectFileByFileName(fileName).update(file)
   }
 
-  def deleteById(id: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    filesTable.filter(_.fileId === id).delete
+  def updateFileByUploadDate(uploadDate: Date, file: FileRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectFileByUploadDate(uploadDate).update(file)
   }
 
-  def deleteByFileName(name: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    filesTable.filter(_.fileName === name).delete
+  def deleteFileByFileId(fileId: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectFileByFileId(fileId).delete
+  }
+
+  def deleteFileByFileName(fileName: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectFileByFileName(fileName).delete
+  }
+
+  def deleteFileByUploadDate(uploadDate: Date): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectFileByUploadDate(uploadDate).delete
   }
 }

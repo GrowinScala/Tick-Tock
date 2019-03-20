@@ -24,12 +24,12 @@ object TaskMappings {
                       taskId: String,
                       fileId: String,
                       period: Int,
-                      value: Option[Int],
-                      startDateAndTime: Option[Date],
-                      endDateAndTime: Option[Date],
-                      totalOccurrences: Option[Int],
-                      currentOccurrences: Option[Int],
-                      timezone: Option[String]
+                      value: Option[Int] = None,
+                      startDateAndTime: Option[Date] = None,
+                      endDateAndTime: Option[Date] = None,
+                      totalOccurrences: Option[Int] = None,
+                      currentOccurrences: Option[Int] = None,
+                      timezone: Option[String] = None
                     )
 
 
@@ -78,39 +78,39 @@ object TaskMappings {
   val deleteAllFromTasksTable = tasksTable.delete
 
   //TODO - Define better names
-  def selectByTaskId(taskId: String): Query[TasksTable, TaskRow, Seq] = {
+  def selectTaskByTaskId(taskId: String): Query[TasksTable, TaskRow, Seq] = {
     tasksTable.filter(_.taskId === taskId)
   }
 
-  def selectByFileId(fileId: String): Query[TasksTable, TaskRow, Seq] = {
+  def selectTaskByFileId(fileId: String): Query[TasksTable, TaskRow, Seq] = {
     tasksTable.filter(_.fileId === fileId)
   }
 
-  def selectByPeriod(period: Int): Query[TasksTable, TaskRow, Seq] = {
+  def selectTaskByPeriod(period: Int): Query[TasksTable, TaskRow, Seq] = {
     tasksTable.filter(_.period === period)
   }
 
-  def selectByValue(value: Int): Query[TasksTable, TaskRow, Seq] = {
+  def selectTaskByValue(value: Int): Query[TasksTable, TaskRow, Seq] = {
     tasksTable.filter(_.value === value)
   }
 
-  def selectByStartDateAndTime(startDateAndTime: Date): Query[TasksTable, TaskRow, Seq] = {
+  def selectTaskByStartDateAndTime(startDateAndTime: Date): Query[TasksTable, TaskRow, Seq] = {
     tasksTable.filter(_.startDateAndTime === startDateAndTime)
   }
 
-  def selectByEndDateAndTime(endDateAndTime: Date): Query[TasksTable, TaskRow, Seq] = {
+  def selectTaskByEndDateAndTime(endDateAndTime: Date): Query[TasksTable, TaskRow, Seq] = {
     tasksTable.filter(_.endDateAndTime === endDateAndTime)
   }
 
-  def selectByTotalOccurrences(totalOccurrences: Int): Query[TasksTable, TaskRow, Seq] = {
+  def selectTaskByTotalOccurrences(totalOccurrences: Int): Query[TasksTable, TaskRow, Seq] = {
     tasksTable.filter(_.totalOccurrences === totalOccurrences)
   }
 
-  def selectByCurrentOccurrences(currentOccurrences: Int): Query[TasksTable, TaskRow, Seq] = {
+  def selectTaskByCurrentOccurrences(currentOccurrences: Int): Query[TasksTable, TaskRow, Seq] = {
     tasksTable.filter(_.currentOccurrences === currentOccurrences)
   }
 
-  def selectByTimezone(timezone: String): Query[TasksTable, TaskRow, Seq] = {
+  def selectTaskByTimezone(timezone: String): Query[TasksTable, TaskRow, Seq] = {
     tasksTable.filter(_.timezone === timezone)
   }
 
@@ -119,71 +119,75 @@ object TaskMappings {
   }
 
   def updateTaskByTaskId(taskId: String, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    tasksTable.filter(_.taskId === taskId).update(task)
+    selectTaskByTaskId(taskId).update(task)
   }
 
   def updateTaskByFileId(fileId: String, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    tasksTable.filter(_.fileId === fileId).update(task)
+    selectTaskByFileId(fileId).update(task)
   }
 
   def updateTaskByPeriod(period: Int, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    tasksTable.filter(_.period === period).update(task)
+    selectTaskByPeriod(period).update(task)
+  }
+
+  def updateTaskByValue(value: Int, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectTaskByValue(value).update(task)
   }
 
   def updateTaskByStartDateAndTime(startDateAndTime: Date, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    tasksTable.filter(_.startDateAndTime === startDateAndTime).update(task)
+    selectTaskByStartDateAndTime(startDateAndTime).update(task)
   }
 
   def updateTaskByEndDateAndTime(endDateAndTime: Date, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    tasksTable.filter(_.endDateAndTime === endDateAndTime).update(task)
+    selectTaskByEndDateAndTime(endDateAndTime).update(task)
   }
 
   def updateTaskByTotalOccurrences(totalOccurrences: Int, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    tasksTable.filter(_.totalOccurrences === totalOccurrences).update(task)
+    selectTaskByTotalOccurrences(totalOccurrences).update(task)
   }
 
   def updateTaskByCurrentOccurrences(currentOccurrences: Int, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    tasksTable.filter(_.currentOccurrences === currentOccurrences).update(task)
+    selectTaskByCurrentOccurrences(currentOccurrences).update(task)
   }
 
   def updateTaskByTimezone(timezone: String, task: TaskRow):  MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    tasksTable.filter(_.timezone === timezone).update(task)
+    selectTaskByTimezone(timezone).update(task)
   }
 
-  def deleteByTaskId(id: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    tasksTable.filter(_.taskId === id).delete
+  def deleteTaskByTaskId(taskId: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectTaskByTaskId(taskId).delete
   }
 
-  def deleteByFileId(id: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    tasksTable.filter(_.fileId === id).delete
+  def deleteTaskByFileId(fileId: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectTaskByFileId(fileId).delete
   }
 
-  def deleteByPeriod(period: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    tasksTable.filter(_.period === period).delete
+  def deleteTaskByPeriod(period: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectTaskByPeriod(period).delete
   }
 
-  def deleteByValue(value: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    tasksTable.filter(_.value === value).delete
+  def deleteTaskByValue(value: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectTaskByValue(value).delete
   }
 
-  def deleteByStartDateAndTime(startDateAndTime: Date): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    tasksTable.filter(_.startDateAndTime === startDateAndTime).delete
+  def deleteTaskByStartDateAndTime(startDateAndTime: Date): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectTaskByStartDateAndTime(startDateAndTime).delete
   }
 
-  def deleteByEndDateAndTime(endDateAndTime: Date): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    tasksTable.filter(_.endDateAndTime === endDateAndTime).delete
+  def deleteTaskByEndDateAndTime(endDateAndTime: Date): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectTaskByEndDateAndTime(endDateAndTime).delete
   }
 
-  def deleteByTotalOccurrences(totalOccurrences: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    tasksTable.filter(_.totalOccurrences === totalOccurrences).delete
+  def deleteTaskByTotalOccurrences(totalOccurrences: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectTaskByTotalOccurrences(totalOccurrences).delete
   }
 
-  def deleteByCurrentOccurrences(currentOccurrences: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    tasksTable.filter(_.currentOccurrences === currentOccurrences).delete
+  def deleteTaskByCurrentOccurrences(currentOccurrences: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectTaskByCurrentOccurrences(currentOccurrences).delete
   }
 
-  def deleteByTimezone(timezone: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    tasksTable.filter(_.timezone === timezone).delete
+  def deleteTaskByTimezone(timezone: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectTaskByTimezone(timezone).delete
   }
 
 }

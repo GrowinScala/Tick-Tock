@@ -56,7 +56,7 @@ class FileControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
       val fileController = new FileController(cc)
       val result = fileController.deleteFile("asd1").apply(fakeRequest)
       val bodyText = contentAsString(result)
-      bodyText mustBe "File with id = asd1 has been deleted."
+      bodyText mustBe ""
     }
   }
 }

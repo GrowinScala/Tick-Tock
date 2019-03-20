@@ -34,7 +34,7 @@ trait FileRepository {
   def deleteFileById(id: String): Future[Int]
 
   //TODO: CREATE,ALTER,DELETE tasks should not be provided as part of the interface.
-  /**
+  /*/**
     * Creates the files table on the database.
     */
   def createFilesTable: Future[Unit]
@@ -42,7 +42,7 @@ trait FileRepository {
   /**
     * Drops the files table on the database.
     */
-  def dropFilesTable: Future[Unit]
+  def dropFilesTable: Future[Unit]*/
 
   /**
     * Checks if a corresponding file row exists on the database by providing its fileId.

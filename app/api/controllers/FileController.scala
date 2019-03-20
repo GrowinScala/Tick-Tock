@@ -7,7 +7,6 @@ import org.apache.commons.io.FilenameUtils
 import play.api.mvc._
 import javax.inject.Inject
 import play.api.libs.json._
-
 import api.dtos.FileDTO
 import api.utils.DateUtils._
 import api.utils.UUIDGenerator
@@ -15,11 +14,13 @@ import api.utils.UUIDGenerator
 import scala.concurrent.{ExecutionContext, Future}
 import database.repositories.{FileRepository, TaskRepository}
 import api.validators.Error._
-
-import api.utils.ErrorMessages._
+import com.typesafe.config.ConfigFactory
+import play.api.{Configuration, Play}
 
 @Singleton
 class FileController @Inject()(cc: ControllerComponents)(implicit exec: ExecutionContext, implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository, implicit val UUIDGen: UUIDGenerator) extends AbstractController(cc) {
+
+  val conf = ConfigFactory.load()
 
   def index = Action {
     Ok("It works!")
@@ -35,14 +36,13 @@ class FileController @Inject()(cc: ControllerComponents)(implicit exec: Executio
           fileRepo.existsCorrespondingFileName(fileName).map{elem =>
             if(elem) Future.successful(BadRequest(Json.toJsObject(invalidUploadFileName)))
           }
-          //TODO: Add these to config instead of hardcoding them. Play has an "application.conf" when you can store configs that then load on "run-time". Learn how to do it ;)
-          val initialFilePath = Paths.get(s"C:/Users/Pedro/Desktop/$uuid")
-          val finalFilePath = Paths.get(s"app/filestorage/$uuid" + ".jar")
+          val initialFilePath = Paths.get(conf.getString("initialFilePath") + uuid)
+          val finalFilePath = Paths.get(conf.getString("finalFilePath") + uuid + ".jar")
           file.ref.moveTo(initialFilePath, replace = false)
           Files.move(initialFilePath, finalFilePath, StandardCopyOption.ATOMIC_MOVE)
           fileRepo.insertInFilesTable(FileDTO(uuid, fileName, uploadDate))
-          //TODO: When Links are implemented, send back a "link to self".
-          Future.successful(Ok("File uploaded successfully => fileId: " + uuid + ", fileName: " + fileName + ", uploadDate: " + uploadDate))
+          val url = routes.FileController.getFileById(uuid).absoluteURL(request.secure)(request).stripSuffix("/").trim
+          Future.successful(Ok("File uploaded successfully => " + url))
         }
         else Future.successful(BadRequest(Json.toJsObject(invalidFileExtension)))
     }.getOrElse {
@@ -71,13 +71,9 @@ class FileController @Inject()(cc: ControllerComponents)(implicit exec: Executio
   //TODO: Considering you're using Options, pattern matching is considered more "Scala" than the if/else.
 
   def getFileById(id: String): Action[AnyContent] = Action.async {
-    fileRepo.selectFileById(id).map{ tr =>
-      if (tr.isDefined)
-        Ok(Json.toJsObject(tr.get))
-      else
-      //Carefully pick messages so that any user trying to exploit your service can't infer from them. "does not exits" tells the user that it does not exist
-      //"does not belong to you" tells the user it exists, but in another user "not found" is ambiguous, user can't infer "why" it could not be found. ;)
-        BadRequest(fileNotFoundError(id))
+    fileRepo.selectFileById(id).map{
+      case Some(file) => Ok(Json.toJsObject(file))
+      case None => BadRequest(Json.toJsObject(invalidFileName))
     }
   }
 
@@ -88,11 +84,9 @@ class FileController @Inject()(cc: ControllerComponents)(implicit exec: Executio
     * @return HTTP response Ok if the file was deleted and BadRequest if not
     */
   def deleteFile(id: String): Action[AnyContent] = Action.async {
-    fileRepo.deleteFileById(id).map { i =>
-      if(i > 0) { //TODO - Create file exists and check first
-        //usually, for the DELETE the response is 204 NO CONTENT. Ok isn't wrong, just not according the standards.
-        Ok("File with id = " + id + " has been deleted.")
-      } else BadRequest("File with id " + id + " does not exist.")
+    fileRepo.selectFileById(id).map {
+      case Some(_) => fileRepo.deleteFileById(id); NoContent
+      case None => BadRequest(Json.toJsObject(invalidEndpointId))
     }
   }
 

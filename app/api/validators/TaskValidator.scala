@@ -62,7 +62,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
   }
 
   def updateValidator(id: String, task: UpdateTaskDTO): Either[List[Error], TaskDTO] = {
-    val oldDTO = Await.result(taskRepo.selectTaskByTaskId(id), 5 seconds)
+    val oldDTO = Await.result(taskRepo.selectTask(id), 5 seconds)
     if (oldDTO.isDefined) {
       val startDate = isValidStartDateFormat(task.startDateAndTime, task.timezone)
       val endDate = isValidEndDateFormat(task.endDateAndTime, task.timezone)
@@ -191,12 +191,12 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
 
   private def isValidPeriodType(periodType: Option[String]): Boolean = {
     periodType.isEmpty ||
-      periodType.get.equals("Minutely") ||
-      periodType.get.equals("Hourly") ||
-      periodType.get.equals("Daily") ||
-      periodType.get.equals("Weekly") ||
-      periodType.get.equals("Monthly") ||
-      periodType.get.equals("Yearly")
+    periodType.get.equals("Minutely") ||
+    periodType.get.equals("Hourly") ||
+    periodType.get.equals("Daily") ||
+    periodType.get.equals("Weekly") ||
+    periodType.get.equals("Monthly") ||
+    periodType.get.equals("Yearly")
   }
 
   private def isValidPeriod(period: Option[Int]): Boolean = {
@@ -325,11 +325,15 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
             if (scheduling.month.isDefined) {
               scheduling.day.get match {
                 case 29 => {
-                  if (scheduling.month.get == 2 && scheduling.year.isDefined && !isLeapYear(scheduling.year.get)) false
+                  scheduling.month.get != 2 || scheduling.year.isEmpty || isLeapYear(scheduling.year.get)
                 }
-                case 30 => if (scheduling.month.get == 2) false
-                case 31 => if (scheduling.month.get == 2 || scheduling.month.get == 4 || scheduling.month.get == 6 ||
-                  scheduling.month.get == 9 || scheduling.month.get == 11) false
+                case 30 => {
+                   scheduling.month.get != 2
+                }
+                case 31 => {
+                  scheduling.month.get != 2 && scheduling.month.get != 4 && scheduling.month.get != 6 &&
+                    scheduling.month.get != 9 && scheduling.month.get != 11
+                }
               }
               if (scheduling.year.isDefined) {
                 if (scheduling.month.get == calendar.get(Calendar.MONTH) && scheduling.year.get == calendar.get(Calendar.YEAR)) if(scheduling.day.get >= calendar.get(Calendar.DAY_OF_MONTH)) iter(list.tail) else false

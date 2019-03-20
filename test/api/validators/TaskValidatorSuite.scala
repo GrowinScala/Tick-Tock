@@ -4,7 +4,7 @@ import java.util.{Calendar, UUID}
 
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
-import api.dtos.{CreateTaskDTO, TaskDTO}
+import api.dtos.{CreateExclusionDTO, CreateTaskDTO, ExclusionDTO, TaskDTO}
 import api.services.{PeriodType, SchedulingType}
 import api.utils.{FakeUUIDGenerator, UUIDGenerator}
 import api.validators.Error._
@@ -40,6 +40,13 @@ class TaskValidatorSuite extends PlaySpec{
       calendar.set(2030, 1 - 1, 1, 12, 0, 0)
       val startDate = calendar.getTime
       validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.RunOnce, Some(startDate))).toString
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (RunOnce task with a startDate and timezone)" in {
+      val dto = CreateTaskDTO("test1", SchedulingType.RunOnce, Some("2030-01-01 12:00:00"), None, None, None, None, Some("PST"))
+      calendar.set(2030, 1 - 1, 1, 20, 0, 0) // 8 hours later due to the PST timezone
+      val startDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.RunOnce, Some(startDate), None, None, None, None, None, Some("PST"))).toString
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Minutely Periodic task without startDate and with endDate" in {
@@ -96,6 +103,103 @@ class TaskValidatorSuite extends PlaySpec{
       val startDate = calendar.getTime
       validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Yearly), Some(6), None, Some(3), Some(3))).toString
     }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with exclusionDate)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with day)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with dayOfWeek)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with dayType)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with month)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with year)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with day and criteria)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with dayOfWeek and criteria)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with dayType and criteria)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with month and criteria)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with year and criteria)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with multiple complex exclusions)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with schedulingDate)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with day)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with dayOfWeek)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with dayType)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with month)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with year)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with day and criteria)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with dayOfWeek and criteria)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with dayType and criteria)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with month and criteria)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with year and criteria)" in {
+
+    }
+
+    "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with multiple complex schedulings)" in {
+
+    }
+
 
     "receive an invalid CreateTaskDTO with missing fields. (Periodic task without any other fields)" in {
       val dto = CreateTaskDTO("test1", SchedulingType.Periodic)
@@ -182,6 +286,124 @@ class TaskValidatorSuite extends PlaySpec{
       val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), None, Some(-1))
       validator.scheduleValidator(dto).toString mustBe Left(List(invalidOccurrences)).toString
     }
+
+    "receive an invalid CreateTaskDTO with invalid timezone." in {
+
+    }
+
+
+    "receive an invalid CreateTaskDTO with invalid exclusions. (invalid exclusion format => no parameters)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid exclusions. (invalid exclusion format => with an unknown parameter)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid exclusions. (invalid exclusion format => with exclusionId)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid exclusions. (invalid exclusion format => with taskId)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid exclusions. (invalid exclusion format => exclusionDate + another parameter)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid exclusions. (invalid exclusion format => only criteria)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid exclusions. (invalid exclusionDate format)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid exclusions. (invalid exclusionDate values)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid exclusions. (invalid day)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid exclusions. (invalid dayOfWeek)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid exclusions. (invalid dayType)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid exclusions. (invalid month)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid exclusions. (invalid year)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid exclusions. (invalid criteria)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid schedulings. (invalid scheduling format => no parameters)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid schedulings. (invalid scheduling format => with an unknown parameter)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid schedulings. (invalid scheduling format => with schedulingId)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid schedulings. (invalid scheduling format => with taskId)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid schedulings. (invalid scheduling format => schedulingDate + another parameter)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid schedulings. (invalid scheduling format => only criteria)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid schedulings. (invalid schedulingDate format)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid schedulings. (invalid schedulingDate values)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid schedulings. (invalid day)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid schedulings. (invalid dayOfWeek)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid schedulings. (invalid dayType)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid schedulings. (invalid month)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid schedulings. (invalid year)" in {
+
+    }
+
+    "receive an invalid CreateTaskDTO with invalid schedulings. (invalid criteria)" in {
+
+    }
+
 
   }
 

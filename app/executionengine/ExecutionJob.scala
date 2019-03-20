@@ -25,7 +25,7 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
   * @param datetime Date of when the file is run. (If Periodic, it represents the first execution)
   * @param interval Time interval between each execution. (Only applicable in a Periodic task)
   */
-class ExecutionJob @Inject()(taskId: String, fileId: String, schedulingType: SchedulingType, startDate: Option[Date] = None, interval: Option[Duration] = Some(ZERO), endDate: Option[Date] = None, timezone: Option[String], schedulings: Option[Queue[Date]], exclusions: Option[Queue[Date]])(implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository) {
+class ExecutionJob @Inject()(taskId: String, fileId: String, schedulingType: SchedulingType, startDate: Option[Date] = None, interval: Option[Duration] = Some(ZERO), endDate: Option[Date] = None, timezone: Option[String] = None, schedulings: Option[Queue[Date]] = None, exclusions: Option[Queue[Date]] = None)(implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository) {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
   val calendar = Calendar.getInstance

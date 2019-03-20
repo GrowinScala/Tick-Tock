@@ -22,7 +22,7 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
   private def taskRowToTaskDTO(task: TaskRow): Future[TaskDTO] = {
-    dtbase.run(selectById(task.fileId).map(_.fileName).result.head).map{ name =>
+    dtbase.run(selectFileByFileId(task.fileId).map(_.fileName).result.head).map{ name =>
       task.period match{
         case 0 /*RunOnce*/=> TaskDTO(task.taskId, name, SchedulingType.RunOnce, task.startDateAndTime)
         case 1 /*Minutely*/=> TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Minutely), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
@@ -36,7 +36,7 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
   }
 
   private def taskDTOToTaskRow(task: TaskDTO): Future[TaskRow] = {
-    dtbase.run(selectByFileName(task.fileName).result.head.map(_.fileId)).map { fileId =>
+    dtbase.run(selectFileByFileName(task.fileName).result.head.map(_.fileId)).map { fileId =>
       task.taskType match {
         case SchedulingType.RunOnce =>
           TaskRow(task.taskId, fileId, 0, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
@@ -55,6 +55,8 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
             case PeriodType.Yearly =>
               TaskRow(task.taskId, fileId, 6, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
           }
+        case SchedulingType.Personalized =>
+          TaskRow(task.taskId, fileId, 7, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
       }
 
     }
@@ -69,7 +71,7 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
     dtbase.run(selectAllFromTasksTable.result).flatMap { seq =>
       Future.sequence {
         seq.map { elem =>
-          dtbase.run(selectById(elem.fileId).map(_.fileName).result.head).map{ name =>
+          dtbase.run(selectFileByFileId(elem.fileId).map(_.fileName).result.head).map{ name =>
             elem.period match{
               case 0 /*RunOnce*/=> TaskDTO(elem.taskId, name, SchedulingType.RunOnce, elem.startDateAndTime)
               case 1 /*Minutely*/=> TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Minutely), elem.value, elem.endDateAndTime, elem.totalOccurrences, elem.currentOccurrences, elem.timezone)
@@ -91,31 +93,31 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
     * @param id - the identifier of the task we want to select
     * @return the selected task according to the id given
     */
-  def selectTaskByTaskId(id: String): Future[Option[TaskDTO]] = {
-    dtbase.run(selectByTaskId(id).result).flatMap{seq =>
+  def selectTask(id: String): Future[Option[TaskDTO]] = {
+    dtbase.run(selectTaskByTaskId(id).result).flatMap{ seq =>
       if(seq.isEmpty) Future.successful(None)
       else taskRowToTaskDTO(seq.head).map(elem => Some(elem))
     }
   }
 
   def selectFileIdByTaskId(id: String): Future[Option[String]] = {
-    selectTaskByTaskId(id).flatMap{ elem =>
-      if(elem.isDefined) dtbase.run(selectByFileName(elem.get.fileName).result.head.map(_.fileId)).map(item => Some(item))//TODO: Improve implementation.
+    selectTask(id).flatMap{ elem =>
+      if(elem.isDefined) dtbase.run(selectFileByFileName(elem.get.fileName).result.head.map(_.fileId)).map(item => Some(item))//TODO: Improve implementation.
       else Future.successful(None)
     }
   }
 
   def selectTotalOccurrencesByTaskId(id: String): Future[Option[Int]] = {
-    dtbase.run(selectByTaskId(id).result.head.map(_.totalOccurrences))
+    dtbase.run(selectTaskByTaskId(id).result.head.map(_.totalOccurrences))
   }
 
   def selectCurrentOccurrencesByTaskId(id: String): Future[Option[Int]] = {
-    dtbase.run(selectByTaskId(id).result.head.map(_.currentOccurrences))
+    dtbase.run(selectTaskByTaskId(id).result.head.map(_.currentOccurrences))
   }
 
   def decrementCurrentOccurrencesByTaskId(id: String): Future[Unit] = {
     selectCurrentOccurrencesByTaskId(id).map{
-      elem => Await.result(dtbase.run(selectByTaskId(id).map(_.currentOccurrences).update(Some(elem.get - 1))), 5 seconds)
+      elem => Await.result(dtbase.run(selectTaskByTaskId(id).map(_.currentOccurrences).update(Some(elem.get - 1))), 5 seconds)
     }
   }
 
@@ -125,7 +127,7 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
     * @param id - identifier of the task to be deleted
     */
   def deleteTaskById(id: String): Future[Int] = {
-    dtbase.run(deleteByTaskId(id))
+    dtbase.run(deleteTaskByTaskId(id))
   }
 
   /**
@@ -146,7 +148,7 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
     dtbase.run(deleteAllFromTasksTable)
   }
 
-  /**
+  /*/**
     * Creates the tasks table on the database.
     */
   def createTasksTable: Future[Unit] = {
@@ -158,7 +160,7 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
     */
   def dropTasksTable: Future[Unit] = {
     dtbase.run(dropTasksTableAction)
-  }
+  }*/
 
   /**
     * Inserts a task (row) on the tasks table on the database.
@@ -166,7 +168,7 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
     * @param task TaskDTO to be inserted.
     */
   def insertInTasksTable(task: TaskDTO): Future[Boolean] = {
-    dtbase.run(selectByFileName(task.fileName).exists.result).flatMap {exists =>
+    dtbase.run(selectFileByFileName(task.fileName).exists.result).flatMap {exists =>
       if(exists) taskDTOToTaskRow(task).flatMap(elem => dtbase.run(insertTask(elem)).map(i => i == 1))
       else Future.successful(false)
     }

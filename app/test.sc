@@ -1,5 +1,6 @@
 import java.sql.Timestamp
-import java.util.Date
+import java.text.SimpleDateFormat
+import java.util.{Calendar, Date}
 
 import api.dtos.TaskDTO
 import api.services.{PeriodType, SchedulingType}
@@ -21,5 +22,14 @@ implicit val uuidGen = new DefaultUUIDGenerator
 
 val validator = new TaskValidator()
 
-val task = TaskDTO("asd3", "test3", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Monthly), Some(1), None, Some(12), Some(12))
-Json.toJsObject(task)
+//val date = parseDateWithTimezone("2030-01-01 00:00:00", "EST")
+val date1 = parseDateWithTimezone("2019-07-01 00:00:00", "PST")
+val date2 = parseDateWithTimezone("01-07-2019 00:00:00", "PST")
+val date3 = parseDateWithTimezone("2019/07/01 00:00:00", "PST")
+val date4 = parseDateWithTimezone("01/07/2019 00:00:00", "PST")
+
+val date5 = parseDate("2030-01-01 00:00:00")
+val date6 = parseDate("01-01-2030 00:00:00")
+val date7 = parseDate("2030/01/01 00:00:00")
+val date8 = parseDate("01/01/2030 00:00:00")
+val date9 = parseDate("01012030 000000")

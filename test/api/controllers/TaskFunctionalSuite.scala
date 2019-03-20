@@ -15,15 +15,17 @@ import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import api.utils.DateUtils._
+import api.utils.UUIDGenerator
 import play.api.test.FakeRequest
 import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
 import api.validators.Error._
 import play.api.libs.json.JsArray
+import slick.jdbc.MySQLProfile.api._
+import database.mappings.FileMappings._
+import database.mappings.TaskMappings._
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.Duration
-import com.google.inject.{AbstractModule, Guice}
-import database.utils.DatabaseUtils.TEST_DB
 import play.api.test.Helpers._
 import slick.jdbc.meta.MTable
 
@@ -40,9 +42,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
   lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
-  Guice.createInjector(appBuilder.applicationModule).injectMembers(this)
+  val dtbase: Database = appBuilder.injector.instanceOf[Database]
   implicit val fileRepo: FileRepository = appBuilder.injector.instanceOf[FileRepository]
   implicit val taskRepo: TaskRepository = appBuilder.injector.instanceOf[TaskRepository]
+  implicit val uuidGen: UUIDGenerator = appBuilder.injector.instanceOf[UUIDGenerator]
   implicit val actorSystem: ActorSystem = ActorSystem()
   implicit val mat: Materializer = ActorMaterializer()
 
@@ -58,27 +61,25 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
   val fileUUID3: String = UUID.randomUUID().toString
   val fileUUID4: String = UUID.randomUUID().toString
 
+  val id = uuidGen.generateUUID
+
   override def beforeAll = {
     val result = for {
-      _ <- fileRepo.createFilesTable
+      _ <- dtbase.run(createFilesTableAction)
       _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", getCurrentDateTimestamp))
       _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID2, "test2", getCurrentDateTimestamp))
       _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID3, "test3", getCurrentDateTimestamp))
       res <- fileRepo.insertInFilesTable(FileDTO(fileUUID4, "test4", getCurrentDateTimestamp))
     } yield res
     Await.result(result, Duration.Inf)
-    Await.result(taskRepo.createTasksTable, Duration.Inf)
-    println(Await.result(TEST_DB.run(MTable.getTables), Duration.Inf))
+    Await.result(dtbase.run(createTasksTableAction), Duration.Inf)
+    println(Await.result(dtbase.run(MTable.getTables), Duration.Inf))
     println(Await.result(fileRepo.selectAllFiles, Duration.Inf))
   }
 
-  override def beforeEach = {
-
-  }
-
   override def afterAll = {
-    Await.result(taskRepo.dropTasksTable, Duration.Inf)
-    Await.result(fileRepo.dropFilesTable, Duration.Inf)
+    Await.result(dtbase.run(dropTasksTableAction), Duration.Inf)
+    Await.result(dtbase.run(dropFilesTableAction), Duration.Inf)
   }
 
   override def afterEach = {
@@ -113,7 +114,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
     "receive a POST request with a JSON body with the correct data and insert it into the database. (yyyy-MM-dd HH:mm:ss date format)" in {
@@ -134,7 +135,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
 
     }
 
@@ -156,7 +157,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
     "receive a POST request with a JSON body with the correct data and insert it into the database. (yyyy/MM/dd HH:mm:ss date format)" in {
@@ -177,7 +178,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
 
     }
 
@@ -199,7 +200,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
     "receive a POST request with a JSON body with the correct data and insert it into the database. (max delay exceeded)" in {
@@ -220,7 +221,32 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+    }
+
+    "receive a POST request with a JSON body with correct data and insert it into the database. (with timezone)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "RunOnce",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "timezone": "EST"
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for{
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val task = Await.result(taskRepo.selectTask(id), Duration.Inf)
+      task.isDefined mustBe true
+      task.get.startDateAndTime.toString mustBe "Some(Tue Jan 01 05:00:00 GMT 2030)"
     }
 
     "receive a POST request with a JSON body with incorrect data. (wrong file name)" in {
@@ -349,7 +375,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
     "receive a POST request with a JSON body with correct periodic task data and insert it into the database. (with occurrences) (Minutely)" in {
@@ -373,7 +399,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
     "receive a POST request with a JSON body with correct periodic task data and insert it into the database. (Hourly)" in {
@@ -397,7 +423,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
     "receive a POST request with a JSON body with correct periodic task data and insert it into the database. (Daily)" in {
@@ -421,7 +447,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
     "receive a POST request with a JSON body with correct periodic task data and insert it into the database. (Weekly)" in {
@@ -445,7 +471,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
     "receive a POST request with a JSON body with correct periodic task data and insert it into the database. (Monthly)" in {
@@ -469,7 +495,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
     "receive a POST request with a JSON body with correct periodic task data and insert it into the database. (Yearly)" in {
@@ -493,7 +519,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
     "receive a POST request with a JSON body with correct periodic task data and insert it into the database. (dd-MM-yyyy HH:mm:ss endDate format)" in {
@@ -517,7 +543,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
     "receive a POST request with a JSON body with correct periodic task data and insert it into the database. (yyyy/MM/dd HH:mm:ss endDate format)" in {
@@ -541,7 +567,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
     "receive a POST request with a JSON body with correct periodic task data and insert it into the database. (dd/MM/yyyy HH:mm:ss endDate format)" in {
@@ -565,8 +591,39 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
+
+    "receive a POST request with a JSON body with correct periodic task data and insert it into the database. (with timezone)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2019-07-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 2,
+            "endDateAndTime": "01-01-2020 00:00:00",
+            "timezone": "PST"
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for{
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val task = Await.result(taskRepo.selectTask(id), Duration.Inf)
+      task.isDefined mustBe true
+      task.get.startDateAndTime.get mustBe "Some(Mon Jul 01 08:00:00 BST 2019)"
+      task.get.endDateAndTime.get mustBe "Some(Wed Jan 01 08:00:00 GMT 2020)"
+    }
+
+
 
     "receive a POST request with a JSON body with incorrect periodic task data. (missing Periodic fields)" in {
       val fakeRequest = FakeRequest(POST, "/task")
@@ -798,6 +855,562 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidCreateTaskFormat).toString + "]"
     }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with exclusionDate)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayType)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with month)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day and dayOfWeek)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day and dayType)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day and month)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek and dayType)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek and month)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayType and month)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayType and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with month and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek and dayType)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek and month)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, dayType and month)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, dayType and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayType, month and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, dayType and month)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, dayType and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, month and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayType, month and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, dayType, month and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, dayType, month and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with exclusionDate and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayType and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with month and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayType and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, month and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, dayType and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, month and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayType, month and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayType, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with month, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, dayType and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, month and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, dayType, month and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, dayType, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayType, month, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, dayType, month and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, dayType, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, month, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayType, month, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, dayType, month, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, dayType, month, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with multiple exclusions)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with no arguments)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with an unknown parameter)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with exclusionId)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with taskId)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with exclusionDate and day)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with exclusionDate and dayOfWeek)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with exclusionDate and dayType)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with exclusionDate and month)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with exclusionDate and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with only criteria)" in {
+
+    }
+
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with schedulingDate)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2019-07-01 00:00:00",
+            "schedulings": {
+              "schedulingDate": ""
+            }
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for{
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with month)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day and dayOfWeek)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day and dayType)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day and month)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek and dayType)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek and month)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType and month)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with month and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, month)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, dayType, month)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, dayType, year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType, month, year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType and month)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, month and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayType, month and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, dayType, month and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType, month and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with month and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayType and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, month and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, dayType and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, month and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType, month and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with month, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, month and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, dayType, month and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, dayType, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType, month, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType, month and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, month, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayType, month, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, dayType, month, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType, month, year and criteria)" in {
+
+    }
+
+    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with multiple schedulings)" in {
+
+    }
+
+    "receive a POST request with a JSON body with incorrect personalized task data. (with no scheduling)" in {
+
+    }
+
+    "receive a POST request with a JSON body with incorrect personalized task data. (with a scheduling with no parameters)" in {
+
+    }
+
+    "receive a POST request with a JSON body with incorrect personalized task data. (with a scheduling with an unknown parameter)" in {
+
+    }
+
+    "receive a POST request with a JSON body with incorrect personalized task data. (with schedulingId)" in {
+
+    }
+
+    "receive a POST request with a JSON body with incorrect personalized task data. (with taskId)" in {
+
+    }
+
+    "receive a POST request with a JSON body with incorrect personalized task data. (with exclusionDate and day)" in {
+
+    }
+
+    "receive a POST request with a JSON body with incorrect personalized task data. (with exclusionDate and dayOfWeek)" in {
+
+    }
+
+    "receive a POST request with a JSON body with incorrect personalized task data. (with exclusionDate and dayType)" in {
+
+    }
+
+    "receive a POST request with a JSON body with incorrect personalized task data. (with exclusionDate and month)" in {
+
+    }
+
+    "receive a POST request with a JSON body with incorrect personalized task data. (with exclusionDate and year)" in {
+
+    }
+
+    "receive a POST request with a JSON body with incorrect personalized task data. (with only criteria)" in {
+
+    }
+
   }
 
   "GET /task" should {
@@ -899,7 +1512,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       println(bodyText)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidEndpointId) + "]"
-      val task = Await.result(taskRepo.selectTaskByTaskId("newUUID"), Duration.Inf)
+      val task = Await.result(taskRepo.selectTask("newUUID"), Duration.Inf)
       task.isDefined mustBe false
     }
 
@@ -924,12 +1537,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val routeOption = route(app, fakeRequest)
       val task = for{
         _ <- routeOption.get
-        res <- taskRepo.selectTaskByTaskId("11231bd5-6f92-496c-9fe7-75bc180467b0")
+        res <- taskRepo.selectTask("11231bd5-6f92-496c-9fe7-75bc180467b0")
       } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map{
         elem => elem.isDefined mustBe true
         val resultDto = TaskDTO("11231bd5-6f92-496c-9fe7-75bc180467b0", "test1", SchedulingType.RunOnce)
@@ -949,7 +1562,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       } yield res
       Await.result(result, Duration.Inf)
       val id = "asd1"
-      Await.result(taskRepo.selectTaskByTaskId(id), Duration.Inf).isDefined mustBe true
+      Await.result(taskRepo.selectTask(id), Duration.Inf).isDefined mustBe true
       val fakeRequest = FakeRequest(PATCH, "/task/" + id)
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
@@ -960,12 +1573,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val routeOption = route(app, fakeRequest)
       val task = for{
         _ <- routeOption.get
-        res <- taskRepo.selectTaskByTaskId(id)
+        res <- taskRepo.selectTask(id)
       } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map{ elem =>
         elem.isDefined mustBe true
         val resultDto = TaskDTO("asd1", "test4", SchedulingType.RunOnce)
@@ -994,12 +1607,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val routeOption = route(app, fakeRequest)
       val task = for{
         _ <- routeOption.get
-        res <- taskRepo.selectTaskByTaskId(id)
+        res <- taskRepo.selectTask(id)
       } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map{ elem =>
         elem.isDefined mustBe true
         val resultDto = TaskDTO(id, "test2", SchedulingType.RunOnce, Some(stringToDateFormat("2020-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Daily), Some(2), Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")))
@@ -1029,7 +1642,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val routeOption = route(app, fakeRequest)
       val task = for {
         _ <- routeOption.get
-        res <- taskRepo.selectTaskByTaskId(id)
+        res <- taskRepo.selectTask(id)
       } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
@@ -1067,12 +1680,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val routeOption = route(app, fakeRequest)
       val task = for {
         _ <- routeOption.get
-        res <- taskRepo.selectTaskByTaskId(id)
+        res <- taskRepo.selectTask(id)
       } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map { elem =>
         elem.isDefined mustBe true
         val resultDto = TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(stringToDateFormat("2019-07-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Hourly), Some(1), Some(stringToDateFormat("2020-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
@@ -1102,12 +1715,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val routeOption = route(app, fakeRequest)
       val task = for {
         _ <- routeOption.get
-        res <- taskRepo.selectTaskByTaskId(id)
+        res <- taskRepo.selectTask(id)
       } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map { elem =>
         elem.isDefined mustBe true
         val resultDto = dto2.copy(startDateAndTime = Some(stringToDateFormat("2019-07-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
@@ -1136,12 +1749,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val routeOption = route(app, fakeRequest)
       val task = for {
         _ <- routeOption.get
-        res <- taskRepo.selectTaskByTaskId(id)
+        res <- taskRepo.selectTask(id)
       } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map { elem =>
         elem.isDefined mustBe true
         val resultDto = dto2.copy(periodType = Some(PeriodType.Hourly))
@@ -1170,12 +1783,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val routeOption = route(app, fakeRequest)
       val task = for {
         _ <- routeOption.get
-        res <- taskRepo.selectTaskByTaskId(id)
+        res <- taskRepo.selectTask(id)
       } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map{ elem =>
         elem.isDefined mustBe true
         val resultDto = dto2.copy(period = Some(5))
@@ -1205,12 +1818,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val routeOption = route(app, fakeRequest)
       val task = for {
         _ <- routeOption.get
-        res <- taskRepo.selectTaskByTaskId(id)
+        res <- taskRepo.selectTask(id)
       } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map { elem =>
         elem.isDefined mustBe true
         val resultDto = dto2.copy(endDateAndTime = Some(stringToDateFormat("2050-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
@@ -1240,12 +1853,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val routeOption = route(app, fakeRequest)
       val task = for{
         _ <- routeOption.get
-        res <- taskRepo.selectTaskByTaskId(id)
+        res <- taskRepo.selectTask(id)
       } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map{ elem =>
         elem.isDefined mustBe true
         val resultDTO = dto3.copy(endDateAndTime = Some(stringToDateFormat("2050-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), totalOccurrences = None, currentOccurrences = None)
@@ -1275,12 +1888,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val routeOption = route(app, fakeRequest)
       val task = for{
         _ <- routeOption.get
-        res <- taskRepo.selectTaskByTaskId(id)
+        res <- taskRepo.selectTask(id)
       } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map { elem =>
         elem.isDefined mustBe true
         val resultDto = dto3.copy(totalOccurrences = Some(5), currentOccurrences = Some(5))
@@ -1310,12 +1923,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val routeOption = route(app, fakeRequest)
       val task = for {
         _ <- routeOption.get
-        res <- taskRepo.selectTaskByTaskId(id)
+        res <- taskRepo.selectTask(id)
       } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map{ elem =>
         elem.isDefined mustBe true
         val resultDTO = dto2.copy(endDateAndTime = None, totalOccurrences = Some(5), currentOccurrences = Some(5))
@@ -1347,12 +1960,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val routeOption = route(app, fakeRequest)
       val task = for {
         _ <- routeOption.get
-        res <- taskRepo.selectTaskByTaskId(id)
+        res <- taskRepo.selectTask(id)
       } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map{ elem =>
         elem.isDefined mustBe true
         val resultDto = TaskDTO("11231bd5-6f92-496c-9fe7-75bc180467b0", "test4", SchedulingType.RunOnce, Some(stringToDateFormat("2050-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
@@ -1387,12 +2000,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val routeOption = route(app, fakeRequest)
       val task = for{
         _ <- routeOption.get
-        res <- taskRepo.selectTaskByTaskId(id)
+        res <- taskRepo.selectTask(id)
       } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map{ elem =>
         elem.isDefined mustBe true
         val resultDto = TaskDTO("11231bd5-6f92-496c-9fe7-75bc180467b0", "test4", SchedulingType.Periodic, Some(stringToDateFormat("2050-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Yearly), Some(2), None, Some(6), Some(6))
@@ -1430,12 +2043,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val routeOption = route(app, fakeRequest)
       val task = for{
         _ <- routeOption.get
-        res <- taskRepo.selectTaskByTaskId("11231bd5-6f92-496c-9fe7-75bc180467b0")
+        res <- taskRepo.selectTask("11231bd5-6f92-496c-9fe7-75bc180467b0")
       } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map(elem => elem.isDefined mustBe true)
     }
 
@@ -1464,7 +2077,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val routeOption = route(app, fakeRequest)
       val task = for{
         _ <- routeOption.get
-        res <- taskRepo.selectTaskByTaskId("11231bd5-6f92-496c-9fe7-75bc180467b0")
+        res <- taskRepo.selectTask("11231bd5-6f92-496c-9fe7-75bc180467b0")
       } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
@@ -1499,8 +2112,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val routeOption = route(app, fakeRequest)
       val tasks = for{
         _ <- routeOption.get
-        task1 <- taskRepo.selectTaskByTaskId("11231bd5-6f92-496c-9fe7-75bc180467b0")
-        task2 <- taskRepo.selectTaskByTaskId("asd4")
+        task1 <- taskRepo.selectTask("11231bd5-6f92-496c-9fe7-75bc180467b0")
+        task2 <- taskRepo.selectTask("asd4")
       } yield (task1, task2)
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
@@ -1539,12 +2152,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val routeOption = route(app, fakeRequest)
       val task = for {
         _ <- routeOption.get
-        res <- taskRepo.selectTaskByTaskId("11231bd5-6f92-496c-9fe7-75bc180467b0")
+        res <- taskRepo.selectTask("11231bd5-6f92-496c-9fe7-75bc180467b0")
       } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map { elem =>
         elem.isDefined mustBe true
         val resultDto = TaskDTO("11231bd5-6f92-496c-9fe7-75bc180467b0", "test4", SchedulingType.Periodic, Some(stringToDateFormat("2019-07-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2020-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
@@ -1578,7 +2191,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val routeOption = route(app, fakeRequest)
       val task = for{
         _ <- routeOption.get
-        res <- taskRepo.selectTaskByTaskId("11231bd5-6f92-496c-9fe7-75bc180467b0")
+        res <- taskRepo.selectTask("11231bd5-6f92-496c-9fe7-75bc180467b0")
       } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
@@ -1628,8 +2241,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       } yield res
       val bodyText = contentAsString(routeOption.get)
       println(bodyText)
-      status(routeOption.get) mustBe OK
-      bodyText mustBe "Task with id = " + id + " was deleted"
+      status(routeOption.get) mustBe NO_CONTENT
+      bodyText mustBe ""
       tasks.map(elem => elem.size mustBe 0)
     }
   }

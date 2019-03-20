@@ -4,10 +4,9 @@ import java.sql.Timestamp
 import java.util.Date
 
 import api.services.Criteria.Criteria
-import api.services.{Criteria, DayType}
 import api.services.DayType.DayType
+import api.services.{Criteria, DayType}
 import play.api.libs.json.{Json, OFormat}
-import slick.dbio.Effect
 import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._
 
@@ -20,24 +19,24 @@ object SchedulingMappings {
   case class SchedulingRow(
                            schedulingId: String,
                            taskId: String,
-                           schedulingDate: Option[Date],
-                           day: Option[Int],
-                           dayOfWeek: Option[Int],
-                           dayType: Option[DayType],
-                           month: Option[Int],
-                           year: Option[Int],
-                           criteria: Option[Criteria]
+                           schedulingDate: Option[Date] = None,
+                           day: Option[Int] = None,
+                           dayOfWeek: Option[Int] = None,
+                           dayType: Option[DayType] = None,
+                           month: Option[Int] = None,
+                           year: Option[Int] = None,
+                           criteria: Option[Criteria] = None
                          )
 
-  implicit val exclusionsRowFormat: OFormat[SchedulingRow] = Json.format[SchedulingRow]
+  implicit val schedulingsRowFormat: OFormat[SchedulingRow] = Json.format[SchedulingRow]
 
   //---------------------------------------------------------
   //# TABLE MAPPINGS
   //---------------------------------------------------------
 
-  class ExclusionsTable(tag: Tag) extends Table[SchedulingRow](tag, "exclusions"){
+  class SchedulingsTable(tag: Tag) extends Table[SchedulingRow](tag, "schedulings"){
     def schedulingId = column[String]("schedulingId", O.PrimaryKey, O.Length(36))
-    def taskId = column[String]("taskId", O.Unique, O.Length(36))
+    def taskId = column[String]("taskId", O.Length(36))
     def schedulingDate = column[Option[Date]]("schedulingDate")
     def day = column[Option[Int]]("day")
     def dayOfWeek = column[Option[Int]]("dayOfWeek")
@@ -83,9 +82,122 @@ object SchedulingMappings {
   //---------------------------------------------------------
   //# QUERY EXTENSIONS
   //---------------------------------------------------------
-  lazy val exclusionsTable = TableQuery[ExclusionsTable]
-  val createExclusionsTableAction = exclusionsTable.schema.create
-  val dropExclusionsTableAction = exclusionsTable.schema.drop
-  val selectAllFromExclusionsTable = exclusionsTable
-  val deleteAllFromExclusionsTable = exclusionsTable.delete
+  lazy val schedulingsTable = TableQuery[SchedulingsTable]
+  val createSchedulingsTableAction = schedulingsTable.schema.create
+  val dropSchedulingsTableAction = schedulingsTable.schema.drop
+  val selectAllFromSchedulingsTable = schedulingsTable
+  val deleteAllFromSchedulingsTable = schedulingsTable.delete
+
+  def selectSchedulingBySchedulingId(schedulingId: String): Query[SchedulingsTable, SchedulingRow, Seq] = {
+    schedulingsTable.filter(_.schedulingId === schedulingId)
+  }
+
+  def selectSchedulingByTaskId(taskId: String): Query[SchedulingsTable, SchedulingRow, Seq] = {
+    schedulingsTable.filter(_.taskId === taskId)
+  }
+
+  def selectSchedulingBySchedulingDate(schedulingDate: Date): Query[SchedulingsTable, SchedulingRow, Seq] = {
+    schedulingsTable.filter(_.schedulingDate === schedulingDate)
+  }
+
+  def selectSchedulingByDay(day: Int): Query[SchedulingsTable, SchedulingRow, Seq] = {
+    schedulingsTable.filter(_.day === day)
+  }
+
+  def selectSchedulingByDayOfWeek(dayOfWeek: Int): Query[SchedulingsTable, SchedulingRow, Seq] = {
+    schedulingsTable.filter(_.dayOfWeek === dayOfWeek)
+  }
+
+  def selectSchedulingByDayType(dayType: DayType): Query[SchedulingsTable, SchedulingRow, Seq] = {
+    schedulingsTable.filter(_.dayType === dayType)
+  }
+
+  def selectSchedulingByMonth(month: Int): Query[SchedulingsTable, SchedulingRow, Seq] = {
+    schedulingsTable.filter(_.month === month)
+  }
+
+  def selectSchedulingByYear(year: Int): Query[SchedulingsTable, SchedulingRow, Seq] = {
+    schedulingsTable.filter(_.year === year)
+  }
+
+  def selectSchedulingByCriteria(criteria: Criteria): Query[SchedulingsTable, SchedulingRow, Seq] = {
+    schedulingsTable.filter(_.criteria === criteria)
+  }
+
+  def insertScheduling(scheduling: SchedulingRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    schedulingsTable += scheduling
+  }
+
+  def updateSchedulingBySchedulingId(schedulingId: String, scheduling: SchedulingRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectSchedulingBySchedulingId(schedulingId).update(scheduling)
+  }
+
+  def updateSchedulingByTaskId(taskId: String, scheduling: SchedulingRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectSchedulingByTaskId(taskId).update(scheduling)
+  }
+
+  def updateSchedulingBySchedulingDate(schedulingDate: Date, scheduling: SchedulingRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectSchedulingBySchedulingDate(schedulingDate).update(scheduling)
+  }
+
+  def updateSchedulingByDay(day: Int, scheduling: SchedulingRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectSchedulingByDay(day).update(scheduling)
+  }
+
+  def updateSchedulingByDayOfWeek(dayOfWeek: Int, scheduling: SchedulingRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectSchedulingByDayOfWeek(dayOfWeek).update(scheduling)
+  }
+
+  def updateSchedulingByDayType(dayType: DayType, scheduling: SchedulingRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectSchedulingByDayType(dayType).update(scheduling)
+  }
+
+  def updateSchedulingByMonth(month: Int, scheduling: SchedulingRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectSchedulingByMonth(month).update(scheduling)
+  }
+
+  def updateSchedulingByYear(year: Int, scheduling: SchedulingRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectSchedulingByYear(year).update(scheduling)
+  }
+
+  def updateSchedulingByCriteria(criteria: Criteria, scheduling: SchedulingRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectSchedulingByCriteria(criteria).update(scheduling)
+  }
+
+  def deleteSchedulingBySchedulingId(schedulingId: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectSchedulingBySchedulingId(schedulingId).delete
+  }
+
+  def deleteSchedulingByTaskId(taskId: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectSchedulingByTaskId(taskId).delete
+  }
+
+  def deleteSchedulingBySchedulingDate(schedulingDate: Date): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectSchedulingBySchedulingDate(schedulingDate).delete
+  }
+
+  def deleteSchedulingByDay(day: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectSchedulingByDay(day).delete
+  }
+
+  def deleteSchedulingByDayOfWeek(dayOfWeek: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectSchedulingByDayOfWeek(dayOfWeek).delete
+  }
+
+  def deleteSchedulingByDayType(dayType: DayType): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectSchedulingByDayType(dayType).delete
+  }
+
+  def deleteSchedulingByMonth(month: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectSchedulingByMonth(month).delete
+  }
+
+  def deleteSchedulingByYear(year: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectSchedulingByYear(year).delete
+  }
+
+  def deleteSchedulingByCriteria(criteria: Criteria): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    selectSchedulingByCriteria(criteria).delete
+  }
+
 }

@@ -78,8 +78,7 @@ class FakeFileRepository extends FileRepository{
     * @return true if row exists, false if not.
     */
   def existsCorrespondingFileName(fileName: String): Future[Boolean] = {
-    if(fileName.equals("test1")) Future.successful(true)
-    else Future.successful(false)
+   Future.successful(fileName.equals("test1"))
   }
 
   /**

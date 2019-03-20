@@ -5,6 +5,8 @@ import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.util.{Calendar, Date, TimeZone}
 
+import api.services.DayType
+import api.services.DayType.DayType
 import api.validators.Error
 import database.repositories.{FileRepository, FileRepositoryImpl}
 
@@ -67,9 +69,17 @@ object DateUtils{
     sdf.parse(date)
   }
 
-  def dateToDayTypeString(date: Date): String = ???
+  def dateToDayOfWeekInt(date: Date): Int = {
+    val calendar = Calendar.getInstance()
+    calendar.setTime(date)
+    calendar.get(Calendar.DAY_OF_WEEK)
+  }
 
-  def dateToDayOfWeekInt(date: Date): Int = ???
+  def dateToDayTypeString(date: Date): DayType = {
+    val dayOfWeek = dateToDayOfWeekInt(date)
+    if(dayOfWeek >= 1 && dayOfWeek <= 5) DayType.Weekday
+    else DayType.Weekend
+  }
 
   def removeTimeFromDate(date: Date): Date = {
     val sdf = new SimpleDateFormat("yyyy-MM-dd")
@@ -98,8 +108,15 @@ object DateUtils{
   def parseDate(date: String): Option[Date] = {
     dateFormatsList.flatMap { format =>
       format.setLenient(false)
+      format.setTimeZone(TimeZone.getDefault)
       Try(Some(format.parse(date))).getOrElse(None)
     }.headOption
+  }
+
+  def parseTimezone(string: String): Option[TimeZone] = {
+    val timezone = TimeZone.getTimeZone(string)
+    if(!string.equals("GMT") && timezone.getID.equals("GMT")) None
+    else Some(timezone)
   }
 
   def parseDateWithTimezone(date: String, timezone: String): Option[Date] = {
@@ -110,9 +127,7 @@ object DateUtils{
     }.headOption
   }
 
-  def parseTimezone(timezone: String): Option[TimeZone] = {
-    Try(Some(TimeZone.getTimeZone(timezone))).getOrElse(None)
-  }
+
 
   /**
     * Method that returns the current time in a HH:mm:ss.SSS string format.

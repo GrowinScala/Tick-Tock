@@ -21,7 +21,7 @@ import play.api.test.Helpers._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite with BeforeAndAfterAll with BeforeAndAfterEach{
+class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite{
 
   lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
   lazy val injector: Injector = appBuilder.injector()
@@ -35,24 +35,8 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
 
   val LOCALHOST = "localhost:9000"
 
-  override def beforeAll(): Unit = {
-
-  }
-
-  override def beforeEach(): Unit = {
-
-  }
-
-  override def afterAll(): Unit = {
-
-  }
-
-  override def afterEach(): Unit = {
-
-  }
-
   "TaskController#schedule (POST /task)" should {
-    "should be valid in" in {
+    "be valid in" in {
       val fakeRequest = FakeRequest(POST, "/task")
         .withHeaders(HOST -> LOCALHOST, CONTENT_TYPE -> "application/json")
         .withBody(Json.parse("""
@@ -62,16 +46,15 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
             "taskType": "RunOnce"
           }
         """))
-
       val taskController = new TaskController(cc)
       val result = taskController.schedule.apply(fakeRequest)
       val bodyText = contentAsString(result)
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/asd1"
     }
   }
 
   "TaskController#getSchedule (GET /task)" should {
-    "should be valid in" in {
+    "be valid in" in {
       val fakeRequest = FakeRequest(GET, s"/task")
         .withHeaders(HOST -> LOCALHOST)
       val taskController = new TaskController(cc)
@@ -84,7 +67,7 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
   }
 
   "TaskController#getScheduleById (GET /task/:id)" should {
-    "should be valid in" in {
+    "be valid in" in {
       val id = "asd1"
       val fakeRequest = FakeRequest(GET, s"/task/" + id)
         .withHeaders(HOST -> LOCALHOST)
@@ -95,8 +78,8 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
     }
   }
 
-  "TaskController#updateTask (PATCH /task/:id" should {
-    "should be valid in" in {
+  "TaskController#updateTask (PATCH /task/:id)" should {
+    "be valid in" in {
       val id = "asd1"
       val fakeRequest = FakeRequest(PATCH, s"/task/" + id)
         .withHeaders(HOST -> LOCALHOST, CONTENT_TYPE -> "application/json")
@@ -110,12 +93,23 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
       val taskController = new TaskController(cc)
       val result = taskController.updateTask(id).apply(fakeRequest)
       val bodyText = contentAsString(result)
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+    }
+  }
+
+  "TaskController#deleteTask (DELETE /task/:id)" should {
+    "be valid in" in {
+      val id = "asd1"
+      val fakeRequest = FakeRequest(DELETE, s"/task/" + id)
+      val taskController = new TaskController(cc)
+      val result = taskController.deleteTask(id).apply(fakeRequest)
+      val bodyText = contentAsString(result)
+      bodyText mustBe ""
     }
   }
 
   "TaskController#replaceTask (PUT /task/:id)" should {
-    "should be valid in" in {
+    "be valid in" in {
       val id = "asd1"
       val fakeRequest = FakeRequest(PUT, s"/task/" + id)
         .withHeaders(HOST -> LOCALHOST)
@@ -129,65 +123,7 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
       val taskController = new TaskController(cc)
       val result = taskController.replaceTask(id).apply(fakeRequest)
       val bodyText = contentAsString(result)
-      bodyText mustBe "Task received."
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
-  }
-
-
-  /*"FileController#getAllFiles" should {
-    "receive a GET request" in {
-      val fakeRequest = FakeRequest(GET, s"/file")
-        .withHeaders(HOST -> "localhost:9000")
-      val fileController = new FileController(cc)
-      val result = fileController.getAllFiles.apply(fakeRequest)
-      val bodyText = contentAsString(result)
-      bodyText mustBe """[{"fileId":"asd1","fileName":"test1","uploadDate":1514808000000},{"fileId":"asd2","fileName":"test2","uploadDate":1514808000000},{"fileId":"asd3","fileName":"test3","uploadDate":1514808000000}]"""
-    }
-  }
-
-  "FileController#getFileById" should {
-    "receive a GET request." in {
-      val fakeRequest = FakeRequest(GET, s"/file/asd1")
-        .withHeaders(HOST -> "localhost:9000")
-      val fileController = new FileController(cc)
-      val result = fileController.getFileById("asd1").apply(fakeRequest)
-      val bodyText = contentAsString(result)
-      bodyText mustBe """{"fileId":"asd1","fileName":"test1","uploadDate":1514808000000}"""
-    }
-  }
-
-  "FileController#deleteFile" should {
-    "receive a DELETE request." in {
-      val fakeRequest = FakeRequest(DELETE, s"/file/asd1")
-        .withHeaders(HOST -> "localhost:9000")
-      val fileController = new FileController(cc)
-      val result = fileController.deleteFile("asd1").apply(fakeRequest)
-      val bodyText = contentAsString(result)
-      bodyText mustBe "File with id = asd1 as been deleted."
-    }
-  }*/
-
-  "TaskController#getSchedule (GET /task)" should {
-    val fakeRequest = FakeRequest(GET, s"/task")
-      .withHeaders(HOST -> "localhost:9000")
-    val fileController = new FileController(cc)
-    val result = fileController.getAllFiles.apply(fakeRequest)
-    val bodyText = contentAsString(result)
-  }
-
-  "TaskController#getScheduleById (GET /task/:id)" should {
-    val fakeRequest = FakeRequest(GET, s"/task/asd1")
-      .withHeaders(HOST -> "localhost:9000")
-    val fileController = new FileController(cc)
-    val result = fileController.getAllFiles.apply(fakeRequest)
-    val bodyText = contentAsString(result)
-  }
-
-  "TaskController#replaceTask (PUT /task/:id)" should {
-    val fakeRequest = FakeRequest(GET, s"/task")
-      .withHeaders(HOST -> "localhost:9000")
-    val fileController = new FileController(cc)
-    val result = fileController.getAllFiles.apply(fakeRequest)
-    val bodyText = contentAsString(result)
   }
 }

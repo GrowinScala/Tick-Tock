@@ -30,7 +30,7 @@ trait TaskRepository {
     * @param id - the identifier of the task.
     * @return a TaskDTO of the selected task.
     */
-  def selectTaskByTaskId(id: String): Future[Option[TaskDTO]]
+  def selectTask(id: String): Future[Option[TaskDTO]]
 
   /**
     *
@@ -86,7 +86,7 @@ trait TaskRepository {
     */
   def updateTaskById(id: String, task: TaskDTO): Future[Int]
 
-  /**
+  /*/**
     * Creates the tasks table on the database.
     */
   def createTasksTable: Future[Unit]
@@ -94,7 +94,7 @@ trait TaskRepository {
   /**
     * Drops the tasks table on the database.
     */
-  def dropTasksTable: Future[Unit]
+  def dropTasksTable: Future[Unit]*/
 
   /**
     * Inserts a task (row) on the tasks table on the database.
