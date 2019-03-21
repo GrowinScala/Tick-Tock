@@ -2,7 +2,7 @@ import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Date}
 
-import api.dtos.TaskDTO
+import api.dtos.{CreateExclusionDTO, TaskDTO}
 import api.services.{PeriodType, SchedulingType}
 import slick.jdbc.MySQLProfile.api._
 import api.utils.DateUtils._
@@ -22,14 +22,6 @@ implicit val uuidGen = new DefaultUUIDGenerator
 
 val validator = new TaskValidator()
 
-//val date = parseDateWithTimezone("2030-01-01 00:00:00", "EST")
-val date1 = parseDateWithTimezone("2019-07-01 00:00:00", "PST")
-val date2 = parseDateWithTimezone("01-07-2019 00:00:00", "PST")
-val date3 = parseDateWithTimezone("2019/07/01 00:00:00", "PST")
-val date4 = parseDateWithTimezone("01/07/2019 00:00:00", "PST")
+//val result = validator.isValidExclusionFormat(Some(List(CreateExclusionDTO(None, Some(15)))), "asd1")
 
-val date5 = parseDate("2030-01-01 00:00:00")
-val date6 = parseDate("01-01-2030 00:00:00")
-val date7 = parseDate("2030/01/01 00:00:00")
-val date8 = parseDate("01/01/2030 00:00:00")
-val date9 = parseDate("01012030 000000")
+parseTimezone("BDT")

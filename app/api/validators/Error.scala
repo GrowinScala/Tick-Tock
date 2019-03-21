@@ -35,9 +35,10 @@ object Error{
     errorCode = "error-01",
     message ="""
         |The json format is not valid. Json must contain:
-        |- the String fields "startDateAndTime", "fileName" and "taskType" in that order.
-        |- the remaining fields "periodType"(String), "period"(Int), "endDateAndTime"(String) and "occurrences"(Int) (in that order) only when taskType is "Periodic".
-        |- either an "endDateAndTime" or "occurrences" field but not both.
+        |- The order of fields as follows: "fileName"(String), "taskType"(String), "startDateAndTime"(String), "periodType"(String), "period"(String), "endDateAndTime"(String), "occurrences"(Int), "timezone"(String), "exclusions"(List of Exclusions) and "schedulings"(List of Schedulings).
+        |- If the taskType is "RunOnce": the fields "fileName"(String) and "taskType"(String) should be introduced and optionally "startDateAndTime"(String) and "timezone"(String). No other fields should be introduced.
+        |- If the taskType is "Periodic": the fields "fileName"(String), "taskType"(String), "periodType"(String), "period"(Int) and one of the fields between "endDateAndTime"(String) and "occurrences"(Int) but not both should be introduced and optionally "startDateAndTime"(String), "timezone"(String) and "exclusions"(List of Exclusions). No other fields should be introduced.
+        |- If the taskType is "Personalized": the fields "fileName", "taskType"(String), "schedulings"(List of Schedulings) and one of the fields between "endDateAndTime"(String) and "occurrences"(Int) but not both should be introduced and optionally "startDateAndTime"(String), "timezone"(String) and "exclusions"(List of Exclusions). No other fields should be introduced.
         |- if this is a PUT request, the task introduced must not have a taskId. (the taskId is introduced in the endpoint)""".stripMargin,
     reason = Error.invalid,
     locationType = None,
@@ -175,7 +176,8 @@ object Error{
     locationType = Some("schedulings"),
     location = body
   )
-  lazy val invalidSchedulingDateValue = Error(
+
+  lazy val invalidSchedulingDate = Error(
     errorCode = "error-16",
     message = s"schedulingDate must be a date in the future.",
     reason = Error.invalid,
@@ -239,7 +241,7 @@ object Error{
     location = body
   )
 
-  lazy val invalidExclusionDateValue = Error(
+  lazy val invalidExclusionDate = Error(
     errorCode = "error-24",
     message = s"exclusionDate must be a date in the future.",
     reason = Error.invalid,

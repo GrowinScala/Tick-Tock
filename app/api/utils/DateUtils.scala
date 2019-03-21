@@ -115,7 +115,7 @@ object DateUtils{
 
   def parseTimezone(string: String): Option[TimeZone] = {
     val timezone = TimeZone.getTimeZone(string)
-    if(!string.equals("GMT") && timezone.getID.equals("GMT")) None
+    if(!string.equals(TimeZone.getDefault.toString) && timezone.getID.equals(TimeZone.getDefault.toString)) None
     else Some(timezone)
   }
 
@@ -126,8 +126,6 @@ object DateUtils{
       Try(Some(format.parse(date))).getOrElse(None)
     }.headOption
   }
-
-
 
   /**
     * Method that returns the current time in a HH:mm:ss.SSS string format.

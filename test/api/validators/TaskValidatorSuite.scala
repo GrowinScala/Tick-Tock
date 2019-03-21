@@ -4,8 +4,8 @@ import java.util.{Calendar, UUID}
 
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
-import api.dtos.{CreateExclusionDTO, CreateTaskDTO, ExclusionDTO, TaskDTO}
-import api.services.{PeriodType, SchedulingType}
+import api.dtos._
+import api.services.{Criteria, DayType, PeriodType, SchedulingType}
 import api.utils.{FakeUUIDGenerator, UUIDGenerator}
 import api.validators.Error._
 import com.google.inject.Guice
@@ -105,101 +105,204 @@ class TaskValidatorSuite extends PlaySpec{
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with exclusionDate)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(5), None, Some(24), None,
+        Some(List(CreateExclusionDTO(Some("2030-01-01 12:10:00")))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      calendar.set(2030, 1 - 1, 1, 12, 10, 0)
+      val exclusionDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Minutely), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("dsa1", "asd1", Some(exclusionDate))))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with day)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None,
+        Some(List(CreateExclusionDTO(None, Some(10)))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("dsa1", "asd1", None, Some(10))))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with dayOfWeek)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None,
+        Some(List(CreateExclusionDTO(None, None, Some(3)))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("dsa1", "asd1", None, None, Some(3))))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with dayType)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None,
+        Some(List(CreateExclusionDTO(None, None, Some(3)))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("dsa1", "asd1", None, None, Some(3))))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with month)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None,
+        Some(List(CreateExclusionDTO(None, None, None, None, Some(5)))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("dsa1", "asd1", None, None, None, None, Some(5))))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with year)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None,
+        Some(List(CreateExclusionDTO(None, None, None, None, None, Some(2031)))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("dsa1", "asd1", None, None, None, None, None, Some(2031))))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with day and criteria)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None,
+        Some(List(CreateExclusionDTO(None, Some(15), None, None, None, None, Some(Criteria.First)))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("dsa1", "asd1", None, Some(15), None, None, None, None, Some(Criteria.First))))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with dayOfWeek and criteria)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None,
+        Some(List(CreateExclusionDTO(None, None, Some(5), None, None, None, Some(Criteria.Second)))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("dsa1", "asd1", None, None, Some(5), None, None, None, Some(Criteria.Second))))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with dayType and criteria)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None,
+        Some(List(CreateExclusionDTO(None, None, None, Some(DayType.Weekend), None, None, Some(Criteria.Third)))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("dsa1", "asd1", None, None, None, Some(DayType.Weekend), None, None, Some(Criteria.Third))))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with month and criteria)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None,
+        Some(List(CreateExclusionDTO(None, None, None, None, Some(9), None, Some(Criteria.Fourth)))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("dsa1", "asd1", None, None, None, None, Some(9), None, Some(Criteria.Fourth))))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with year and criteria)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None,
+        Some(List(CreateExclusionDTO(None, None, None, None, None, Some(2032), Some(Criteria.Last)))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("dsa1", "asd1", None, None, None, None, None, Some(2032), Some(Criteria.Last))))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with multiple complex exclusions)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None,
+        Some(List(CreateExclusionDTO(None, Some(13), Some(6), None, None, Some(2032)), CreateExclusionDTO(Some("2030-12-25 00:00:00")), CreateExclusionDTO(None, None, None, Some(DayType.Weekend), Some(8), None, Some(Criteria.First)))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      calendar.set(2030, 12 - 1, 25, 0, 0, 0)
+      val exclusionDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("dsa1", "asd1", None, Some(13), Some(6), None, None, Some(2032)), ExclusionDTO("dsa1", "asd1", Some(exclusionDate)), ExclusionDTO("dsa1", "asd1", None, None, None, Some(DayType.Weekend), Some(8), None, Some(Criteria.First))))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with schedulingDate)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None, None,
+        Some(List(CreateSchedulingDTO(Some("2030-01-01 12:00:00"), None, None, None, None, None, None))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val schedulingDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("dsa1", "asd1", Some(schedulingDate), None, None, None, None, None, None)))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with day)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None, None,
+        Some(List(CreateSchedulingDTO(None, Some(15), None, None, None, None, None))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("dsa1", "asd1", None, Some(15), None, None, None, None, None)))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with dayOfWeek)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None, None,
+        Some(List(CreateSchedulingDTO(None, None, Some(1), None, None, None, None))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("dsa1", "asd1", None, None, Some(1), None, None, None, None)))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with dayType)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None, None,
+        Some(List(CreateSchedulingDTO(None, None, None, Some(DayType.Weekday), None, None, None))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("dsa1", "asd1", None, None, None, Some(DayType.Weekday), None, None, None)))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with month)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None, None,
+        Some(List(CreateSchedulingDTO(None, None, None, None, Some(10), None, None))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("dsa1", "asd1", None, None, None, None, Some(10), None, None)))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with year)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None, None,
+        Some(List(CreateSchedulingDTO(None, None, None, None, None, Some(2033), None))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("dsa1", "asd1", None, None, None, None, None, Some(2033), None)))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with day and criteria)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None, None,
+        Some(List(CreateSchedulingDTO(None, Some(31), None, None, None, None, Some(Criteria.First)))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("dsa1", "asd1", None, Some(31), None, None, None, None, Some(Criteria.First))))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with dayOfWeek and criteria)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None, None,
+        Some(List(CreateSchedulingDTO(None, None, Some(7), None, None, None, Some(Criteria.Second)))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("dsa1", "asd1", None, None, Some(7), None, None, None, Some(Criteria.Second))))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with dayType and criteria)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None, None,
+        Some(List(CreateSchedulingDTO(None, None, None, Some(DayType.Weekend), None, None, Some(Criteria.Third)))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("dsa1", "asd1", None, None, None, Some(DayType.Weekend), None, None, Some(Criteria.Third))))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with month and criteria)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None, None,
+        Some(List(CreateSchedulingDTO(None, None, None, None, Some(2), None, Some(Criteria.Fourth)))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("dsa1", "asd1", None, None, None, None, Some(2), None, Some(Criteria.Fourth))))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with year and criteria)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None, None,
+        Some(List(CreateSchedulingDTO(None, None, None, None, None, Some(2038), Some(Criteria.Last)))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("dsa1", "asd1", None, None, None, None, None, Some(2038), Some(Criteria.Last))))))
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with multiple complex schedulings)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None, None,
+        Some(List(CreateSchedulingDTO(None, Some(13), Some(6), None, None, Some(2032)), CreateSchedulingDTO(Some("2030-12-25 00:00:00")), CreateSchedulingDTO(None, None, None, Some(DayType.Weekend), Some(8), None, Some(Criteria.First)))))
+      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
+      val startDate = calendar.getTime
+      calendar.set(2030, 12 - 1, 25, 0, 0, 0)
+      val schedulingDate = calendar.getTime
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("dsa1", "asd1", None, Some(13), Some(6), None, None, Some(2032)), SchedulingDTO("dsa1", "asd1", Some(schedulingDate)), SchedulingDTO("dsa1", "asd1", None, None, None, Some(DayType.Weekend), Some(8), None, Some(Criteria.First))))))
     }
-
 
     "receive an invalid CreateTaskDTO with missing fields. (Periodic task without any other fields)" in {
       val dto = CreateTaskDTO("test1", SchedulingType.Periodic)
@@ -288,124 +391,120 @@ class TaskValidatorSuite extends PlaySpec{
     }
 
     "receive an invalid CreateTaskDTO with invalid timezone." in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, Some("BDT"))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidTimezone)).toString
     }
-
 
     "receive an invalid CreateTaskDTO with invalid exclusions. (invalid exclusion format => no parameters)" in {
-
-    }
-
-    "receive an invalid CreateTaskDTO with invalid exclusions. (invalid exclusion format => with an unknown parameter)" in {
-
-    }
-
-    "receive an invalid CreateTaskDTO with invalid exclusions. (invalid exclusion format => with exclusionId)" in {
-
-    }
-
-    "receive an invalid CreateTaskDTO with invalid exclusions. (invalid exclusion format => with taskId)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(CreateExclusionDTO())))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidExclusionFormat)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid exclusions. (invalid exclusion format => exclusionDate + another parameter)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(CreateExclusionDTO(Some("2035-01-01 00:00:00"), Some(15)))))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidExclusionFormat)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid exclusions. (invalid exclusion format => only criteria)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(CreateExclusionDTO(None, None, None, None, None, None, Some(Criteria.Fourth)))))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidExclusionFormat)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid exclusions. (invalid exclusionDate format)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(CreateExclusionDTO(Some("2035:01:01 00:00:00")))))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidExclusionDate)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid exclusions. (invalid exclusionDate values)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(CreateExclusionDTO(Some("2035-01-01 25:00:00")))))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidExclusionDate)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid exclusions. (invalid day)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(CreateExclusionDTO(None, Some(32)))))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidExclusionDayValue)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid exclusions. (invalid dayOfWeek)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(CreateExclusionDTO(None, None, Some(8)))))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidExclusionDayOfWeekValue)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid exclusions. (invalid dayType)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(CreateExclusionDTO(None, None, None, Some("Holiday")))))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidExclusionDayTypeValue)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid exclusions. (invalid month)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(CreateExclusionDTO(None, None, None, None, Some(13)))))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidExclusionMonthValue)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid exclusions. (invalid year)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(CreateExclusionDTO(None, None, None, None, None, Some(1995)))))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidExclusionYearValue)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid exclusions. (invalid criteria)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(CreateExclusionDTO(None, Some(20), None, None, None, None, Some("Fifth")))))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidExclusionCriteriaValue)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid schedulings. (invalid scheduling format => no parameters)" in {
-
-    }
-
-    "receive an invalid CreateTaskDTO with invalid schedulings. (invalid scheduling format => with an unknown parameter)" in {
-
-    }
-
-    "receive an invalid CreateTaskDTO with invalid schedulings. (invalid scheduling format => with schedulingId)" in {
-
-    }
-
-    "receive an invalid CreateTaskDTO with invalid schedulings. (invalid scheduling format => with taskId)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Personalized, Some("2030-01-01 12:00:00"), None, None, Some("2040-01-01 00:00:00"), None, None, None, Some(List(CreateSchedulingDTO())))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidSchedulingFormat)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid schedulings. (invalid scheduling format => schedulingDate + another parameter)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Personalized, Some("2030-01-01 12:00:00"), None, None, Some("2040-01-01 00:00:00"), None, None, None, Some(List(CreateSchedulingDTO(Some("2035-01-01 00:00:00"), None, None, None, Some(10)))))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidSchedulingFormat)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid schedulings. (invalid scheduling format => only criteria)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Personalized, Some("2030-01-01 12:00:00"), None, None, Some("2040-01-01 00:00:00"), None, None, None, Some(List(CreateSchedulingDTO(None, None, None, None, None, None, Some(Criteria.Third)))))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidSchedulingFormat)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid schedulings. (invalid schedulingDate format)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Personalized, Some("2030-01-01 12:00:00"), None, None, Some("2040-01-01 00:00:00"), None, None, None, Some(List(CreateSchedulingDTO(Some("2035:01:01 00:00:00")))))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidSchedulingDate)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid schedulings. (invalid schedulingDate values)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Personalized, Some("2030-01-01 12:00:00"), None, None, Some("2040-01-01 00:00:00"), None, None, None, Some(List(CreateSchedulingDTO(Some("2035-01-01 25:00:00")))))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidSchedulingDate)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid schedulings. (invalid day)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Personalized, Some("2030-01-01 12:00:00"), None, None, Some("2040-01-01 00:00:00"), None, None, None, Some(List(CreateSchedulingDTO(None, Some(0)))))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidSchedulingDayValue)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid schedulings. (invalid dayOfWeek)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Personalized, Some("2030-01-01 12:00:00"), None, None, Some("2040-01-01 00:00:00"), None, None, None, Some(List(CreateSchedulingDTO(None, None, Some(8)))))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidSchedulingDayOfWeekValue)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid schedulings. (invalid dayType)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Personalized, Some("2030-01-01 12:00:00"), None, None, Some("2040-01-01 00:00:00"), None, None, None, Some(List(CreateSchedulingDTO(None, None, None, Some("Christmas")))))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidSchedulingDayTypeValue)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid schedulings. (invalid month)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Personalized, Some("2030-01-01 12:00:00"), None, None, Some("2040-01-01 00:00:00"), None, None, None, Some(List(CreateSchedulingDTO(None, None, None, None, Some(13)))))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidSchedulingMonthValue)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid schedulings. (invalid year)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Personalized, Some("2030-01-01 12:00:00"), None, None, Some("2040-01-01 00:00:00"), None, None, None, Some(List(CreateSchedulingDTO(None, None, None, None, None, Some(2006)))))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidSchedulingYearValue)).toString
     }
 
     "receive an invalid CreateTaskDTO with invalid schedulings. (invalid criteria)" in {
-
+      val dto = CreateTaskDTO("test1", SchedulingType.Personalized, Some("2030-01-01 12:00:00"), None, None, Some("2040-01-01 00:00:00"), None, None, None, Some(List(CreateSchedulingDTO(None, Some(5), None, None, None, None, Some("Sixth")))))
+      validator.scheduleValidator(dto).toString mustBe Left(List(invalidSchedulingCriteriaValue)).toString
     }
 
-
   }
-
 
 }
