@@ -1,7 +1,7 @@
 package api.services
 
 import api.dtos.{SchedulingDTO, TaskDTO}
-import database.repositories.{FileRepository, TaskRepository}
+import database.repositories.{FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.PlaySpec
 import play.api.Mode
@@ -12,31 +12,15 @@ import executionengine.ExecutionJob
 
 import scala.concurrent.ExecutionContext
 
-class TaskServiceSuite extends PlaySpec with BeforeAndAfterAll with BeforeAndAfterEach{
+class TaskServiceSuite extends PlaySpec{
 
   lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder().in(Mode.Test)
   lazy val injector: Injector = appBuilder.injector()
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
-  implicit val fileRepo: FileRepository = injector.instanceOf[FileRepository]
-  implicit val taskRepo: TaskRepository = injector.instanceOf[TaskRepository]
+  implicit val fileRepo: FileRepository = new FakeFileRepository
+  implicit val taskRepo: TaskRepository = new FakeTaskRepository
 
   val taskService = new TaskService()
-
-  override def beforeAll = {
-
-  }
-
-  override def beforeEach = {
-
-  }
-
-  override def afterAll = {
-
-  }
-
-  override def afterEach = {
-
-  }
 
   "TaskService#scheduleTask" should {
 
@@ -44,12 +28,11 @@ class TaskServiceSuite extends PlaySpec with BeforeAndAfterAll with BeforeAndAft
       taskService.cancellableMap.isEmpty mustBe true
       val taskDTO = TaskDTO("asd", "asd", SchedulingType.RunOnce, Some(stringToDateFormat("2030-01-01 12:00:00" , "yyyy-MM-dd HH:mm:ss")))
       taskService.scheduleTask(taskDTO)
-      taskService.cancellableMap += (taskDTO.taskId -> new ExecutionJob(taskDTO.taskId, taskDTO.fileName, taskDTO.taskType, taskDTO.startDateAndTime, None, None, None, None, None).start)
-      println( taskService.cancellableMap + "ola")
+      taskService.cancellableMap + (taskDTO.taskId -> new ExecutionJob(taskDTO.taskId, taskDTO.fileName, taskDTO.taskType, taskDTO.startDateAndTime, None, None, None, None, None).start)
+      println(taskService.cancellableMap + "ola")
       taskService.cancellableMap.size mustBe 1
       taskService.cancellableMap.head._1 mustBe "asd"
-      taskService.cancellableMap -= "asd"
-
+      taskService.cancellableMap - "asd"
     }
 
     "receive a Minutely Periodic TaskDTO and store a new entry in the cancellableMap." in {

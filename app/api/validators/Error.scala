@@ -169,24 +169,98 @@ object Error{
     location = endpoint
   )
 
-  lazy val invalidSchedulingFormat = Error(
+  lazy val invalidExclusionFormat = Error(
     errorCode = "error-15",
+    message = s"The exclusion format must either only contain a exclusionDate field or any of the other fields without the exclusionDate. (day, dayOfWeek, dayType, month, year, criteria)",
+    reason = Error.invalid,
+    locationType = Some("exclusions"),
+    location = body
+  )
+
+  lazy val invalidExclusionDateFormat = Error(
+    errorCode = "error-16",
+    message = s"exclusionDate has an incorrect format. It must to follow one of the following formats: yyyy-MM-dd HH:mm:ss ; dd-MM-yyyy HH:mm:ss ; yyyy/MM/dd HH:mm:ss ; dd/MM/yyyy HH:mm:ss.",
+    reason = Error.invalid,
+    locationType = Some("exclusions/exclusionDate"),
+    location = body
+  )
+
+  lazy val invalidExclusionDateValue = Error(
+    errorCode = "error-17",
+    message = s"exclusionDate must be a date in the future.",
+    reason = Error.invalid,
+    locationType = Some("exclusions/exclusionDate"),
+    location = body
+  )
+  lazy val invalidExclusionDayValue = Error(
+    errorCode = "error-18",
+    message = s"day must be an Int between 1 and 28/29/30/31. (depending if the month was specified and which month it is)",
+    reason = Error.invalid,
+    locationType = Some("exclusions/day"),
+    location = body
+  )
+  lazy val invalidExclusionDayOfWeekValue = Error(
+    errorCode = "error-19",
+    message = s"dayOfWeek must be an Int between 1 and 7. (1-Sun,2-Mon,3-Tue,4-Wed,5-Tue,6-Fri,7-Sat)",
+    reason = Error.invalid,
+    locationType = Some("exclusions/dayOfWeek"),
+    location = body
+  )
+  lazy val invalidExclusionDayTypeValue = Error(
+    errorCode = "error-20",
+    message = s"dayType must be an Int between 0 and 1. (0-Weekday,1-Weekend)",
+    reason = Error.invalid,
+    locationType = Some("exclusions/dayType"),
+    location = body
+  )
+  lazy val invalidExclusionMonthValue = Error(
+    errorCode = "error-21",
+    message = s"month must be an Int between 1 and 12. (1-Jan,2-Feb,3-Mar,4-Apr,5-May,6-Jun,7-Jul,8-Aug,9-Sep,10-Oct,11-Nov,12-Dec)",
+    reason = Error.invalid,
+    locationType = Some("exclusions/month"),
+    location = body
+  )
+  lazy val invalidExclusionYearValue = Error(
+    errorCode = "error-22",
+    message = s"year must be an Int between the current year and a future year.",
+    reason = Error.invalid,
+    locationType = Some("exclusions/year"),
+    location = body
+  )
+  lazy val invalidExclusionCriteriaValue = Error(
+    errorCode = "error-23",
+    message = """criteria must be a String of either "First", "Second", "Third", "Fourth" and "Last".""",
+    reason = Error.invalid,
+    locationType = Some("exclusions/criteria"),
+    location = body
+  )
+
+  lazy val invalidSchedulingFormat = Error(
+    errorCode = "error-24",
     message = s"The schedulings format must either only contain a schedulingDate field or any of the other fields without the schedulingDate. (day, dayOfWeek, dayType, month, year, criteria)",
     reason = Error.invalid,
     locationType = Some("schedulings"),
     location = body
   )
 
-  lazy val invalidSchedulingDate = Error(
-    errorCode = "error-16",
+  lazy val invalidSchedulingDateValue = Error(
+    errorCode = "error-25",
     message = s"schedulingDate must be a date in the future.",
     reason = Error.invalid,
     locationType = Some("schedulings/schedulingDate"),
     location = body
   )
 
+  lazy val invalidSchedulingDateFormat = Error(
+    errorCode = "error-26",
+    message = s"schedulingDate has an incorrect format. It must to follow one of the following formats: yyyy-MM-dd HH:mm:ss ; dd-MM-yyyy HH:mm:ss ; yyyy/MM/dd HH:mm:ss ; dd/MM/yyyy HH:mm:ss.",
+    reason = Error.invalid,
+    locationType = Some("schedulings/schedulingDate"),
+    location = body
+  )
+
   lazy val invalidSchedulingDayValue = Error(
-    errorCode = "error-17",
+    errorCode = "error-27",
     message = s"day must be an Int between 1 and 28/29/30/31. (depending if the month was specified and which month it is)",
     reason = Error.invalid,
     locationType = Some("schedulings/day"),
@@ -194,7 +268,7 @@ object Error{
   )
 
   lazy val invalidSchedulingDayOfWeekValue = Error(
-    errorCode = "error-18",
+    errorCode = "error-28",
     message = s"dayOfWeek must be an Int between 1 and 7. (1-Sun,2-Mon,3-Tue,4-Wed,5-Tue,6-Fri,7-Sat)",
     reason = Error.invalid,
     locationType = Some("schedulings/dayOfWeek"),
@@ -202,7 +276,7 @@ object Error{
   )
 
   lazy val invalidSchedulingDayTypeValue = Error(
-    errorCode = "error-19",
+    errorCode = "error-29",
     message = s"dayType must be an Int between 0 and 1. (0-Weekday,1-Weekend)",
     reason = Error.invalid,
     locationType = Some("schedulings/dayType"),
@@ -210,7 +284,7 @@ object Error{
   )
 
   lazy val invalidSchedulingMonthValue = Error(
-    errorCode = "error-20",
+    errorCode = "error-30",
     message = s"month must be an Int between 1 and 12. (1-Jan,2-Feb,3-Mar,4-Apr,5-May,6-Jun,7-Jul,8-Aug,9-Sep,10-Oct,11-Nov,12-Dec)",
     reason = Error.invalid,
     locationType = Some("schedulings/month"),
@@ -218,7 +292,7 @@ object Error{
   )
 
   lazy val invalidSchedulingYearValue = Error(
-    errorCode = "error-21",
+    errorCode = "error-31",
     message = s"year must be an Int between the current year and a future year.",
     reason = Error.invalid,
     locationType = Some("schedulings/year"),
@@ -226,77 +300,20 @@ object Error{
   )
 
   lazy val invalidSchedulingCriteriaValue = Error(
-    errorCode = "error-22",
+    errorCode = "error-32",
     message = """criteria must be a String of either "First", "Second", "Third", "Fourth" and "Last".""",
     reason = Error.invalid,
     locationType = Some("schedulings/criteria"),
     location = body
   )
 
-  lazy val invalidExclusionFormat = Error(
-    errorCode = "error-23",
-    message = s"The exclusion format must either only contain a exclusionDate field or any of the other fields without the exclusionDate. (day, dayOfWeek, dayType, month, year, criteria)",
-    reason = Error.invalid,
-    locationType = Some("exclusions"),
-    location = body
-  )
-
-  lazy val invalidExclusionDate = Error(
-    errorCode = "error-24",
-    message = s"exclusionDate must be a date in the future.",
-    reason = Error.invalid,
-    locationType = Some("exclusions/exclusionDate"),
-    location = body
-  )
-  lazy val invalidExclusionDayValue = Error(
-    errorCode = "error-25",
-    message = s"day must be an Int between 1 and 28/29/30/31. (depending if the month was specified and which month it is)",
-    reason = Error.invalid,
-    locationType = Some("exclusions/day"),
-    location = body
-  )
-  lazy val invalidExclusionDayOfWeekValue = Error(
-    errorCode = "error-26",
-    message = s"dayOfWeek must be an Int between 1 and 7. (1-Sun,2-Mon,3-Tue,4-Wed,5-Tue,6-Fri,7-Sat)",
-    reason = Error.invalid,
-    locationType = Some("exclusions/dayOfWeek"),
-    location = body
-  )
-  lazy val invalidExclusionDayTypeValue = Error(
-    errorCode = "error-27",
-    message = s"dayType must be an Int between 0 and 1. (0-Weekday,1-Weekend)",
-    reason = Error.invalid,
-    locationType = Some("exclusions/dayType"),
-    location = body
-  )
-  lazy val invalidExclusionMonthValue = Error(
-    errorCode = "error-28",
-    message = s"month must be an Int between 1 and 12. (1-Jan,2-Feb,3-Mar,4-Apr,5-May,6-Jun,7-Jul,8-Aug,9-Sep,10-Oct,11-Nov,12-Dec)",
-    reason = Error.invalid,
-    locationType = Some("exclusions/month"),
-    location = body
-  )
-  lazy val invalidExclusionYearValue = Error(
-    errorCode = "error-29",
-    message = s"year must be an Int between the current year and a future year.",
-    reason = Error.invalid,
-    locationType = Some("exclusions/year"),
-    location = body
-  )
-  lazy val invalidExclusionCriteriaValue = Error(
-    errorCode = "error-30",
-    message = """criteria must be a String of either "First", "Second", "Third", "Fourth" and "Last".""",
-    reason = Error.invalid,
-    locationType = Some("exclusions/criteria"),
-    location = body
-  )
 
   //---------------------------------------------------------
   //# FILE ERRORS
   //---------------------------------------------------------
 
   lazy val invalidUploadFormat = Error(
-    errorCode = "error-31",
+    errorCode = "error-33",
     message = """Request must be a MultipartFormData and have the first parameter be a File with key 'file' and the second parameter being a String with the file name.""",
     reason = Error.invalid,
     locationType = None,
@@ -304,7 +321,7 @@ object Error{
   )
 
   lazy val invalidUploadFileName = Error(
-    errorCode = "error-32",
+    errorCode = "error-34",
     message = "There's already another file with that fileName",
     reason = Error.invalid,
     locationType = Some("name"),
@@ -312,7 +329,7 @@ object Error{
   )
 
   lazy val invalidFileExtension = Error(
-    errorCode = "error-33",
+    errorCode = "error-35",
     message = "The uploaded file must be a .jar file.",
     reason = Error.invalid,
     locationType = Some("file"),

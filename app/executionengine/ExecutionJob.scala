@@ -158,7 +158,7 @@ class ExecutionJob @Inject()(taskId: String, fileId: String, schedulingType: Sch
       val now = new Date()
       val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
       val currentTime = sdf.parse(sdf.format(now)).getTime
-      val scheduledTime = sdf.parse(sdf.format(datetime)).getTime
+      val scheduledTime = sdf.parse(sdf.format(datetime.get)).getTime
       Duration.ofMillis(scheduledTime - currentTime)
     }
   }
