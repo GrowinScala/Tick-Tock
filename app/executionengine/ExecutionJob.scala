@@ -3,7 +3,7 @@ package executionengine
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Date, TimeZone}
 
-import akka.actor.{Actor, ActorRef, ActorSystem, Cancellable, Props}
+import akka.actor.{Actor, ActorRef, ActorSystem, Cancellable, Props, Timers}
 import api.services.SchedulingType._
 import java.time.Duration
 import java.time.Duration._
@@ -11,10 +11,18 @@ import java.time.Duration._
 import api.services.SchedulingType
 import api.utils.DateUtils._
 import database.repositories.{FileRepository, TaskRepository}
+import executionengine.ExecutionJob.{Cancel, Delay, Execute, Start}
 import javax.inject.Inject
 
 import scala.collection.mutable.Queue
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
+
+object ExecutionJob {
+  case object Start
+  case object Execute
+  case object Delay
+  case object Cancel
+}
 
 /**
   * Class that handles independent scheduling jobs and calls the ExecutionManager
@@ -25,12 +33,22 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
   * @param datetime Date of when the file is run. (If Periodic, it represents the first execution)
   * @param interval Time interval between each execution. (Only applicable in a Periodic task)
   */
-class ExecutionJob @Inject()(taskId: String, fileId: String, schedulingType: SchedulingType, startDate: Option[Date] = None, interval: Option[Duration] = Some(ZERO), endDate: Option[Date] = None, timezone: Option[String] = None, schedulings: Option[Queue[Date]] = None, exclusions: Option[Queue[Date]] = None)(implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository) {
+class ExecutionJob @Inject()(taskId: String, fileId: String, schedulingType: SchedulingType, startDate: Option[Date] = None, interval: Option[Duration] = Some(ZERO), endDate: Option[Date] = None, timezone: Option[String] = None, schedulings: Option[Queue[Date]] = None, exclusions: Option[Queue[Date]] = None)(implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository) extends Actor with Timers{
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
   val calendar = Calendar.getInstance
 
   /**
+    * Actor method that defined how to act when it receives a task.
+    */
+  def receive: Receive = {
+    case Start => start
+    case Execute => execute
+    case Delay => delay
+    case Cancel => cancel
+  }
+
+  /*/**
     * Actor and Runnable that handles file executions.
     */
   object ExecutionActor extends Actor with Runnable{
@@ -110,14 +128,9 @@ class ExecutionJob @Inject()(taskId: String, fileId: String, schedulingType: Sch
     def receive = {
       case _ => println(getSpecificCurrentTime + " Received delayed task with storageName: " + fileId)
     }
-  }
+  }*/
 
   private final val MAX_DELAY_SECONDS = 21474835 //max delay handled by the akka.actor.Actor system.
-
-  val system = ActorSystem("SchedulerSystem")
-  val schedulerActor: ActorRef = system.actorOf(Props(ExecutionActor), "SchedulerActor")
-  val delayerActor: ActorRef = system.actorOf(Props(DelayerActor), "DelayerActor")
-  implicit val sd: ExecutionContextExecutor = system.dispatcher
 
   /**
     * Method that is called when a scheduling is made. It checks for the time delay until the task is supposed to be executed
@@ -128,23 +141,68 @@ class ExecutionJob @Inject()(taskId: String, fileId: String, schedulingType: Sch
     * - If it doesn't exceed the maximum delay and its date is in the future, it is scheduled to execute the file with the
     * ExecutionActor depending on the schedulingType.
     */
-  def start: Cancellable ={
+  def start: Unit ={
     val delay = calculateDelay(startDate)
     if(delay.getSeconds > MAX_DELAY_SECONDS && delay.toMillis >= 0){
-      system.scheduler.scheduleOnce(Duration.ofSeconds(MAX_DELAY_SECONDS), DelayerActor)
+      timers.startSingleTimer("delayKey", Delay, Duration.ofSeconds(MAX_DELAY_SECONDS))
     }
     else {
       schedulingType match {
         case RunOnce =>
-          system.scheduler.scheduleOnce(delay, ExecutionActor)
+          timers.startSingleTimer("executionKey", Execute, delay)
         case Periodic =>
-          system.scheduler.schedule(delay, interval.get, ExecutionActor)
+          timers.startPeriodicTimer("executionKey", Execute, interval.get)
         case Personalized =>
           val nextDateDelay = calculateDelay(Some(schedulings.get.dequeue))
-          system.scheduler.scheduleOnce(nextDateDelay, ExecutionActor)
+          timers.startSingleTimer("executionKey", Execute, nextDateDelay)
       }
     }
   }
+
+  def execute: Unit = {
+    val currentDate = removeTimeFromDate(new Date())
+    if(!isExcluded(currentDate)){
+      if(schedulingType == SchedulingType.RunOnce){
+        ExecutionManager.runFile(fileId)
+        printExecutionMessage
+      }
+      else { //if it's not a RunOnce task, its a periodic one, so it has to have either endDate or occurrences
+        if (endDate.isDefined) {
+          if (getCurrentDate.after(endDate.get)) {
+            ExecutionManager.runFile(fileId); printExecutionMessage
+            if(schedulings.isDefined && schedulings.get.nonEmpty){
+              val nextDateDelay = calculateDelay(Some(schedulings.get.dequeue))
+              timers.startSingleTimer("executionKey", Execute, nextDateDelay)
+            }
+          }
+        }
+        else { //if it doesn't have endDate, it has occurrences.
+          taskRepo.selectCurrentOccurrencesByTaskId(taskId).map { occurrences =>
+            if (occurrences.get != 0) {
+              taskRepo.decrementCurrentOccurrencesByTaskId(taskId)
+              ExecutionManager.runFile(fileId); printExecutionMessage
+              if(schedulings.isDefined && schedulings.get.nonEmpty){
+                val nextDateDelay = calculateDelay(Some(schedulings.get.dequeue))
+                timers.startSingleTimer("executionKey", Execute, nextDateDelay)
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  def printExecutionMessage: Unit = {
+    if(startDate.isDefined) println("Ran file " + fileId + " scheduled to run at " + dateToStringFormat(startDate.get, "yyyy-MM-dd HH:mm:ss") + ".")
+    else println("Ran file " + fileId + " scheduled to run immediately.")
+  }
+
+  def delay: Unit = ExecutionManager.delayFile(ExecutionJob.this)
+
+  def printDelayMessage: Unit = println(getSpecificCurrentTime + " Received delayed task with storageName: " + fileId)
+
+  def cancel: Unit = timers.cancelAll()
+
 
   /**
     * Calculated the delay between the current date and time with the given date and time.
@@ -183,7 +241,7 @@ class ExecutionJob @Inject()(taskId: String, fileId: String, schedulingType: Sch
   def runNextScheduling: Unit = {
     if(schedulings.isDefined && schedulings.get.nonEmpty){
       val nextDateDelay = calculateDelay(Some(schedulings.get.dequeue))
-      system.scheduler.scheduleOnce(nextDateDelay, ExecutionActor)
+      timers.startSingleTimer("schedulingKey", Execute, nextDateDelay)
     }
   }
 

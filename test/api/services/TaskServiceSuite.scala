@@ -28,11 +28,9 @@ class TaskServiceSuite extends PlaySpec{
       taskService.cancellableMap.isEmpty mustBe true
       val taskDTO = TaskDTO("asd", "asd", SchedulingType.RunOnce, Some(stringToDateFormat("2030-01-01 12:00:00" , "yyyy-MM-dd HH:mm:ss")))
       taskService.scheduleTask(taskDTO)
-      taskService.cancellableMap + (taskDTO.taskId -> new ExecutionJob(taskDTO.taskId, taskDTO.fileName, taskDTO.taskType, taskDTO.startDateAndTime, None, None, None, None, None).start)
-      println(taskService.cancellableMap + "ola")
       taskService.cancellableMap.size mustBe 1
       taskService.cancellableMap.head._1 mustBe "asd"
-      taskService.cancellableMap - "asd"
+      taskService.cancellableMap -= "asd"
     }
 
     "receive a Minutely Periodic TaskDTO and store a new entry in the cancellableMap." in {
@@ -41,7 +39,7 @@ class TaskServiceSuite extends PlaySpec{
       taskService.scheduleTask(taskDTO)
       taskService.cancellableMap.size mustBe 1
       taskService.cancellableMap.head._1 mustBe "asd"
-      taskService.cancellableMap - "asd"
+      taskService.cancellableMap -= "asd"
     }
 
     "receive a Hourly Periodic TaskDTO and store a new entry in the cancellableMap." in {
@@ -50,7 +48,7 @@ class TaskServiceSuite extends PlaySpec{
       taskService.scheduleTask(taskDTO)
       taskService.cancellableMap.size mustBe 1
       taskService.cancellableMap.head._1 mustBe "asd"
-      taskService.cancellableMap - "asd"
+      taskService.cancellableMap -= "asd"
     }
 
     "receive a Daily Periodic TaskDTO and store a new entry in the cancellableMap." in {
@@ -59,7 +57,7 @@ class TaskServiceSuite extends PlaySpec{
       taskService.scheduleTask(taskDTO)
       taskService.cancellableMap.size mustBe 1
       taskService.cancellableMap.head._1 mustBe "asd"
-      taskService.cancellableMap - "asd"
+      taskService.cancellableMap -= "asd"
     }
 
     "receive a Weekly Periodic TaskDTO and store a new entry in the cancellableMap." in {
@@ -68,7 +66,7 @@ class TaskServiceSuite extends PlaySpec{
       taskService.scheduleTask(taskDTO)
       taskService.cancellableMap.size mustBe 1
       taskService.cancellableMap.head._1 mustBe "asd"
-      taskService.cancellableMap - "asd"
+      taskService.cancellableMap -= "asd"
     }
 
     "receive a Monthly Periodic TaskDTO and store a new entry in the cancellableMap." in {
@@ -77,7 +75,7 @@ class TaskServiceSuite extends PlaySpec{
       taskService.scheduleTask(taskDTO)
       taskService.cancellableMap.size mustBe 1
       taskService.cancellableMap.head._1 mustBe "asd"
-      taskService.cancellableMap - "asd"
+      taskService.cancellableMap -= "asd"
     }
 
     "receive a Yearly Periodic TaskDTO and store a new entry in the cancellableMap." in {
@@ -86,7 +84,7 @@ class TaskServiceSuite extends PlaySpec{
       taskService.scheduleTask(taskDTO)
       taskService.cancellableMap.size mustBe 1
       taskService.cancellableMap.head._1 mustBe "asd"
-      taskService.cancellableMap - "asd"
+      taskService.cancellableMap -= "asd"
     }
 
     "receive a Personalized TaskDTO and store a new entry in the cancellableMap." in {
@@ -95,7 +93,7 @@ class TaskServiceSuite extends PlaySpec{
       taskService.scheduleTask(taskDTO)
       taskService.cancellableMap.size mustBe 1
       taskService.cancellableMap.head._1 mustBe "asd"
-      taskService.cancellableMap - "asd"
+      taskService.cancellableMap -= "asd"
     }
 
   }

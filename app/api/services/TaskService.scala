@@ -5,14 +5,15 @@ import java.util.{Calendar, Date}
 import executionengine.ExecutionJob
 import java.time.Duration
 
-import akka.actor.Cancellable
+import akka.actor.{ActorRef, ActorSystem, Props}
 import api.dtos.{ExclusionDTO, SchedulingDTO, TaskDTO}
 import api.utils.DateUtils.{dateToDayTypeString, _}
 import database.repositories.{FileRepository, TaskRepository}
+import executionengine.ExecutionJob.{Cancel, Execute}
 import javax.inject.{Inject, Singleton}
 
 import scala.collection.mutable.Queue
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor}
 
 /**
   * Object that contains all methods for the task scheduling related to the service layer.
@@ -20,9 +21,12 @@ import scala.concurrent.{Await, ExecutionContext}
 @Singleton
 class TaskService @Inject()(implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository) {
 
-  implicit val ec = ExecutionContext.global
+  val system = ActorSystem("ExecutionSystem")
+  implicit val sd: ExecutionContextExecutor = system.dispatcher
 
-  var cancellableMap: scala.collection.mutable.Map[String, Cancellable] = scala.collection.mutable.Map[String, Cancellable]()
+  implicit val ec: ExecutionContext = ExecutionContext.global
+
+  var cancellableMap: scala.collection.immutable.Map[String, ActorRef] = scala.collection.immutable.Map[String, ActorRef]()
 
   /**
     * Schedules a task by giving the storageName to be executed once immediately.
@@ -32,30 +36,46 @@ class TaskService @Inject()(implicit val fileRepo: FileRepository, implicit val 
     val fileId = Await.result(fileRepo.selectFileIdFromFileName(task.fileName), scala.concurrent.duration.Duration.Inf)
     task.taskType match{
       case SchedulingType.RunOnce =>
-        cancellableMap + (task.taskId -> new ExecutionJob(task.taskId, fileId, SchedulingType.RunOnce, task.startDateAndTime, None, None, task.timezone, calculateExclusions(task), None).start)
+        val shuttleRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.RunOnce, task.startDateAndTime, None, None, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo))
+        cancellableMap += (task.taskId -> shuttleRef)
+        shuttleRef ! Execute
       case SchedulingType.Periodic =>
         task.periodType.get match {
           case PeriodType.Minutely =>
-            cancellableMap + (task.taskId -> new ExecutionJob(task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofMinutes(task.period.get)), task.endDateAndTime, task.timezone, calculateExclusions(task), None).start)
+            val shuttleRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofMinutes(task.period.get)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo))
+            cancellableMap += (task.taskId -> shuttleRef)
+            shuttleRef ! Execute
           case PeriodType.Hourly =>
-            cancellableMap + (task.taskId -> new ExecutionJob(task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofHours(task.period.get)), task.endDateAndTime, task.timezone, calculateExclusions(task), None).start)
+            val shuttleRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofHours(task.period.get)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo))
+            cancellableMap += (task.taskId -> shuttleRef)
+            shuttleRef ! Execute
           case PeriodType.Daily =>
-            cancellableMap + (task.taskId -> new ExecutionJob(task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get)), task.endDateAndTime, task.timezone, calculateExclusions(task), None).start)
+            val shuttleRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo))
+            cancellableMap += (task.taskId -> shuttleRef)
+            shuttleRef ! Execute
           case PeriodType.Weekly =>
-            cancellableMap + (task.taskId -> new ExecutionJob(task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get * 7)), task.endDateAndTime, task.timezone, calculateExclusions(task), None).start)
+            val shuttleRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get * 7)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo))
+            cancellableMap += (task.taskId -> shuttleRef)
+            shuttleRef ! Execute
           case PeriodType.Monthly =>
-            cancellableMap + (task.taskId -> new ExecutionJob(task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get * 30)), task.endDateAndTime, task.timezone, calculateExclusions(task), None).start)
+            val shuttleRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get * 30)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo))
+            cancellableMap += (task.taskId -> shuttleRef)
+            shuttleRef ! Execute
           case PeriodType.Yearly =>
-            cancellableMap + (task.taskId -> new ExecutionJob(task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get * 365)), task.endDateAndTime, task.timezone, calculateExclusions(task), None).start)
+            val shuttleRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get * 365)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo))
+            cancellableMap += (task.taskId -> shuttleRef)
+            shuttleRef ! Execute
         }
       case SchedulingType.Personalized =>
-        cancellableMap += (task.taskId -> new ExecutionJob(task.taskId, fileId, SchedulingType.Personalized, task.startDateAndTime, None, task.endDateAndTime, task.timezone, calculateExclusions(task), calculateSchedulings(task)).start)
+        val shuttleRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Personalized, task.startDateAndTime, None, task.endDateAndTime, task.timezone, calculateExclusions(task), calculateSchedulings(task), fileRepo, taskRepo))
+        cancellableMap += (task.taskId -> shuttleRef)
+        shuttleRef ! Execute
     }
   }
 
   def replaceTask(id: String, task: TaskDTO): Unit = {
     if(cancellableMap.contains(id)){
-      cancellableMap(id).cancel
+      cancellableMap(id) ! Cancel
       cancellableMap -= id
     }
     scheduleTask(task)
