@@ -32,7 +32,7 @@ class TaskValidatorSuite extends PlaySpec{
   "TaskValidator#scheduleValidator" should {
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (RunOnce task with no startDate)" in {
       val dto = CreateTaskDTO("test1", SchedulingType.RunOnce)
-      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1" , "test1", SchedulingType.RunOnce)).toString
+      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.RunOnce)).toString
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (RunOnce task with a startDate)" in {

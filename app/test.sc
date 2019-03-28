@@ -3,7 +3,7 @@ import java.text.SimpleDateFormat
 import java.util.{Calendar, Date, TimeZone}
 
 import api.dtos.{CreateExclusionDTO, TaskDTO}
-import api.services.{PeriodType, SchedulingType}
+import api.services.{PeriodType, SchedulingType, TaskService}
 import slick.jdbc.MySQLProfile.api._
 import api.utils.DateUtils._
 import api.utils.{DefaultUUIDGenerator, UUIDGenerator}
@@ -13,6 +13,7 @@ import executionengine.ExecutionJob
 import play.api.libs.json.Json
 
 import scala.concurrent.duration.Duration
+import scala.collection._
 import scala.concurrent.{Await, ExecutionContext}
 
 implicit val ec = ExecutionContext.Implicits.global
@@ -29,7 +30,15 @@ val validator = new TaskValidator()
 calendar.set(2030, 12 - 1, 25, 0, 0, 0)
 val schedulingDate = calendar.getTime*/
 
-val exeJob = new ExecutionJob("asd", "asd", SchedulingType.RunOnce)
+/*val exeJob = new ExecutionJob("asd", "asd", SchedulingType.RunOnce)
 
-exeJob.calculateDelay(Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
+exeJob.calculateDelay(Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))*/
+
+val calendar = Calendar.getInstance()
+
+calendar.setTime(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))
+
+val ts = new TaskService()
+
+println(ts.getDateFromCalendar(1, 1, 2030))
 
