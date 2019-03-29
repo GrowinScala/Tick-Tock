@@ -68,6 +68,7 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
     Await.result(taskRepo.deleteAllTasks, Duration.Inf)
   }
 
+  //TODO chane date inputs, the fuction returns the current hours, and the input is 00:00:00
   "DBTasksTable#drop/createTasksTable" should {
     "create and then drop the Tasks table on the database." in {
       val result = for {

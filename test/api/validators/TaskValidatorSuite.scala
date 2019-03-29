@@ -301,7 +301,8 @@ class TaskValidatorSuite extends PlaySpec{
       val startDate = calendar.getTime
       calendar.set(2030, 12 - 1, 25, 0, 0, 0)
       val schedulingDate = calendar.getTime
-      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Personalized, Some(startDate), None, None, None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("asd1", "asd1", None, None, None, Some(DayType.Weekend), Some(8), None, Some(Criteria.First)), SchedulingDTO("asd1", "asd1", Some(schedulingDate)), SchedulingDTO("asd1", "asd1", None, Some(13), Some(6), None, None, Some(2032)))))).toString
+      validator.scheduleValidator(dto).toString mustBe
+        Right(TaskDTO("asd1", "test1", SchedulingType.Personalized, Some(startDate), None, None, None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("asd1", "asd1", None, None, None, Some(DayType.Weekend), Some(8), None, Some(Criteria.First)), SchedulingDTO("asd1", "asd1", Some(schedulingDate)), SchedulingDTO("asd1", "asd1", None, Some(13), Some(6), None, None, Some(2032)))))).toString
     }
 
     "receive an invalid CreateTaskDTO with missing fields. (Periodic task without any other fields)" in {

@@ -1,7 +1,5 @@
 package database.repositories
 
-import java.util.UUID
-
 import api.dtos.FileDTO
 import api.utils.DateUtils._
 

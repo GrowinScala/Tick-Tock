@@ -1,6 +1,6 @@
 package database.utils
 import javax.inject.Singleton
-import slick.jdbc.{H2Profile, MySQLProfile}
+import slick.jdbc.H2Profile
 import slick.jdbc.MySQLProfile.backend.Database
 
 @Singleton

@@ -1,7 +1,5 @@
 package executionengine
 
-import akka.actor.Cancellable
-
 import scala.sys.process._
 
 /**
@@ -28,6 +26,6 @@ object ExecutionManager{
     * @param job ExecutionJob received to be re-launched after the delaying.
     */
   def delayFile(job: ExecutionJob): Unit = synchronized {
-    job.start
+    job.start()
   }
 }

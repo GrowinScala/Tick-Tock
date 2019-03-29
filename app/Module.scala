@@ -7,7 +7,7 @@ import slick.jdbc.MySQLProfile.api._
 
 class Module extends AbstractModule {
 
-  def configure = {
+  def configure(): Unit = {
     Seq(bind(classOf[Database]).toInstance(DEFAULT_DB),
       bind(classOf[FileRepository]).toInstance(new FileRepositoryImpl(DEFAULT_DB)),
       bind(classOf[TaskRepository]).toInstance(new TaskRepositoryImpl(DEFAULT_DB)),

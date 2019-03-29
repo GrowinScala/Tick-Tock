@@ -1,11 +1,9 @@
 package database.repositories
 
-import api.dtos.{TaskDTO, UpdateTaskDTO}
+import api.dtos.TaskDTO
 import api.services.{PeriodType, SchedulingType}
 import database.mappings.FileMappings._
 import database.mappings.TaskMappings._
-import javax.inject.Inject
-import slick.dbio.DBIO
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.duration._

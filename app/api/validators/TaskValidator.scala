@@ -28,8 +28,8 @@ import scala.util.Try
 @Singleton
 class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository, implicit val UUIDGen: UUIDGenerator) {
 
-  implicit val ec = ExecutionContext.global
-  val calendar = Calendar.getInstance
+  implicit val ec: ExecutionContext = ExecutionContext.global
+  val calendar: Calendar = Calendar.getInstance
 
   //---------------------------------------------------------
   //# TASK VALIDATORS
@@ -63,10 +63,15 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
       ((schedulingDates.isEmpty && !existsAtLeastOneSchedulingDate(task.schedulings)) || schedulingDates.nonEmpty, invalidSchedulingDateFormat))
       ::: areValidExclusions(exclusions, startDate, endDate)
       ::: areValidSchedulings(schedulings, startDate, endDate)
-      ).filter(!_._1)
+      ).filter( errorList => errorList match {
+          case (isValid,_) => !isValid
+          }
+        )
 
     if (errorList.isEmpty) Right(TaskDTO(taskId, task.fileName, task.taskType, startDate, task.periodType, task.period, endDate, task.occurrences, task.occurrences, if(timezone.isDefined) Some(timezone.get.getID) else None, exclusions, schedulings))
-    else Left(errorList.unzip._2)
+    else Left(errorList.unzip match {
+      case (_,errors)  => errors
+    })
   }
 
   def updateValidator(id: String, task: UpdateTaskDTO): Either[List[Error], TaskDTO] = {
@@ -126,7 +131,9 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
           if (task.schedulings.isDefined) schedulings else oldSchedulings //schedulings
         ))
       }
-      else Left(errorList.unzip._2)
+      else Left(errorList.unzip match {
+        case (_,errors)  => errors
+      })
     }
     else Left(List(invalidEndpointId))
   }
