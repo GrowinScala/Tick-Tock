@@ -1,6 +1,6 @@
 package api.services
 
-object Criteria extends Enumeration{
+object Criteria extends Enumeration {
 
   type Criteria = String
 

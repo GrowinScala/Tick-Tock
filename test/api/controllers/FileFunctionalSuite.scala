@@ -3,13 +3,13 @@ package api.controllers
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.stream.{ ActorMaterializer, Materializer }
 import api.dtos.FileDTO
-import api.utils.DateUtils.{getCurrentDateTimestamp, stringToDateFormat}
+import api.utils.DateUtils.{ getCurrentDateTimestamp, stringToDateFormat }
 import com.google.inject.Guice
-import database.repositories.{FileRepository, TaskRepository}
+import database.repositories.{ FileRepository, TaskRepository }
 import database.utils.DatabaseUtils.TEST_DB
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -21,7 +21,7 @@ import slick.jdbc.meta.MTable
 import slick.jdbc.MySQLProfile.api._
 import database.mappings.FileMappings._
 
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{ Await, ExecutionContext }
 import scala.concurrent.duration.Duration
 
 class FileFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll with BeforeAndAfterEach {

@@ -1,4 +1,5 @@
 import java.io.File
+import java.text.SimpleDateFormat
 import java.util.{Calendar, Date}
 
 import api.services.TaskService
@@ -37,3 +38,10 @@ def getDateFromCalendar(day: Int, month: Int, year: Int, timezone: Option[String
 
 println(getDateFromCalendar(1, 1, 2030))
 
+def removeTimeFromDate(date: Date): Date = {
+  val sdf = new SimpleDateFormat("yyyy-MM-dd")
+  val string = sdf.format(date)
+  sdf.parse(string)
+}
+
+removeTimeFromDate(calendar.getTime)

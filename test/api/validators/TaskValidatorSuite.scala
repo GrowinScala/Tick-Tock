@@ -1,21 +1,21 @@
 package api.validators
 
-import java.util.{Calendar, UUID}
+import java.util.{ Calendar, UUID }
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.stream.{ ActorMaterializer, Materializer }
 import api.dtos._
-import api.services.{Criteria, DayType, PeriodType, SchedulingType}
-import api.utils.{FakeUUIDGenerator, UUIDGenerator}
+import api.services.{ Criteria, DayType, PeriodType, SchedulingType }
+import api.utils.{ FakeUUIDGenerator, UUIDGenerator }
 import api.validators.Error._
 import com.google.inject.Guice
-import database.repositories.{FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository}
+import database.repositories.{ FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository }
 import org.scalatestplus.play.PlaySpec
 import play.api.inject.guice.GuiceApplicationBuilder
 
 import scala.concurrent.ExecutionContext
 
-class TaskValidatorSuite extends PlaySpec{
+class TaskValidatorSuite extends PlaySpec {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
   lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()

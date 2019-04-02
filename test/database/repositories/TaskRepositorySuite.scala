@@ -1,12 +1,11 @@
 package database.repositories
 
-
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
-import api.dtos.{FileDTO, TaskDTO}
-import api.services.{PeriodType, SchedulingType}
+import akka.stream.{ ActorMaterializer, Materializer }
+import api.dtos.{ FileDTO, TaskDTO }
+import api.services.{ PeriodType, SchedulingType }
 import api.utils.DateUtils._
 import org.scalatest._
 import database.mappings.FileMappings._
@@ -17,11 +16,10 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import slick.jdbc.meta.MTable
 import slick.jdbc.MySQLProfile.api._
 
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{ Await, ExecutionContext }
 import scala.concurrent.duration._
 
-class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with BeforeAndAfterEach{
-
+class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with BeforeAndAfterEach {
 
   lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder().in(Mode.Test)
   lazy val injector: Injector = appBuilder.injector()
@@ -55,8 +53,6 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
     Await.result(result, Duration.Inf)
     Await.result(dtbase.run(createTasksTableAction), Duration.Inf)
 
-    //validate beforeAll:
-    //println(Await.result(fileRepo.exec(filesTable.length.result), Duration.Inf))
   }
 
   override def afterAll = {
@@ -84,7 +80,7 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
 
   "DBTasksTable#insertInTasksTable,selectAllTasks" should {
     "insert rows into the Tasks table on the database and select all rows" in {
-      val result = for{
+      val result = for {
         _ <- taskRepo.selectAllTasks.map(seq => assert(seq.isEmpty))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
@@ -96,7 +92,7 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
 
   "DBTasksTable#deleteAllTasks" should {
     "insert several rows and then delete them all from the Tasks table on the database." in {
-      val result = for{
+      val result = for {
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.selectAllTasks.map(seq => assert(seq.size == 2))
@@ -109,7 +105,7 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
 
   "DBTasksTable#selectTaskByTaskId" should {
     "insert several rows and select a specific task by giving its taskId" in {
-      val result = for{
+      val result = for {
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.selectTask(taskUUID1).map(dto => assert(dto.get.fileName == "test1"))
@@ -121,7 +117,7 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
 
   "DBTasksTable#selectFileIdByTaskId" should {
     "inserts several rows and select a specific fileId from a task by giving its taskId" in {
-      val result = for{
+      val result = for {
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.selectFileIdByTaskId(taskUUID1).map(fileId => assert(fileId.get == fileUUID1))

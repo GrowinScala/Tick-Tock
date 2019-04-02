@@ -1,14 +1,14 @@
 package api.controllers
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.stream.{ ActorMaterializer, Materializer }
 import api.dtos.TaskDTO
 import api.services.SchedulingType
 import api.utils.DateUtils.stringToDateFormat
-import api.utils.{FakeUUIDGenerator, UUIDGenerator}
+import api.utils.{ FakeUUIDGenerator, UUIDGenerator }
 import com.google.inject.Guice
-import database.repositories.{FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository}
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import database.repositories.{ FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository }
+import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Mode
@@ -19,9 +19,9 @@ import play.api.mvc._
 import play.api.test._
 import play.api.test.Helpers._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
-class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite{
+class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite {
 
   lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
   lazy val injector: Injector = appBuilder.injector()

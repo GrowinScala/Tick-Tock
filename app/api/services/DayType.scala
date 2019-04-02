@@ -1,6 +1,6 @@
 package api.services
 
-object DayType extends Enumeration{
+object DayType extends Enumeration {
 
   type DayType = String
 

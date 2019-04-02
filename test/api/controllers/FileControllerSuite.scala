@@ -1,21 +1,21 @@
 package api.controllers
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
-import api.utils.{FakeUUIDGenerator, UUIDGenerator}
-import database.repositories.{FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository}
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import akka.stream.{ ActorMaterializer, Materializer }
+import api.utils.{ FakeUUIDGenerator, UUIDGenerator }
+import database.repositories.{ FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository }
+import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.mvc.{ControllerComponents, Results}
+import play.api.mvc.{ ControllerComponents, Results }
 import play.api.test.Helpers._
 import play.api.test._
 
 import scala.concurrent.ExecutionContext
 
-class FileControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite with BeforeAndAfterAll with BeforeAndAfterEach{
+class FileControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite with BeforeAndAfterAll with BeforeAndAfterEach {
 
   lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
   lazy val injector: Injector = appBuilder.injector()
