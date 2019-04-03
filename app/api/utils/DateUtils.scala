@@ -2,23 +2,17 @@ package api.utils
 
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.util.{ Calendar, Date, TimeZone }
+import java.util.{Calendar, Date, TimeZone}
 
 import api.services.DayType
 import api.services.DayType.DayType
-import api.validators.Error
-import database.repositories.{ FileRepository, FileRepositoryImpl }
 
-import scala.concurrent.{ Await, ExecutionContext, Future }
-import scala.util.{ Failure, Success, Try }
-import scala.concurrent.duration._
-import database.utils.DatabaseUtils._
-import javax.inject.{ Inject, Singleton }
+import scala.concurrent.ExecutionContext
+import scala.util.Try
 
 object DateUtils {
 
-  implicit val ec = ExecutionContext.global
+  implicit val ec: ExecutionContext = ExecutionContext.global
 
   //---------------------------------------------------------
   //# DATE FORMATS

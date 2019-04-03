@@ -1,14 +1,10 @@
 package api.dtos
 
-import java.util.Date
-
 import api.services.Criteria.Criteria
 import api.services.DayType.DayType
-import play.api.libs.json.{ JsPath, Json, OWrites, Reads }
-
-import play.api.libs.json._
-import play.api.libs.json.Reads._
 import play.api.libs.functional.syntax._
+import play.api.libs.json.Reads._
+import play.api.libs.json.{JsPath, Json, OWrites, Reads}
 
 import scala.concurrent.ExecutionContext
 
@@ -25,7 +21,7 @@ case class UpdateExclusionDTO(
 
 object UpdateExclusionDTO {
 
-  implicit val ec = ExecutionContext.global
+  implicit val ec: ExecutionContext = ExecutionContext.global
 
   /**
    * Implicit that defines how an UpdateExclusionDTO is read from the JSON request.

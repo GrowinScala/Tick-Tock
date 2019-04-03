@@ -37,9 +37,6 @@ class FakeFileRepository extends FileRepository {
     Future.successful(3)
   }
 
-  /**
-   *
-   */
   def deleteFileById(id: String): Future[Int] = {
     Future.successful(1)
   }

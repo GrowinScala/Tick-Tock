@@ -1,28 +1,26 @@
 package api.controllers
 
-import java.nio.file.{ Files, Path, Paths, StandardCopyOption }
+import java.nio.file.{Files, Paths, StandardCopyOption}
 
-import javax.inject.Singleton
-import org.apache.commons.io.FilenameUtils
-import play.api.mvc._
-import javax.inject.Inject
-import play.api.libs.json._
 import api.dtos.FileDTO
 import api.utils.DateUtils._
 import api.utils.UUIDGenerator
-
-import scala.concurrent.{ ExecutionContext, Future }
-import database.repositories.{ FileRepository, TaskRepository }
 import api.validators.Error._
 import com.typesafe.config.ConfigFactory
-import play.api.{ Configuration, Play }
+import database.repositories.{FileRepository, TaskRepository}
+import javax.inject.{Inject, Singleton}
+import org.apache.commons.io.FilenameUtils
+import play.api.libs.json._
+import play.api.mvc._
+
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class FileController @Inject() (cc: ControllerComponents)(implicit exec: ExecutionContext, implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository, implicit val UUIDGen: UUIDGenerator) extends AbstractController(cc) {
 
-  val conf = ConfigFactory.load()
+ private val conf = ConfigFactory.load()
 
-  def index = Action {
+  def index: Action[AnyContent] = Action {
     Ok("It works!")
   }
 
@@ -67,8 +65,6 @@ class FileController @Inject() (cc: ControllerComponents)(implicit exec: Executi
    * @param id - identifier of the file we are looking for
    * @return the file corresponding to the id given
    */
-  //TODO: Considering you're using Options, pattern matching is considered more "Scala" than the if/else.
-
   def getFileById(id: String): Action[AnyContent] = Action.async {
     fileRepo.selectFileById(id).map {
       case Some(file) => Ok(Json.toJsObject(file))

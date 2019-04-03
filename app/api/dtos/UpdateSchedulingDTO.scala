@@ -1,12 +1,10 @@
 package api.dtos
 
-import java.util.Date
-
 import api.services.Criteria.Criteria
 import api.services.DayType.DayType
-import play.api.libs.json._
-import play.api.libs.json.Reads._
 import play.api.libs.functional.syntax._
+import play.api.libs.json.Reads._
+import play.api.libs.json._
 
 import scala.concurrent.ExecutionContext
 
@@ -23,7 +21,7 @@ case class UpdateSchedulingDTO(
 
 object UpdateSchedulingDTO {
 
-  implicit val ec = ExecutionContext.global
+  implicit val ec:ExecutionContext = ExecutionContext.global
 
   /**
    * Implicit that defines how an UpdateSchedulingDTO is read from the JSON request.

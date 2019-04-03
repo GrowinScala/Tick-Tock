@@ -1,28 +1,27 @@
 package api.services
 
-import akka.actor.{ ActorSystem, Props }
-import api.dtos.{ ExclusionDTO, SchedulingDTO, TaskDTO }
-import database.repositories.{ FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository }
-import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
+import akka.actor.{ActorSystem, Props}
+import api.dtos.{ExclusionDTO, SchedulingDTO, TaskDTO}
+import api.utils.DateUtils._
+import database.repositories.{FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository}
+import executionengine.ExecutionJob
 import org.scalatestplus.play.PlaySpec
 import play.api.Mode
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
-import api.utils.DateUtils._
-import executionengine.ExecutionJob
 
 import scala.concurrent.ExecutionContext
 
 class TaskServiceSuite extends PlaySpec {
 
-  lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder().in(Mode.Test)
-  lazy val injector: Injector = appBuilder.injector()
-  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
-  implicit val fileRepo: FileRepository = new FakeFileRepository
-  implicit val taskRepo: TaskRepository = new FakeTaskRepository
+  private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder().in(Mode.Test)
+  private lazy val injector: Injector = appBuilder.injector()
+  private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+  private implicit val fileRepo: FileRepository = new FakeFileRepository
+  private implicit val taskRepo: TaskRepository = new FakeTaskRepository
 
-  val taskService = new TaskService()
-  val system = ActorSystem("ExecutionSystem")
+  private val taskService = new TaskService()
+  private val system = ActorSystem("ExecutionSystem")
 
   "TaskService#scheduleTask" should {
 

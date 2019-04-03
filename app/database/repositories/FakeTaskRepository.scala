@@ -1,7 +1,7 @@
 package database.repositories
 
 import api.dtos.TaskDTO
-import api.services.{ PeriodType, SchedulingType }
+import api.services.{PeriodType, SchedulingType}
 import api.utils.DateUtils._
 
 import scala.concurrent.Future

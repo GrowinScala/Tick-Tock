@@ -18,16 +18,16 @@ import scala.concurrent.duration._
 
 class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with BeforeAndAfterEach {
 
-  lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder().in(Mode.Test)
-  lazy val injector: Injector = appBuilder.injector()
-  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
-  implicit val fileRepo: FileRepository = injector.instanceOf[FileRepository]
-  val dtbase: Database = injector.instanceOf[Database]
+  private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder().in(Mode.Test)
+  private lazy val injector: Injector = appBuilder.injector()
+  private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+  private implicit val fileRepo: FileRepository = injector.instanceOf[FileRepository]
+  private val dtbase: Database = injector.instanceOf[Database]
 
-  val uuid1 = UUID.randomUUID().toString
-  val uuid2 = UUID.randomUUID().toString
-  val uuid3 = UUID.randomUUID().toString
-  val uuid4 = UUID.randomUUID().toString
+  private val uuid1 = UUID.randomUUID().toString
+  private val uuid2 = UUID.randomUUID().toString
+  private val uuid3 = UUID.randomUUID().toString
+  private val uuid4 = UUID.randomUUID().toString
 
   override def beforeAll(): Unit = {
     Await.result(dtbase.run(createFilesTableAction), Duration.Inf)

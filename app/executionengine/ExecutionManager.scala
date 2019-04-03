@@ -13,7 +13,7 @@ object ExecutionManager {
   /**
    * Method that is called when a scheduled task is fired and a certain file should be executed.
    * It creates a separate process for that file to run by running a console command.
-   * @param file
+   * @param file target file that will be executed
    * @return
    */
   def runFile(file: String): Int = synchronized {

@@ -1,14 +1,12 @@
 package database.mappings
 
-import java.net.FileNameMap
 import java.sql.Timestamp
 import java.util.Date
 
-import play.api.libs.json.{ Json, OFormat }
+import play.api.libs.json.{Json, OFormat}
 import slick.dbio.Effect
 import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._
-import slick.sql.FixedSqlAction
 
 /**
  * Object that contains the representation of the File table Row,

@@ -1,7 +1,6 @@
 package api.validators
 
-import play.api.libs.json.{ Json, OFormat }
-import play.http.DefaultHttpErrorHandler
+import play.api.libs.json.{Json, OFormat}
 
 case class Error( //TODO: Add error code
   errorCode: String,

@@ -3,66 +3,55 @@ package api.controllers
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import akka.stream.{ ActorMaterializer, Materializer }
-import api.dtos.{ FileDTO, TaskDTO }
-import api.services.{ PeriodType, SchedulingType }
-import database.repositories.{ FileRepository, FileRepositoryImpl, TaskRepository, TaskRepositoryImpl }
-import org.scalatest.{ AsyncWordSpec, BeforeAndAfterAll, BeforeAndAfterEach }
-import org.scalatestplus.play.PlaySpec
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.{ Application, Mode }
-import play.api.inject.Injector
-import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Json
+import akka.stream.{ActorMaterializer, Materializer}
+import api.dtos.{FileDTO, TaskDTO}
+import api.services.{PeriodType, SchedulingType}
 import api.utils.DateUtils._
 import api.utils.UUIDGenerator
-import play.api.test.FakeRequest
-import org.scalatestplus.play.{ OneAppPerSuite, PlaySpec }
 import api.validators.Error._
-import play.api.libs.json.JsArray
-import slick.jdbc.MySQLProfile.api._
 import database.mappings.FileMappings._
 import database.mappings.TaskMappings._
-
-import scala.concurrent.{ Await, ExecutionContext, Future }
-import scala.concurrent.duration.Duration
+import database.repositories.{FileRepository, TaskRepository}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import org.scalatestplus.play.PlaySpec
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.Json
+import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.meta.MTable
+
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext}
 
 class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll with BeforeAndAfterEach {
 
-  /**
-   * new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-   * new SimpleDateFormat("dd-MM-yyyy HH:mm:ss")
-   * new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
-   * new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
-   */
+  private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
-  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+  private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
+  private val dtbase: Database = appBuilder.injector.instanceOf[Database]
+  private implicit val fileRepo: FileRepository = appBuilder.injector.instanceOf[FileRepository]
+  private implicit val taskRepo: TaskRepository = appBuilder.injector.instanceOf[TaskRepository]
+  private implicit val uuidGen: UUIDGenerator = appBuilder.injector.instanceOf[UUIDGenerator]
+  private implicit val actorSystem: ActorSystem = ActorSystem()
+  private implicit val mat: Materializer = ActorMaterializer()
 
-  lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
-  val dtbase: Database = appBuilder.injector.instanceOf[Database]
-  implicit val fileRepo: FileRepository = appBuilder.injector.instanceOf[FileRepository]
-  implicit val taskRepo: TaskRepository = appBuilder.injector.instanceOf[TaskRepository]
-  implicit val uuidGen: UUIDGenerator = appBuilder.injector.instanceOf[UUIDGenerator]
-  implicit val actorSystem: ActorSystem = ActorSystem()
-  implicit val mat: Materializer = ActorMaterializer()
+  private val LOCALHOST = "localhost:9000"
 
-  val LOCALHOST = "localhost:9000"
+  private val taskUUID1: String = UUID.randomUUID().toString
+  private val taskUUID2: String = UUID.randomUUID().toString
+  private val taskUUID3: String = UUID.randomUUID().toString
+  private val taskUUID4: String = UUID.randomUUID().toString
 
-  val taskUUID1: String = UUID.randomUUID().toString
-  val taskUUID2: String = UUID.randomUUID().toString
-  val taskUUID3: String = UUID.randomUUID().toString
-  val taskUUID4: String = UUID.randomUUID().toString
+  private val fileUUID1: String = UUID.randomUUID().toString
+  private val fileUUID2: String = UUID.randomUUID().toString
+  private val fileUUID3: String = UUID.randomUUID().toString
+  private val fileUUID4: String = UUID.randomUUID().toString
 
-  val fileUUID1: String = UUID.randomUUID().toString
-  val fileUUID2: String = UUID.randomUUID().toString
-  val fileUUID3: String = UUID.randomUUID().toString
-  val fileUUID4: String = UUID.randomUUID().toString
+  private val id = uuidGen.generateUUID
 
-  val id = uuidGen.generateUUID
-
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     val result = for {
       _ <- dtbase.run(createFilesTableAction)
       _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", getCurrentDateTimestamp))
@@ -76,12 +65,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
     println(Await.result(fileRepo.selectAllFiles, Duration.Inf))
   }
 
-  override def afterAll = {
+  override def afterAll: Unit = {
     Await.result(dtbase.run(dropTasksTableAction), Duration.Inf)
     Await.result(dtbase.run(dropFilesTableAction), Duration.Inf)
   }
 
-  override def afterEach = {
+  override def afterEach: Unit = {
     Await.result(taskRepo.deleteAllTasks, Duration.Inf)
   }
 

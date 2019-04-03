@@ -5,7 +5,7 @@ import database.mappings.FileMappings._
 import javax.inject.Inject
 import slick.jdbc.MySQLProfile.api._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository {
 
@@ -51,21 +51,6 @@ class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository {
     dtbase.run(deleteFileByFileId(id))
   }
 
-  /*/**
-    * Creates the files table on the database.
-    */
-  def createFilesTable: Future[Unit] = {
-    dtbase.run(createFilesTableAction)
-  }
-
-  /**
-    * Drops the files table on the database.
-    */
-  def dropFilesTable: Future[Unit] = {
-    dtbase.run(dropFilesTableAction)
-  }*/
-
-  //TODO: "Don't code twice". This one could be implemented using "selectFileById"
   /**
    * Checks if a corresponding file row exists on the database by providing its fileId.
    * @param fileId Id of the file on the database.
@@ -83,9 +68,7 @@ class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository {
   def existsCorrespondingFileName(fileName: String): Future[Boolean] = {
     selectFileByName(fileName).map(elem => elem.isDefined)
   }
-
-  //TODO change head to headOption to avoid exceptions
-
+  
   /**
    * Retrieves a fileId of a row on the database by providing the fileName.
    * @param fileName Name of the file given by the user on the database.

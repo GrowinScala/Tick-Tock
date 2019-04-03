@@ -1,16 +1,14 @@
 package api.utils
 
-import java.text.SimpleDateFormat
-import java.util.{ Calendar, Date }
+import java.util.Calendar
 
 import api.services.DayType
-import org.scalatest.{ AsyncWordSpec, FlatSpec }
 import api.utils.DateUtils._
 import org.scalatestplus.play.PlaySpec
 
 class DateUtilsSuite extends PlaySpec {
 
-  val calendar = Calendar.getInstance()
+  private val calendar = Calendar.getInstance()
 
   "DateUtils#stringToDateFormat" should {
     "convert a string in a certain format into a Date object. (yyyy-MM-dd HH:mm:ss format)" in {

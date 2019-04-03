@@ -1,8 +1,7 @@
 package database.repositories
 
-import java.util.UUID
-
 import api.dtos.FileDTO
+
 import scala.concurrent.Future
 
 trait FileRepository {
@@ -32,17 +31,6 @@ trait FileRepository {
    * Deletes a single file from the database given its id
    */
   def deleteFileById(id: String): Future[Int]
-
-  //TODO: CREATE,ALTER,DELETE tasks should not be provided as part of the interface.
-  /*/**
-    * Creates the files table on the database.
-    */
-  def createFilesTable: Future[Unit]
-
-  /**
-    * Drops the files table on the database.
-    */
-  def dropFilesTable: Future[Unit]*/
 
   /**
    * Checks if a corresponding file row exists on the database by providing its fileId.

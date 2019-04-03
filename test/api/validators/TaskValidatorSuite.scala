@@ -1,15 +1,15 @@
 package api.validators
 
-import java.util.{ Calendar, UUID }
+import java.util.Calendar
 
 import akka.actor.ActorSystem
-import akka.stream.{ ActorMaterializer, Materializer }
+import akka.stream.{ActorMaterializer, Materializer}
 import api.dtos._
-import api.services.{ Criteria, DayType, PeriodType, SchedulingType }
-import api.utils.{ FakeUUIDGenerator, UUIDGenerator }
+import api.services.{Criteria, DayType, PeriodType, SchedulingType}
+import api.utils.{FakeUUIDGenerator, UUIDGenerator}
 import api.validators.Error._
 import com.google.inject.Guice
-import database.repositories.{ FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository }
+import database.repositories.{FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository}
 import org.scalatestplus.play.PlaySpec
 import play.api.inject.guice.GuiceApplicationBuilder
 
@@ -17,17 +17,18 @@ import scala.concurrent.ExecutionContext
 
 class TaskValidatorSuite extends PlaySpec {
 
-  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
-  lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
+  private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+  private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
   Guice.createInjector(appBuilder.applicationModule).injectMembers(this)
-  implicit val fileRepo: FileRepository = new FakeFileRepository
-  implicit val taskRepo: TaskRepository = new FakeTaskRepository
-  implicit val UUIDGen: UUIDGenerator = new FakeUUIDGenerator
-  implicit val actorSystem: ActorSystem = ActorSystem()
-  implicit val mat: Materializer = ActorMaterializer()
 
-  val validator = new TaskValidator
-  val calendar = Calendar.getInstance()
+  private implicit val fileRepo: FileRepository = new FakeFileRepository
+  private implicit val taskRepo: TaskRepository = new FakeTaskRepository
+  private implicit val UUIDGen: UUIDGenerator = new FakeUUIDGenerator
+  private implicit val actorSystem: ActorSystem = ActorSystem()
+  private implicit val mat: Materializer = ActorMaterializer()
+
+  private val validator = new TaskValidator
+  private val calendar = Calendar.getInstance()
 
   "TaskValidator#scheduleValidator" should {
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (RunOnce task with no startDate)" in {

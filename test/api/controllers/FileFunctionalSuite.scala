@@ -3,47 +3,45 @@ package api.controllers
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import akka.stream.{ ActorMaterializer, Materializer }
+import akka.stream.{ActorMaterializer, Materializer}
 import api.dtos.FileDTO
-import api.utils.DateUtils.{ getCurrentDateTimestamp, stringToDateFormat }
+import api.utils.DateUtils.stringToDateFormat
+import api.validators.Error._
 import com.google.inject.Guice
-import database.repositories.{ FileRepository, TaskRepository }
-import database.utils.DatabaseUtils.TEST_DB
-import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
+import database.mappings.FileMappings._
+import database.repositories.{FileRepository, TaskRepository}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test._
-import api.validators.Error._
-import slick.jdbc.meta.MTable
 import slick.jdbc.MySQLProfile.api._
-import database.mappings.FileMappings._
 
-import scala.concurrent.{ Await, ExecutionContext }
 import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext}
 
 class FileFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll with BeforeAndAfterEach {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
-  lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
+  private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
   Guice.createInjector(appBuilder.applicationModule).injectMembers(this)
-  implicit val fileRepo: FileRepository = appBuilder.injector.instanceOf[FileRepository]
-  implicit val taskRepo: TaskRepository = appBuilder.injector.instanceOf[TaskRepository]
-  val dtbase: Database = appBuilder.injector.instanceOf[Database]
-  implicit val actorSystem: ActorSystem = ActorSystem()
-  implicit val mat: Materializer = ActorMaterializer()
+  private implicit val fileRepo: FileRepository = appBuilder.injector.instanceOf[FileRepository]
+  private implicit val taskRepo: TaskRepository = appBuilder.injector.instanceOf[TaskRepository]
+  private val dtbase: Database = appBuilder.injector.instanceOf[Database]
+  private implicit val actorSystem: ActorSystem = ActorSystem()
+  private implicit val mat: Materializer = ActorMaterializer()
 
-  val LOCALHOST = "localhost:9000"
+  private val LOCALHOST = "localhost:9000"
 
-  val fileUUID1: String = UUID.randomUUID().toString
-  val fileUUID2: String = UUID.randomUUID().toString
-  val fileUUID3: String = UUID.randomUUID().toString
-  val fileUUID4: String = UUID.randomUUID().toString
+  private val fileUUID1: String = UUID.randomUUID().toString
+  private val fileUUID2: String = UUID.randomUUID().toString
+  private val fileUUID3: String = UUID.randomUUID().toString
+  private val fileUUID4: String = UUID.randomUUID().toString
 
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     val result = for {
       _ <- dtbase.run(createFilesTableAction)
       _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", stringToDateFormat("01-01-2018 12:00:00", "dd-MM-yyyy HH:mm:ss")))
@@ -55,7 +53,7 @@ class FileFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
 
   }
 
-  override def afterAll = {
+  override def afterAll: Unit = {
     Await.result(dtbase.run(dropFilesTableAction), Duration.Inf)
   }
 

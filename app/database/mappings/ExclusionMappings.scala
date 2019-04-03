@@ -4,9 +4,9 @@ import java.sql.Timestamp
 import java.util.Date
 
 import api.services.Criteria.Criteria
-import api.services.{ Criteria, DayType }
 import api.services.DayType.DayType
-import play.api.libs.json.{ Json, OFormat }
+import api.services.{Criteria, DayType}
+import play.api.libs.json.{Json, OFormat}
 import slick.dbio.Effect
 import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._

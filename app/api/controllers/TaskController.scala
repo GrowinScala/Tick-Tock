@@ -1,19 +1,16 @@
 package api.controllers
 
-import java.util.UUID
-
-import akka.actor.ActorSystem
-import api.dtos.{ CreateTaskDTO, TaskDTO, UpdateTaskDTO }
+import api.dtos.{CreateTaskDTO, UpdateTaskDTO}
 import api.services.TaskService
 import api.utils.UUIDGenerator
-import javax.inject.{ Inject, Singleton }
+import api.validators.Error._
+import api.validators.TaskValidator
+import database.repositories.{FileRepository, TaskRepository}
+import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
 import play.api.mvc._
-import database.repositories.{ FileRepository, TaskRepository }
-import api.validators.TaskValidator
-import api.validators.Error._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * This controller handles the HTTP requests that are related to task scheduling.

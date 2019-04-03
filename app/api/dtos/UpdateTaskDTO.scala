@@ -2,9 +2,10 @@ package api.dtos
 
 import api.services.PeriodType.PeriodType
 import api.services.SchedulingType.SchedulingType
-import play.api.libs.json.{ JsPath, Json, OWrites, Reads }
-import play.api.libs.json.Reads._
 import play.api.libs.functional.syntax._
+import play.api.libs.json.Reads._
+import play.api.libs.json.{JsPath, Json, OWrites, Reads}
+
 import scala.concurrent.ExecutionContext
 
 case class UpdateTaskDTO(
@@ -22,7 +23,7 @@ case class UpdateTaskDTO(
 
 object UpdateTaskDTO {
 
-  implicit val ec = ExecutionContext.global
+  implicit val ec:ExecutionContext = ExecutionContext.global
 
   /**
    * Implicit that defines how an UpdateTaskDTO is read from the JSON request.

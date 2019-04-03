@@ -1,19 +1,19 @@
 package database.repositories
 
 import api.dtos.TaskDTO
-import api.services.{ PeriodType, SchedulingType }
+import api.services.{PeriodType, SchedulingType}
 import database.mappings.FileMappings._
 import database.mappings.TaskMappings._
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.duration._
-import scala.concurrent.{ Await, ExecutionContext, Future }
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 /**
  * Class that handles the data layer for the scheduled tasks.
  * It contains task scheduling related queries to communicate with the database.
  *
- * @param db Database class that contains the database information.
+ * @param dtbase Database class that contains the database information.
  */
 class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
 
@@ -145,20 +145,6 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
   def deleteAllTasks: Future[Int] = {
     dtbase.run(deleteAllFromTasksTable)
   }
-
-  /*/**
-    * Creates the tasks table on the database.
-    */
-  def createTasksTable: Future[Unit] = {
-    dtbase.run(createTasksTableAction)
-  }
-
-  /**
-    * Drops the tasks table on the database.
-    */
-  def dropTasksTable: Future[Unit] = {
-    dtbase.run(dropTasksTableAction)
-  }*/
 
   /**
    * Inserts a task (row) on the tasks table on the database.

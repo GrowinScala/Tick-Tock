@@ -17,15 +17,15 @@ import scala.concurrent.ExecutionContext
 
 class FileControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite with BeforeAndAfterAll with BeforeAndAfterEach {
 
-  lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
-  lazy val injector: Injector = appBuilder.injector()
-  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
-  implicit val fileRepo: FileRepository = new FakeFileRepository
-  implicit val taskRepo: TaskRepository = new FakeTaskRepository
-  implicit val UUIDGen: UUIDGenerator = new FakeUUIDGenerator
-  val cc: ControllerComponents = injector.instanceOf[ControllerComponents]
-  implicit val actorSystem: ActorSystem = ActorSystem()
-  implicit val mat: Materializer = ActorMaterializer()
+  private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
+  private lazy val injector: Injector = appBuilder.injector()
+  private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+  private implicit val fileRepo: FileRepository = new FakeFileRepository
+  private implicit val taskRepo: TaskRepository = new FakeTaskRepository
+  private implicit val UUIDGen: UUIDGenerator = new FakeUUIDGenerator
+  private val cc: ControllerComponents = injector.instanceOf[ControllerComponents]
+  private implicit val actorSystem: ActorSystem = ActorSystem()
+  private implicit val mat: Materializer = ActorMaterializer()
 
   "FileController#getAllFiles" should {
     "receive a GET request" in {

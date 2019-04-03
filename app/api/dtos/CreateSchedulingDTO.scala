@@ -2,9 +2,9 @@ package api.dtos
 
 import api.services.Criteria.Criteria
 import api.services.DayType.DayType
-import play.api.libs.json._
-import play.api.libs.json.Reads._
 import play.api.libs.functional.syntax._
+import play.api.libs.json.Reads._
+import play.api.libs.json._
 
 case class CreateSchedulingDTO(
   schedulingDate: Option[String] = None,

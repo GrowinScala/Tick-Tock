@@ -1,6 +1,6 @@
 package api.dtos
 
-import java.util.{ Date, UUID }
+import java.util.Date
 
 import play.api.libs.json._
 

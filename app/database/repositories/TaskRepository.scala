@@ -1,23 +1,13 @@
 package database.repositories
 
-import java.util.UUID
-
-import akka.actor.FSM.Failure
-import akka.actor.Status.Success
-import api.dtos.{ TaskDTO, UpdateTaskDTO }
-import database.mappings.TaskMappings.TaskRow
+import api.dtos.TaskDTO
 
 import scala.concurrent.Future
-import scala.concurrent.Await
-import scala.concurrent.duration._
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.{ Failure, Success, Try }
 
 /**
  * Class that handles the data layer for the scheduled tasks.
  * It contains task scheduling related queries to communicate with the database.
  *
- * @param db Database class that contains the database information.
  */
 trait TaskRepository {
 
@@ -84,16 +74,6 @@ trait TaskRepository {
    * @return an Int with information of the updated task
    */
   def updateTaskById(id: String, task: TaskDTO): Future[Int]
-
-  /*/**
-    * Creates the tasks table on the database.
-    */
-  def createTasksTable: Future[Unit]
-
-  /**
-    * Drops the tasks table on the database.
-    */
-  def dropTasksTable: Future[Unit]*/
 
   /**
    * Inserts a task (row) on the tasks table on the database.

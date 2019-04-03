@@ -1,17 +1,17 @@
 package api.validators
 
-import java.util.{ Calendar, Date, TimeZone, UUID }
+import java.util.{Calendar, Date, TimeZone, UUID}
 
 import api.dtos._
-import api.services.{ Criteria, DayType, SchedulingType }
+import api.services.{Criteria, DayType, SchedulingType}
 import api.utils.DateUtils._
 import api.utils.UUIDGenerator
 import api.validators.Error._
-import database.repositories.{ FileRepository, TaskRepository }
-import javax.inject.{ Inject, Singleton }
+import database.repositories.{FileRepository, TaskRepository}
+import javax.inject.{Inject, Singleton}
 
 import scala.concurrent.duration._
-import scala.concurrent.{ Await, ExecutionContext }
+import scala.concurrent.{Await, ExecutionContext}
 import scala.util.Try
 
 /**
@@ -175,7 +175,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
   /**
    * Checks if the date given is valid, (if it already happened or not)
    *
-   * @param date The Date to be checked
+   * @param startDate The Date to be checked
    * @return Returns a ValidationError if its not valid. None otherwise.
    */
   private def isValidStartDateValue(startDate: Option[Date]): Boolean = {
@@ -463,22 +463,6 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
     }
   }
 
-  /*private def areValidExclusionDayTypeValues(exclusions: List[ExclusionDTO]): Boolean = {
-    def iter(list: List[ExclusionDTO]): Boolean = {
-      if (list.nonEmpty) {
-        val exclusion = list.head
-        if (exclusion.dayType.isDefined) {
-          if (exclusion.dayType.get == DayType.Weekday) if (exclusion.dayOfWeek.get >= 1 && exclusion.dayOfWeek.get <= 5) iter(list.tail) else false
-          else if (exclusion.dayType.get == DayType.Weekend) if (exclusion.dayOfWeek.get == 6 || exclusion.dayOfWeek.get == 7) iter(list.tail) else false
-          else false
-        }
-        else iter(list.tail)
-      }
-      else true
-    }
-    iter(exclusions)
-  }*/
-
   private def areValidExclusionMonthValues(exclusions: Option[List[ExclusionDTO]]): Boolean = {
     def iter(list: List[ExclusionDTO]): Boolean = {
       if (list.nonEmpty) {
@@ -552,31 +536,6 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
     }
   }
 
-  /*private def isValidSchedulingFormat(schedulings: Option[List[CreateSchedulingDTO]], taskId: String): Option[List[SchedulingDTO]] = {
-    val toReturn: List[SchedulingDTO] = Nil
-    if (schedulings.isDefined) {
-      schedulings.get.foreach { scheduling =>
-        if (scheduling.schedulingDate.isDefined) {
-          val parsedDate = parseDate(scheduling.schedulingDate.get)
-          if (parsedDate.isDefined && scheduling.day.isEmpty && scheduling.dayOfWeek.isEmpty &&
-            scheduling.dayType.isEmpty && scheduling.month.isEmpty && scheduling.year.isEmpty && scheduling.criteria.isEmpty)
-            SchedulingDTO(UUIDGen.generateUUID, taskId, parsedDate, scheduling.day, scheduling.dayOfWeek, scheduling.dayType, scheduling.month, scheduling.year, scheduling.criteria) :: toReturn
-
-        }
-        else {
-          if ((scheduling.day.isDefined || scheduling.dayOfWeek.isDefined || scheduling.dayType.isDefined ||
-            scheduling.month.isDefined || scheduling.year.isDefined) &&
-            (scheduling.criteria.isEmpty || scheduling.criteria.get == Criteria.First || scheduling.criteria.get == Criteria.Second ||
-              scheduling.criteria.get == Criteria.Third || scheduling.criteria.get == Criteria.Fourth || scheduling.criteria.get == Criteria.Last))
-            SchedulingDTO(UUIDGen.generateUUID, taskId, None, scheduling.day, scheduling.dayOfWeek, scheduling.dayType, scheduling.month, scheduling.year, scheduling.criteria) :: toReturn
-        }
-      }
-      if (toReturn.size == schedulings.get.size) Some(toReturn)
-      else None
-    }
-    else None
-  }*/
-
   private def areValidUpdateSchedulingFormats(oldSchedulings: Option[List[SchedulingDTO]], schedulings: Option[List[UpdateSchedulingDTO]], schedulingDates: Option[List[Option[Date]]], taskId: String): Option[List[SchedulingDTO]] = {
     def iter(schedulings: List[UpdateSchedulingDTO], schedulingDates: List[Option[Date]], toReturn: List[SchedulingDTO]): Option[List[SchedulingDTO]] = {
       if (schedulings.isEmpty) None
@@ -624,57 +583,6 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
     else None
   }
 
-  /*private def areValidUpdateExclusionFormats(oldExclusions: Option[List[ExclusionDTO]], exclusions: Option[List[UpdateExclusionDTO]], exclusionDates: Option[List[Option[Date]]], taskId: String): Option[List[ExclusionDTO]] = {
-    def iter(exclusions: List[UpdateExclusionDTO], exclusionDates: List[Option[Date]], toReturn: List[ExclusionDTO]): Option[List[ExclusionDTO]] = {
-      if(exclusions.isEmpty) None
-      else{
-        val exclusion = exclusions.head
-        val oldExclusion = getOldExclusionWithExclusionId(exclusion.exclusionId, oldExclusions)
-        if(oldExclusion.isDefined) {
-          exclusion.exclusionDate match {
-            case Some(_) =>
-              val exclusionDate = exclusionDates.head
-              if (exclusionDate.isDefined && exclusion.day.isEmpty && exclusion.dayOfWeek.isEmpty &&
-                exclusion.dayType.isEmpty && exclusion.month.isEmpty && exclusion.year.isEmpty && exclusion.criteria.isEmpty) {
-                iter(exclusions.tail, exclusionDates.tail, ExclusionDTO(exclusion.exclusionId.get, taskId, exclusionDate) :: toReturn)
-              }
-              else None
-            case None =>
-              if (exclusion.taskId.isDefined || exclusion.exclusionDate.isDefined || exclusion.day.isDefined
-                || exclusion.dayOfWeek.isDefined || exclusion.dayType.isDefined || exclusion.month.isDefined || exclusion.year.isDefined
-                || exclusion.criteria.isDefined) {
-                iter(exclusions.tail, exclusionDates.tail, ExclusionDTO(exclusion.exclusionId.get, taskId, None, exclusion.day, exclusion.dayOfWeek, exclusion.dayType, exclusion.month, exclusion.year, exclusion.criteria) :: toReturn)
-              }
-              else None
-          }
-        }
-        else None
-      }
-    }
-    exclusions match {
-      case Some(exclusionList) => iter(exclusionList, exclusionDates.get, Nil)
-      case None => None
-    }
-  }
-
-  private def areValidUpdateExclusionDateFormats(exclusions: Option[List[UpdateExclusionDTO]], startDate: Option[Date], endDate: Option[Date]): Option[List[Option[Date]]] = {
-    def iter(list: List[UpdateExclusionDTO], toReturn: List[Option[Date]]): Option[List[Option[Date]]] = {
-      if(list.nonEmpty) {
-        val exclusion = list.head
-        exclusion.exclusionDate match {
-          case Some(date) =>
-            val parsedDate = parseDate(date)
-            if(parsedDate.isDefined) iter(list.tail, parsedDate :: toReturn)
-            else None
-          case None => iter(list.tail, None :: toReturn)
-        }
-      }
-      else Some(toReturn)
-    }
-    if(exclusions.isDefined) iter(exclusions.get, Nil)
-    else None
-  }*/
-
   private def getOldSchedulingWithSchedulingId(schedulingId: Option[String], oldSchedulings: Option[List[SchedulingDTO]]): Option[SchedulingDTO] = {
     def iter(oldSchedulings: Option[List[SchedulingDTO]]): Option[SchedulingDTO] = {
       if ((oldSchedulings.isEmpty && oldSchedulings.get.isEmpty) || schedulingId.isEmpty) None
@@ -710,59 +618,6 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
       true
     } else false
   }
-
-  /*private def areValidExclusions(exclusions: Option[List[CreateExclusionDTO]], taskId: String, startDate: Option[Date], endDate: Option[Date]): List[(Boolean, Error)] = {
-    val exclusionDates = areValidExclusionDateFormats(exclusions, startDate, endDate)
-    val parsedExclusions = areValidExclusionFormats(exclusions, exclusionDates, taskId)
-    if (exclusions.isDefined){
-      if (startDate.isDefined) calendar.setTime(startDate.get) else calendar.setTime(new Date())
-      List(
-        (exclusions.isEmpty || parsedExclusions.isDefined, invalidExclusionFormat),
-        ((exclusionDates.isEmpty && existsAtLeastOneExclusionDate(exclusions)) || exclusionDates.isDefined, invalidExclusionDateFormat),
-        (areValidExclusionDateValues(parsedExclusions), invalidExclusionDateValue),
-        (areValidExclusionDayValues(parsedExclusions), invalidExclusionDayValue),
-        (areValidExclusionDayOfWeekValues(parsedExclusions), invalidExclusionDayOfWeekValue),
-        (areValidExclusionDayTypeValues(parsedExclusions), invalidExclusionDayTypeValue),
-        (areValidExclusionMonthValues(parsedExclusions), invalidExclusionMonthValue),
-        (areValidExclusionYearValues(parsedExclusions), invalidExclusionYearValue),
-        (areValidExclusionCriteriaValues(parsedExclusions), invalidExclusionCriteriaValue)
-      )
-    }
-    else Nil
-
-  }
-
-  private def existsAtLeastOneExclusionDate(exclusions: Option[List[CreateExclusionDTO]]): Boolean = {
-    if(exclusions.isDefined){
-      exclusions.get.foreach(elem => if(elem.exclusionDate.isEmpty) false)
-      true
-    }
-    else false
-  }
-
-  private def areValidExclusionFormats(exclusions: Option[List[CreateExclusionDTO]], exclusionDates: Option[List[Option[Date]]], taskId: String): Option[List[ExclusionDTO]] = {
-    def iter(list: List[CreateExclusionDTO], dateList: Option[List[Option[Date]]], toReturn: List[ExclusionDTO]): Option[List[ExclusionDTO]] = {
-      if(list.isEmpty) Some(toReturn)
-      else{
-        val exclusion = list.head
-        exclusion.exclusionDate match {
-          case Some(_) =>
-            val exclusionDate = exclusionDates.get.head
-            if(exclusion.day.isEmpty && exclusion.dayOfWeek.isEmpty && exclusion.dayType.isEmpty && exclusion.month.isEmpty && exclusion.year.isEmpty)
-              iter(list.tail, Some(dateList.get.tail), ExclusionDTO(UUIDGen.generateUUID, taskId, exclusionDate) :: toReturn)
-            else None
-          case None =>
-            if(exclusion.day.isDefined || exclusion.dayOfWeek.isDefined || exclusion.dayType.isDefined || exclusion.month.isDefined || exclusion.year.isDefined)
-              iter(list.tail, None, ExclusionDTO(UUIDGen.generateUUID, taskId, None, exclusion.day, exclusion.dayOfWeek, exclusion.dayType, exclusion.month, exclusion.year, exclusion.criteria) :: toReturn)
-            else None
-        }
-      }
-    }
-    exclusions match {
-      case Some(exclusionList) => iter(exclusionList, exclusionDates, Nil)
-      case None => None
-    }
-  }*/
 
   private def areValidSchedulingFormats(schedulings: Option[List[CreateSchedulingDTO]], schedulingDates: List[Option[Date]], taskId: String): Option[List[SchedulingDTO]] = {
     def iter(list: List[CreateSchedulingDTO], dateList: List[Option[Date]], toReturn: List[SchedulingDTO]): Option[List[SchedulingDTO]] = {
@@ -831,16 +686,14 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
           if (scheduling.day.get >= 1 && scheduling.day.get <= 31) {
             if (scheduling.month.isDefined) {
               scheduling.day.get match {
-                case 29 => {
-                  scheduling.month.get != 2 || scheduling.year.isEmpty || isLeapYear(scheduling.year.get)
-                }
-                case 30 => {
-                  scheduling.month.get != 2
-                }
-                case 31 => {
-                  scheduling.month.get != 2 && scheduling.month.get != 4 && scheduling.month.get != 6 &&
+                case 29 => scheduling.month.get != 2 || scheduling.year.isEmpty || isLeapYear(scheduling.year.get)
+
+                case 30 => scheduling.month.get != 2
+
+                case 31 =>
+                    scheduling.month.get != 2 && scheduling.month.get != 4 && scheduling.month.get != 6 &&
                     scheduling.month.get != 9 && scheduling.month.get != 11
-                }
+
               }
               if (scheduling.year.isDefined) {
                 if (scheduling.month.get == calendar.get(Calendar.MONTH) && scheduling.year.get == calendar.get(Calendar.YEAR)) if (scheduling.day.get >= calendar.get(Calendar.DAY_OF_MONTH)) iter(list.tail) else false

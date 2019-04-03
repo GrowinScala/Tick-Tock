@@ -3,46 +3,44 @@ package database.repositories
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import akka.stream.{ ActorMaterializer, Materializer }
-import api.dtos.{ FileDTO, TaskDTO }
-import api.services.{ PeriodType, SchedulingType }
+import akka.stream.{ActorMaterializer, Materializer}
+import api.dtos.{FileDTO, TaskDTO}
+import api.services.{PeriodType, SchedulingType}
 import api.utils.DateUtils._
-import org.scalatest._
 import database.mappings.FileMappings._
 import database.mappings.TaskMappings._
+import org.scalatest._
 import play.api.Mode
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
-import slick.jdbc.meta.MTable
 import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.meta.MTable
 
-import scala.concurrent.{ Await, ExecutionContext }
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
 
 class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with BeforeAndAfterEach {
 
-  lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder().in(Mode.Test)
-  lazy val injector: Injector = appBuilder.injector()
-  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
-  implicit val fileRepo: FileRepository = injector.instanceOf[FileRepository]
-  implicit val taskRepo: TaskRepository = injector.instanceOf[TaskRepository]
-  val dtbase: Database = injector.instanceOf[Database]
-  implicit val actorSystem: ActorSystem = ActorSystem()
-  implicit val mat: Materializer = ActorMaterializer()
+  private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder().in(Mode.Test)
+  private lazy val injector: Injector = appBuilder.injector()
+  private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+  private implicit val fileRepo: FileRepository = injector.instanceOf[FileRepository]
+  private implicit val taskRepo: TaskRepository = injector.instanceOf[TaskRepository]
+  private val dtbase: Database = injector.instanceOf[Database]
+  private implicit val actorSystem: ActorSystem = ActorSystem()
+  private implicit val mat: Materializer = ActorMaterializer()
 
-  val taskUUID1: String = UUID.randomUUID().toString
-  val taskUUID2: String = UUID.randomUUID().toString
-  val taskUUID3: String = UUID.randomUUID().toString
-  val taskUUID4: String = UUID.randomUUID().toString
+  private val taskUUID1: String = UUID.randomUUID().toString
+  private val taskUUID2: String = UUID.randomUUID().toString
+  private val taskUUID3: String = UUID.randomUUID().toString
+  private val taskUUID4: String = UUID.randomUUID().toString
 
-  val fileUUID1: String = UUID.randomUUID().toString
-  val fileUUID2: String = UUID.randomUUID().toString
-  val fileUUID3: String = UUID.randomUUID().toString
-  val fileUUID4: String = UUID.randomUUID().toString
+  private val fileUUID1: String = UUID.randomUUID().toString
+  private val fileUUID2: String = UUID.randomUUID().toString
+  private val fileUUID3: String = UUID.randomUUID().toString
+  private val fileUUID4: String = UUID.randomUUID().toString
 
-  //def runBlocking()
-
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     val result = for {
       _ <- dtbase.run(createFilesTableAction)
       _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", getCurrentDateTimestamp))
@@ -55,16 +53,15 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
 
   }
 
-  override def afterAll = {
+  override def afterAll: Unit = {
     Await.result(dtbase.run(dropTasksTableAction), Duration.Inf)
     Await.result(dtbase.run(dropFilesTableAction), Duration.Inf)
   }
 
-  override def afterEach = {
+  override def afterEach: Unit = {
     Await.result(taskRepo.deleteAllTasks, Duration.Inf)
   }
 
-  //TODO chane date inputs, the function returns the current hours, and the input is 00:00:00
   "DBTasksTable#drop/createTasksTable" should {
     "create and then drop the Tasks table on the database." in {
       val result = for {

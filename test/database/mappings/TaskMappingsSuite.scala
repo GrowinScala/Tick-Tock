@@ -14,8 +14,8 @@ import scala.concurrent.duration.Duration
 
 class TaskMappingsSuite extends PlaySpec with BeforeAndAfterAll with BeforeAndAfterEach {
 
-  lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
-  val dtbase: Database = appBuilder.injector.instanceOf[Database]
+  private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
+  private val dtbase: Database = appBuilder.injector.instanceOf[Database]
 
   private val taskUUID1 = UUID.randomUUID().toString
   private val taskUUID2 = UUID.randomUUID().toString

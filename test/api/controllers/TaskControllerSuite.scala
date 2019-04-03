@@ -1,39 +1,33 @@
 package api.controllers
 
 import akka.actor.ActorSystem
-import akka.stream.{ ActorMaterializer, Materializer }
-import api.dtos.TaskDTO
-import api.services.SchedulingType
-import api.utils.DateUtils.stringToDateFormat
-import api.utils.{ FakeUUIDGenerator, UUIDGenerator }
-import com.google.inject.Guice
-import database.repositories.{ FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository }
-import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
+import akka.stream.{ActorMaterializer, Materializer}
+import api.utils.{FakeUUIDGenerator, UUIDGenerator}
+import database.repositories.{FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository}
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Mode
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.mvc._
-import play.api.test._
 import play.api.test.Helpers._
+import play.api.test._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.ExecutionContext
 
 class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite {
 
-  lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
-  lazy val injector: Injector = appBuilder.injector()
-  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
-  implicit val fileRepo: FileRepository = new FakeFileRepository
-  implicit val taskRepo: TaskRepository = new FakeTaskRepository
-  implicit val UUIDGen: UUIDGenerator = new FakeUUIDGenerator
-  val cc: ControllerComponents = injector.instanceOf[ControllerComponents]
-  implicit val actorSystem: ActorSystem = ActorSystem()
-  implicit val mat: Materializer = ActorMaterializer()
+  private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
+  private lazy val injector: Injector = appBuilder.injector()
+  private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+  private implicit val fileRepo: FileRepository = new FakeFileRepository
+  private implicit val taskRepo: TaskRepository = new FakeTaskRepository
+  private implicit val UUIDGen: UUIDGenerator = new FakeUUIDGenerator
+  private val cc: ControllerComponents = injector.instanceOf[ControllerComponents]
+  private implicit val actorSystem: ActorSystem = ActorSystem()
+  private implicit val mat: Materializer = ActorMaterializer()
 
-  val LOCALHOST = "localhost:9000"
+  private val LOCALHOST = "localhost:9000"
 
   "TaskController#schedule (POST /task)" should {
     "be valid in" in {

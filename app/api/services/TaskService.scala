@@ -1,19 +1,18 @@
 package api.services
 
-import java.util.{ Calendar, Date }
-
-import executionengine.ExecutionJob
 import java.time.Duration
+import java.util.{Calendar, Date}
 
-import akka.actor.{ ActorRef, ActorSystem, Props }
-import api.dtos.{ ExclusionDTO, SchedulingDTO, TaskDTO }
-import api.utils.DateUtils.{ dateToDayTypeString, _ }
-import database.repositories.{ FileRepository, TaskRepository }
-import executionengine.ExecutionJob.{ Cancel, Execute }
-import javax.inject.{ Inject, Singleton }
+import akka.actor.{ActorRef, ActorSystem, Props}
+import api.dtos.{ExclusionDTO, SchedulingDTO, TaskDTO}
+import api.utils.DateUtils.{dateToDayTypeString, _}
+import database.repositories.{FileRepository, TaskRepository}
+import executionengine.ExecutionJob
+import executionengine.ExecutionJob.{Cancel, Execute}
+import javax.inject.{Inject, Singleton}
 
 import scala.collection._
-import scala.concurrent.{ Await, ExecutionContext, ExecutionContextExecutor }
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor}
 
 /**
  * Object that contains all methods for the task scheduling related to the service layer.
@@ -30,7 +29,6 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
 
   /**
    * Schedules a task by giving the storageName to be executed once immediately.
-   * @param fileName Name of the file on the storage folder.
    */
   def scheduleTask(task: TaskDTO): Unit = {
 
