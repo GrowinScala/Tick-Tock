@@ -17,27 +17,27 @@ class FileMappingsSuite extends PlaySpec with BeforeAndAfterAll with BeforeAndAf
   lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
   val dtbase: Database = appBuilder.injector.instanceOf[Database]
 
-  val uuid1 = UUID.randomUUID().toString
-  val uuid2 = UUID.randomUUID().toString
-  val uuid3 = UUID.randomUUID().toString
-  val uuid4 = UUID.randomUUID().toString
-  val uuid5 = UUID.randomUUID().toString
+  private val uuid1 = UUID.randomUUID().toString
+  private val uuid2 = UUID.randomUUID().toString
+  private val uuid3 = UUID.randomUUID().toString
+  private val uuid4 = UUID.randomUUID().toString
+  private val uuid5 = UUID.randomUUID().toString
 
-  override def beforeAll = {
-    val result = for {
-      _ <- dtbase.run(createFilesTableAction)
-      _ <- dtbase.run(insertFile(FileRow(uuid1, "test1", stringToDateFormat("2020-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))
-      _ <- dtbase.run(insertFile(FileRow(uuid2, "test2", stringToDateFormat("2020-01-02 00:00:00", "yyyy-MM-dd HH:mm:ss"))))
-      _ <- dtbase.run(insertFile(FileRow(uuid3, "test3", stringToDateFormat("2020-01-03 00:00:00", "yyyy-MM-dd HH:mm:ss"))))
-      res <- dtbase.run(insertFile(FileRow(uuid4, "test4", stringToDateFormat("2020-01-04 00:00:00", "yyyy-MM-dd HH:mm:ss"))))
-    } yield res
-    Await.result(result, Duration.Inf)
-    Await.result(dtbase.run(selectAllFromFilesTable.result), Duration.Inf).size mustBe 4
-
+  override def beforeAll: Unit = {
+    Await.result(dtbase.run(createFilesTableAction), Duration.Inf)
   }
 
-  override def afterAll = {
+  override def afterAll: Unit = {
     Await.result(dtbase.run(dropFilesTableAction), Duration.Inf)
+  }
+
+  override def beforeEach(): Unit = {
+    dtbase.run(deleteAllFromFilesTable)
+    dtbase.run(insertFile(FileRow(uuid1, "test1", stringToDateFormat("2020-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))
+    dtbase.run(insertFile(FileRow(uuid2, "test2", stringToDateFormat("2020-01-02 00:00:00", "yyyy-MM-dd HH:mm:ss"))))
+    dtbase.run(insertFile(FileRow(uuid3, "test3", stringToDateFormat("2020-01-03 00:00:00", "yyyy-MM-dd HH:mm:ss"))))
+    dtbase.run(insertFile(FileRow(uuid4, "test4", stringToDateFormat("2020-01-04 00:00:00", "yyyy-MM-dd HH:mm:ss"))))
+
   }
 
   "FileMappings#selectById" should {

@@ -4,7 +4,7 @@ import java.util.UUID
 
 import api.utils.DateUtils._
 import database.mappings.TaskMappings._
-import org.scalatest.BeforeAndAfterAll
+import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 import org.scalatestplus.play.PlaySpec
 import play.api.inject.guice.GuiceApplicationBuilder
 import slick.jdbc.MySQLProfile.api._
@@ -12,34 +12,33 @@ import slick.jdbc.MySQLProfile.api._
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-class TaskMappingsSuite extends PlaySpec with BeforeAndAfterAll {
+class TaskMappingsSuite extends PlaySpec with BeforeAndAfterAll with BeforeAndAfterEach {
 
   lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
   val dtbase: Database = appBuilder.injector.instanceOf[Database]
 
-  val taskUUID1 = UUID.randomUUID().toString
-  val taskUUID2 = UUID.randomUUID().toString
-  val taskUUID3 = UUID.randomUUID().toString
-  val taskUUID4 = UUID.randomUUID().toString
+  private val taskUUID1 = UUID.randomUUID().toString
+  private val taskUUID2 = UUID.randomUUID().toString
+  private val taskUUID3 = UUID.randomUUID().toString
+  private val taskUUID4 = UUID.randomUUID().toString
 
-  val fileUUID1 = UUID.randomUUID().toString
-  val fileUUID2 = UUID.randomUUID().toString
-  val fileUUID3 = UUID.randomUUID().toString
+  private val fileUUID1 = UUID.randomUUID().toString
+  private val fileUUID2 = UUID.randomUUID().toString
+  private val fileUUID3 = UUID.randomUUID().toString
 
-  override def beforeAll = {
-    val result = for {
-      _ <- dtbase.run(createTasksTableAction)
-      _ <- dtbase.run(insertTask(TaskRow(taskUUID1, fileUUID1, 0))) //runOnce task
-      _ <- dtbase.run(insertTask(TaskRow(taskUUID2, fileUUID2, 4, Some(3), Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, Some(10), Some(10)))) //periodic task
-      res <- dtbase.run(insertTask(TaskRow(taskUUID3, fileUUID3, 7, None, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(stringToDateFormat("2040-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, Some("PST")))) //personalized task
-    } yield res
-    Await.result(result, Duration.Inf)
-    Await.result(dtbase.run(selectAllFromTasksTable.result), Duration.Inf).size mustBe 3
-
+  override def beforeAll: Unit = {
+    Await.result(dtbase.run(createTasksTableAction), Duration.Inf)
   }
 
-  override def afterAll = {
+  override def afterAll: Unit = {
     Await.result(dtbase.run(dropTasksTableAction), Duration.Inf)
+  }
+
+  override def beforeEach(): Unit = {
+    dtbase.run(deleteAllFromTasksTable)
+    dtbase.run(insertTask(TaskRow(taskUUID1, fileUUID1, 0))) //runOnce task
+    dtbase.run(insertTask(TaskRow(taskUUID2, fileUUID2, 4, Some(3), Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, Some(10), Some(10)))) //periodic task
+    dtbase.run(insertTask(TaskRow(taskUUID3, fileUUID3, 7, None, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(stringToDateFormat("2040-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, Some("PST")))) //personalized task
   }
 
   "TaskMappings#selectTaskByTaskId" should {
@@ -159,12 +158,10 @@ class TaskMappingsSuite extends PlaySpec with BeforeAndAfterAll {
       selectResult1.head.toString mustBe "TaskRow(" + taskUUID4 + "," + fileUUID2 + ",0,None,None,None,None,None,None)"
       val selectResult2 = Await.result(dtbase.run(getTaskByTaskId(taskUUID1).result), Duration.Inf)
       selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateTaskByFileId(fileUUID2, TaskRow(taskUUID1, fileUUID1, 0))), Duration.Inf)
+      val updateResult2 = Await.result(dtbase.run(updateTaskByFileId(fileUUID3, TaskRow(taskUUID1, fileUUID1, 0))), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getTaskByTaskId(taskUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getTaskByTaskId(taskUUID1).result), Duration.Inf)
-      selectResult4.head.toString mustBe "TaskRow(" + taskUUID1 + "," + fileUUID1 + ",0,None,None,None,None,None,None)"
+      val selectResult3 = Await.result(dtbase.run(getTaskByTaskId(taskUUID1).result), Duration.Inf)
+      selectResult3.head.toString mustBe "TaskRow(" + taskUUID1 + "," + fileUUID1 + ",0,None,None,None,None,None,None)"
     }
   }
 
@@ -205,13 +202,13 @@ class TaskMappingsSuite extends PlaySpec with BeforeAndAfterAll {
   "TaskMappings#updateTaskByStartDateAndTime" should {
     "update a TaskRow by giving the corresponding startDateAndTime." in {
       val updateResult1 = Await.result(dtbase.run(updateTaskByStartDateAndTime(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"), TaskRow(taskUUID4, fileUUID1, 1, Some(5), Some(stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(stringToDateFormat("2040-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
-      updateResult1 mustBe 1
+      updateResult1 mustBe 2
       val selectResult1 = Await.result(dtbase.run(getTaskByTaskId(taskUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "TaskRow(" + taskUUID4 + "," + fileUUID1 + ",1,Some(5),Some(Thu Jan 01 00:00:00 GMT 2035),Some(Sun Jan 01 00:00:00 GMT 2040),None,None,None)"
+      selectResult1.head.toString mustBe "TaskRow(" + taskUUID4 + "," + fileUUID1 + ",1,Some(5),Some(Mon Jan 01 00:00:00 GMT 2035),Some(Sun Jan 01 00:00:00 GMT 2040),None,None,None)"
       val selectResult2 = Await.result(dtbase.run(getTaskByTaskId(taskUUID2).result), Duration.Inf)
       selectResult2.isEmpty mustBe true
       val updateResult2 = Await.result(dtbase.run(updateTaskByStartDateAndTime(stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"), TaskRow(taskUUID2, fileUUID2, 4, Some(3), Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, Some(10), Some(10)))), Duration.Inf)
-      updateResult2 mustBe 1
+      updateResult2 mustBe 2
       val selectResult3 = Await.result(dtbase.run(getTaskByTaskId(taskUUID4).result), Duration.Inf)
       selectResult3.isEmpty mustBe true
       val selectResult4 = Await.result(dtbase.run(getTaskByTaskId(taskUUID2).result), Duration.Inf)

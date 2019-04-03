@@ -3,9 +3,9 @@ package database.mappings
 import java.util.UUID
 
 import api.services.{ Criteria, DayType }
-import api.utils.DateUtils.{ stringToDateFormat, _ }
+import api.utils.DateUtils.stringToDateFormat
 import database.mappings.ExclusionMappings._
-import org.scalatest.BeforeAndAfterAll
+import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 import org.scalatestplus.play.PlaySpec
 import play.api.inject.guice.GuiceApplicationBuilder
 import slick.jdbc.MySQLProfile.api._
@@ -13,33 +13,35 @@ import slick.jdbc.MySQLProfile.api._
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-class ExclusionMappingsSuite extends PlaySpec with BeforeAndAfterAll {
+class ExclusionMappingsSuite extends PlaySpec with BeforeAndAfterAll with BeforeAndAfterEach {
 
   lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
   val dtbase: Database = appBuilder.injector.instanceOf[Database]
 
-  val exclusionUUID1 = UUID.randomUUID().toString
-  val exclusionUUID2 = UUID.randomUUID().toString
-  val exclusionUUID3 = UUID.randomUUID().toString
-  val exclusionUUID4 = UUID.randomUUID().toString
+  private val exclusionUUID1 = UUID.randomUUID().toString
+  private val exclusionUUID2 = UUID.randomUUID().toString
+  private val exclusionUUID3 = UUID.randomUUID().toString
+  private val exclusionUUID4 = UUID.randomUUID().toString
 
-  val taskUUID1 = UUID.randomUUID().toString
-  val taskUUID2 = UUID.randomUUID().toString
-  val taskUUID3 = UUID.randomUUID().toString
+  private val taskUUID1 = UUID.randomUUID().toString
+  private val taskUUID2 = UUID.randomUUID().toString
+  private val taskUUID3 = UUID.randomUUID().toString
 
-  override def beforeAll() = {
-    val result = for {
-      _ <- dtbase.run(createExclusionsTableAction)
-      _ <- dtbase.run(insertExclusion(ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))))
-      _ <- dtbase.run(insertExclusion(ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5))))
-      res <- dtbase.run(insertExclusion(ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First))))
-    } yield res
-    Await.result(result, Duration.Inf)
-    Await.result(dtbase.run(selectAllFromExclusionsTable.result), Duration.Inf).size mustBe 3
+  override def beforeAll(): Unit = {
+    Await.result(dtbase.run(createExclusionsTableAction), Duration.Inf)
   }
 
-  override def afterAll() = {
+  override def afterAll(): Unit = {
     Await.result(dtbase.run(dropExclusionsTableAction), Duration.Inf)
+  }
+
+  override def beforeEach(): Unit = {
+
+    Await.result(dtbase.run(deleteAllFromExclusionsTable), Duration.Inf)
+    Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
+    Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5)))), Duration.Inf)
+    Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
+
   }
 
   "ExclusionMappings#selectExclusionByExclusionId" should {
@@ -156,12 +158,10 @@ class ExclusionMappingsSuite extends PlaySpec with BeforeAndAfterAll {
       selectResult1.head.toString mustBe "ExclusionRow(" + exclusionUUID4 + "," + taskUUID2 + ",Some(Tue Jan 01 00:00:00 GMT 2030),None,None,None,None,None,None)"
       val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID1).result), Duration.Inf)
       selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateExclusionByTaskId(taskUUID2, ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
+      val updateResult2 = Await.result(dtbase.run(updateExclusionByTaskId(taskUUID3, ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID1).result), Duration.Inf)
-      selectResult4.head.toString mustBe "ExclusionRow(" + exclusionUUID1 + "," + taskUUID1 + ",Some(Tue Jan 01 00:00:00 GMT 2030),None,None,None,None,None,None)"
+      val selectResult3 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID1).result), Duration.Inf)
+      selectResult3.head.toString mustBe "ExclusionRow(" + exclusionUUID1 + "," + taskUUID1 + ",Some(Tue Jan 01 00:00:00 GMT 2030),None,None,None,None,None,None)"
     }
   }
 

@@ -5,7 +5,7 @@ import java.util.UUID
 import api.services.{ Criteria, DayType }
 import api.utils.DateUtils._
 import database.mappings.SchedulingMappings._
-import org.scalatest.BeforeAndAfterAll
+import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 import org.scalatestplus.play.PlaySpec
 import play.api.inject.guice.GuiceApplicationBuilder
 import slick.jdbc.MySQLProfile.api._
@@ -13,7 +13,7 @@ import slick.jdbc.MySQLProfile.api._
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-class SchedulingMappingsSuite extends PlaySpec with BeforeAndAfterAll {
+class SchedulingMappingsSuite extends PlaySpec with BeforeAndAfterAll with BeforeAndAfterEach {
 
   private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
   private val dtbase: Database = appBuilder.injector.instanceOf[Database]
@@ -28,17 +28,18 @@ class SchedulingMappingsSuite extends PlaySpec with BeforeAndAfterAll {
   private val taskUUID3 = UUID.randomUUID().toString
 
   override def beforeAll(): Unit = {
-
     Await.result(dtbase.run(createSchedulingsTableAction), Duration.Inf)
-    Await.result(dtbase.run(insertScheduling(SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
-    Await.result(dtbase.run(insertScheduling(SchedulingRow(schedulingUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5)))), Duration.Inf)
-    Await.result(dtbase.run(insertScheduling(SchedulingRow(schedulingUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
-    Await.result(dtbase.run(selectAllFromSchedulingsTable.result), Duration.Inf).size mustBe 3
-
   }
 
   override def afterAll(): Unit = {
     Await.result(dtbase.run(dropSchedulingsTableAction), Duration.Inf)
+  }
+
+  override def beforeEach(): Unit = {
+    Await.result(dtbase.run(deleteAllFromSchedulingsTable), Duration.Inf)
+    Await.result(dtbase.run(insertScheduling(SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
+    Await.result(dtbase.run(insertScheduling(SchedulingRow(schedulingUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5)))), Duration.Inf)
+    Await.result(dtbase.run(insertScheduling(SchedulingRow(schedulingUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
   }
 
   "SchedulingMappings#selectSchedulingBySchedulingId" should {
@@ -130,8 +131,6 @@ class SchedulingMappingsSuite extends PlaySpec with BeforeAndAfterAll {
 
   }
 
-  //TODO REWRITE tests, updates and deletes are depending on first input instead of previous updates
-  /*
   "SchedulingMappings#updateSchedulingBySchedulingId" should {
     "update a SchedulingRow by giving the corresponding schedulingId." in {
       val updateResult1 = Await.result(dtbase.run(updateSchedulingBySchedulingId(schedulingUUID1, SchedulingRow(schedulingUUID4, taskUUID2, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
@@ -157,12 +156,10 @@ class SchedulingMappingsSuite extends PlaySpec with BeforeAndAfterAll {
       selectResult1.head.toString mustBe "SchedulingRow(" + schedulingUUID4 + "," + taskUUID2 + ",Some(Tue Jan 01 00:00:00 GMT 2030),None,None,None,None,None,None)"
       val selectResult2 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result), Duration.Inf)
       selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateSchedulingByTaskId(taskUUID2, SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
+      val updateResult2 = Await.result(dtbase.run(updateSchedulingByTaskId(taskUUID3, SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result), Duration.Inf)
-      selectResult4.head.toString mustBe "SchedulingRow(" + schedulingUUID1 + "," + taskUUID1 + ",Some(Tue Jan 01 00:00:00 GMT 2030),None,None,None,None,None,None)"
+      val selectResult3 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result), Duration.Inf)
+      selectResult3.head.toString mustBe "SchedulingRow(" + schedulingUUID1 + "," + taskUUID1 + ",Some(Tue Jan 01 00:00:00 GMT 2030),None,None,None,None,None,None)"
     }
   }
 
@@ -391,6 +388,6 @@ class SchedulingMappingsSuite extends PlaySpec with BeforeAndAfterAll {
       selectResult2.isEmpty mustBe true
       Await.result(dtbase.run(insertScheduling(SchedulingRow(schedulingUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
     }
-  }*/
+  }
 
 }

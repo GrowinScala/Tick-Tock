@@ -618,8 +618,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       val task = Await.result(taskRepo.selectTask(id), Duration.Inf)
       task.isDefined mustBe true
-      task.get.startDateAndTime.get mustBe "Some(Mon Jul 01 08:00:00 BST 2019)"
-      task.get.endDateAndTime.get mustBe "Some(Wed Jan 01 08:00:00 GMT 2020)"
+      task.get.startDateAndTime.get.toString mustBe "Mon Jul 01 08:00:00 BST 2019"
+      task.get.endDateAndTime.get.toString mustBe "Wed Jan 01 08:00:00 GMT 2020"
     }
 
     "receive a POST request with a JSON body with incorrect periodic task data. (missing Periodic fields)" in {
