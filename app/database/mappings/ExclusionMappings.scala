@@ -5,8 +5,8 @@ import java.util.Date
 
 import api.services.Criteria.Criteria
 import api.services.DayType.DayType
-import api.services.{Criteria, DayType}
-import play.api.libs.json.{Json, OFormat}
+import api.services.{ Criteria, DayType }
+import play.api.libs.json.{ Json, OFormat }
 import slick.dbio.Effect
 import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._
@@ -35,7 +35,7 @@ object ExclusionMappings {
   //---------------------------------------------------------
 
   class ExclusionsTable(tag: Tag) extends Table[ExclusionRow](tag, "exclusions") {
-    def exclusionId = column[String]("exclusionId", O.Length(36))
+    def exclusionId = column[String]("exclusionId", O.PrimaryKey, O.Length(36))
     def taskId = column[String]("taskId", O.Length(36))
     def exclusionDate = column[Option[Date]]("exclusionDate")
     def day = column[Option[Int]]("day")
@@ -128,40 +128,36 @@ object ExclusionMappings {
     exclusionsTable += exclusion
   }
 
-  def updateExclusionByExclusionId(exclusionId: String, exclusion: ExclusionRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getExclusionByExclusionId(exclusionId).update(exclusion)
+  def updateExclusionByTaskId(exclusionId: String, taskId: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getExclusionByExclusionId(exclusionId).map(_.taskId).update(taskId)
   }
 
-  def updateExclusionByTaskId(taskId: String, exclusion: ExclusionRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getExclusionByTaskId(taskId).update(exclusion)
+  def updateExclusionByExclusionDate(exclusionId: String, exclusionDate: Date): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getExclusionByExclusionId(exclusionId).map(_.exclusionDate).update(Some(exclusionDate))
   }
 
-  def updateExclusionByExclusionDate(exclusionDate: Date, exclusion: ExclusionRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getExclusionByExclusionDate(exclusionDate).update(exclusion)
+  def updateExclusionByDay(exclusionId: String, day: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getExclusionByExclusionId(exclusionId).map(_.day).update(Some(day))
   }
 
-  def updateExclusionByDay(day: Int, exclusion: ExclusionRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getExclusionByDay(day).update(exclusion)
+  def updateExclusionByDayOfWeek(exclusionId: String, dayOfWeek: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getExclusionByExclusionId(exclusionId).map(_.dayOfWeek).update(Some(dayOfWeek))
   }
 
-  def updateExclusionByDayOfWeek(dayOfWeek: Int, exclusion: ExclusionRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getExclusionByDayOfWeek(dayOfWeek).update(exclusion)
+  def updateExclusionByDayType(exclusionId: String, dayType: DayType): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getExclusionByExclusionId(exclusionId).map(_.dayType).update(Some(dayType))
   }
 
-  def updateExclusionByDayType(dayType: DayType, exclusion: ExclusionRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getExclusionByDayType(dayType).update(exclusion)
+  def updateExclusionByMonth(exclusionId: String, month: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getExclusionByExclusionId(exclusionId).map(_.month).update(Some(month))
   }
 
-  def updateExclusionByMonth(month: Int, exclusion: ExclusionRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getExclusionByMonth(month).update(exclusion)
+  def updateExclusionByYear(exclusionId: String, year: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getExclusionByExclusionId(exclusionId).map(_.year).update(Some(year))
   }
 
-  def updateExclusionByYear(year: Int, exclusion: ExclusionRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getExclusionByYear(year).update(exclusion)
-  }
-
-  def updateExclusionByCriteria(criteria: Criteria, exclusion: ExclusionRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getExclusionByCriteria(criteria).update(exclusion)
+  def updateExclusionByCriteria(exclusionId: String, criteria: Criteria): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getExclusionByExclusionId(exclusionId).map(_.criteria).update(Some(criteria))
   }
 
   def deleteExclusionByExclusionId(exclusionId: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {

@@ -3,9 +3,9 @@ package database.repositories
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
-import api.dtos.{FileDTO, TaskDTO}
-import api.services.{PeriodType, SchedulingType}
+import akka.stream.{ ActorMaterializer, Materializer }
+import api.dtos.{ FileDTO, TaskDTO }
+import api.services.{ PeriodType, SchedulingType }
 import api.utils.DateUtils._
 import database.mappings.FileMappings._
 import database.mappings.TaskMappings._
@@ -17,7 +17,7 @@ import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.meta.MTable
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{ Await, ExecutionContext }
 
 class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with BeforeAndAfterEach {
 

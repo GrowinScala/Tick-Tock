@@ -3,16 +3,16 @@ package api.controllers
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
-import api.dtos.{FileDTO, TaskDTO}
-import api.services.{PeriodType, SchedulingType}
+import akka.stream.{ ActorMaterializer, Materializer }
+import api.dtos.{ FileDTO, TaskDTO }
+import api.services.{ PeriodType, SchedulingType }
 import api.utils.DateUtils._
 import api.utils.UUIDGenerator
 import api.validators.Error._
 import database.mappings.FileMappings._
 import database.mappings.TaskMappings._
-import database.repositories.{FileRepository, TaskRepository}
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import database.repositories.{ FileRepository, TaskRepository }
+import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -23,7 +23,7 @@ import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.meta.MTable
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{ Await, ExecutionContext }
 
 class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll with BeforeAndAfterEach {
 
@@ -2231,16 +2231,5 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       tasks.map(elem => elem.size mustBe 0)
     }
   }
-
-  /*"TaskController#GETtask" should {
-    "receive a GET request" in {
-      val fakeRequest = FakeRequest(POST, "/task")
-        .withHeaders(HOST -> LOCALHOST)
-      val result = route(app, fakeRequest)
-      val bodyText: String = contentAsString(result.get)
-      println(bodyText)
-      status(result.get) mustBe OK
-    }
-  }*/
 
 }

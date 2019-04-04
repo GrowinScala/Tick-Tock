@@ -22,7 +22,7 @@ val validator = new TaskValidator()
 
 val calendar = Calendar.getInstance()
 
-calendar.setTime(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))
+calendar.setTime(stringToDateFormat("2030-01-01 12:30:45", "yyyy-MM-dd HH:mm:ss"))
 
 print(calendar.getTime)
 val ts = new TaskService()
@@ -44,4 +44,5 @@ def removeTimeFromDate(date: Date): Date = {
   sdf.parse(string)
 }
 
-removeTimeFromDate(calendar.getTime)
+val date = calendar.getTime
+val dateWithoutTime = removeTimeFromDate(calendar.getTime)

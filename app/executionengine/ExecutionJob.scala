@@ -3,14 +3,14 @@ package executionengine
 import java.text.SimpleDateFormat
 import java.time.Duration
 import java.time.Duration._
-import java.util.{Calendar, Date}
+import java.util.{ Calendar, Date }
 
-import akka.actor.{Actor, Timers}
+import akka.actor.{ Actor, Timers }
 import api.services.SchedulingType
 import api.services.SchedulingType._
 import api.utils.DateUtils._
-import database.repositories.{FileRepository, TaskRepository}
-import executionengine.ExecutionJob.{Cancel, Delay, Execute, Start}
+import database.repositories.{ FileRepository, TaskRepository }
+import executionengine.ExecutionJob.{ Cancel, Delay, Execute, Start }
 import javax.inject.Inject
 
 import scala.collection._

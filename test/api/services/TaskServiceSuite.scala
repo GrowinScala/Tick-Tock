@@ -1,9 +1,9 @@
 package api.services
 
-import akka.actor.{ActorSystem, Props}
-import api.dtos.{ExclusionDTO, SchedulingDTO, TaskDTO}
+import akka.actor.{ ActorSystem, Props }
+import api.dtos.{ ExclusionDTO, SchedulingDTO, TaskDTO }
 import api.utils.DateUtils._
-import database.repositories.{FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository}
+import database.repositories.{ FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository }
 import executionengine.ExecutionJob
 import org.scalatestplus.play.PlaySpec
 import play.api.Mode
@@ -118,7 +118,7 @@ class TaskServiceSuite extends PlaySpec {
     }
 
     "receive a valid TaskDTO with an exclusion and return a Queue with the corresponding Date(s) for that exclusion. (with day)" in {
-      val dto = TaskDTO("asd", "asd", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2030-02-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, Some(List(ExclusionDTO("asd", "asd", None, Some(15)))))
+      val dto = TaskDTO("asd", "asd", SchedulingType.Periodic, Some(stringToDateFormat("2030-02-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2030-03-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, Some(List(ExclusionDTO("asd", "asd", None, Some(15)))))
       taskService.calculateExclusions(dto) mustBe Some(scala.collection.mutable.Queue(stringToDateFormat("2030-01-15 00:00:00", "yyyy-MM-dd HH:mm:ss")))
     }
 
@@ -172,7 +172,7 @@ class TaskServiceSuite extends PlaySpec {
       taskService.calculateExclusions(dto) mustBe Some(scala.collection.mutable.Queue(stringToDateFormat("2030-01-03 00:00:00", "yyyy-MM-dd HH:mm:ss")))
     }
 
-    "receive a valid TaskDTO with an exclusion and return a Queue with the corresponding Date(s) for that exclusion. (with dayOfWeek and year)" in {
+    /*"receive a valid TaskDTO with an exclusion and return a Queue with the corresponding Date(s) for that exclusion. (with dayOfWeek and year)" in {
 
     }
 
@@ -574,7 +574,7 @@ class TaskServiceSuite extends PlaySpec {
 
     "receive a valid TaskDTO with several schedulings and return a Queue with the corresponding Dates for those schedulings" in {
 
-    }
+    }*/
 
   }
 }

@@ -1,34 +1,8 @@
-
-CREATE TABLE exclusions (
-    exclusionId varchar(36) not null,
-    taskId varchar(36) not null,
-    day int null,
-    dayOfWeek int null,
-    dayType enum('Weekday', 'Weekend') null,
-    month int null,
-    year int null,
-    criteria enum('First', 'Second', 'Third', 'Fourth', 'Last') null,
-    PRIMARY KEY(exclusionId)
-);
-
 CREATE TABLE files(
     fileId varchar(36) not null,
     fileName varchar(50) not null unique,
-    uploadDate date not null,
+    uploadDate timestamp not null,
     PRIMARY KEY(fileId)
-);
-
-CREATE TABLE schedulings(
-    schedulingId varchar(36) not null,
-    taskId varchar(36) not null,
-    schedulingDate date null,
-    day int null,
-    dayOfWeek int null,
-    dayType enum('Weekday', 'Weekend') null,
-    month int null,
-    year int null,
-    criteria enum('First', 'Second', 'Third', 'Fourth', 'Last') null,
-    PRIMARY KEY(schedulingId)
 );
 
 CREATE TABLE tasks(
@@ -36,10 +10,36 @@ CREATE TABLE tasks(
    fileId varchar(36) not null,
    period int not null,
    value int null,
-   startDateAndTime date null,
-   endDateAndTime date null,
+   startDateAndTime timestamp null,
+   endDateAndTime timestamp null,
    totalOccurrences int null,
    currentOccurrences int null,
-   timezone varchar(36) null,
+   timezone varchar(50) null,
    PRIMARY KEY(taskId)
 );
+
+CREATE TABLE schedulings(
+    schedulingId varchar(36) not null,
+    taskId varchar(36) not null,
+    schedulingDate timestamp null,
+    day int null,
+    dayOfWeek int null,
+    dayType int null,
+    month int null,
+    year int null,
+    criteria int null,
+    PRIMARY KEY(schedulingId)
+);
+
+CREATE TABLE exclusions (
+    exclusionId varchar(36) not null,
+    taskId varchar(36) not null,
+    day int null,
+    dayOfWeek int null,
+    dayType int null,
+    month int null,
+    year int null,
+    criteria int null,
+    PRIMARY KEY(exclusionId)
+);
+
