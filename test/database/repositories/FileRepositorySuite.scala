@@ -4,7 +4,7 @@ import java.util.UUID
 
 import api.dtos.FileDTO
 import api.utils.DateUtils._
-import org.scalatest.{AsyncWordSpec, BeforeAndAfterAll, BeforeAndAfterEach}
+import org.scalatest.{ AsyncWordSpec, BeforeAndAfterAll, BeforeAndAfterEach }
 import play.api.Mode
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -18,23 +18,25 @@ import scala.concurrent.duration._
 
 class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with BeforeAndAfterEach {
 
-  lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder().in(Mode.Test)
-  lazy val injector: Injector = appBuilder.injector()
-  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
-  implicit val fileRepo: FileRepository = injector.instanceOf[FileRepository]
-  val dtbase: Database = injector.instanceOf[Database]
+  private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder().in(Mode.Test)
+  private lazy val injector: Injector = appBuilder.injector()
+  private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+  private implicit val fileRepo: FileRepository = injector.instanceOf[FileRepository]
+  private val dtbase: Database = injector.instanceOf[Database]
 
-  val uuid1 = UUID.randomUUID().toString
-  val uuid2 = UUID.randomUUID().toString
-  val uuid3 = UUID.randomUUID().toString
-  val uuid4 = UUID.randomUUID().toString
+  private val uuid1 = UUID.randomUUID().toString
+  private val uuid2 = UUID.randomUUID().toString
+  private val uuid3 = UUID.randomUUID().toString
+  private val uuid4 = UUID.randomUUID().toString
 
   override def beforeAll(): Unit = {
     Await.result(dtbase.run(createFilesTableAction), Duration.Inf)
+    Await.result(dtbase.run(createTasksTableAction), Duration.Inf)
   }
 
   override def afterAll(): Unit = {
-    Await.result(dtbase.run(createTasksTableAction), Duration.Inf)
+    Await.result(dtbase.run(dropTasksTableAction), Duration.Inf)
+    Await.result(dtbase.run(dropFilesTableAction), Duration.Inf)
   }
 
   override def afterEach(): Unit = {
@@ -43,14 +45,11 @@ class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
 
   "DBFilesTable#create/dropFilesTable" should {
     "create and then drop the Files table on the database." in {
-      val result = for{
-        _ <- dtbase.run(MTable.getTables).map(item => assert(item.head.name.name.equals("files")))
-        _ <- dtbase.run(dropFilesTableAction)
-        _ <- dtbase.run(MTable.getTables).map(item => assert(item.isEmpty))
-        _ <- dtbase.run(createFilesTableAction)
-        elem <- dtbase.run(MTable.getTables)
-      } yield elem
-      result.map(item => assert(item.head.name.name.equals("files")))
+      dtbase.run(MTable.getTables).map(item => assert(item.head.name.name.equals("files")))
+      Await.result(dtbase.run(dropFilesTableAction), Duration.Inf)
+      dtbase.run(MTable.getTables).map(item => assert(item.isEmpty))
+      Await.result(dtbase.run(createFilesTableAction), Duration.Inf)
+      dtbase.run(MTable.getTables).map(item => assert(item.head.name.name.equals("files")))
     }
   }
 
@@ -82,7 +81,7 @@ class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
 
   "DBFilesTable#DeleteAllFiles" should {
     "insert rows into the Files table and then delete them all from the Files table on the database." in {
-      val result = for{
+      val result = for {
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
@@ -95,7 +94,7 @@ class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
 
   "DBFilesTable#DeleteFileById" should {
     "insert rows into the Files table and then delete a specific row by giving its fileId" in {
-      val result = for{
+      val result = for {
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
@@ -111,15 +110,14 @@ class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
 
   "DBFilesTable#existsCorrespondingFileId" should {
     "insert some rows into the Files table on the database and check if certain fileId's exist." in {
-      val result = for{
+      val result = for {
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
         elem <- fileRepo.selectFileIdFromFileName("test1")
       } yield elem
       result.map(fileId => Await.result(fileRepo.existsCorrespondingFileId(fileId).map(result => assert(result)), Duration.Inf))
       fileRepo.selectFileIdFromFileName("test2").map(fileId =>
-        Await.result(fileRepo.existsCorrespondingFileId(fileId).map(result => assert(result)), Duration.Inf)
-      )
+        Await.result(fileRepo.existsCorrespondingFileId(fileId).map(result => assert(result)), Duration.Inf))
       val uuidWrong = UUID.randomUUID().toString
       Await.result(fileRepo.existsCorrespondingFileId(uuidWrong).map(result => assert(!result)), Duration.Inf)
     }
@@ -127,7 +125,7 @@ class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
 
   "DBFilesTable#existsCorrespondingFileName" should {
     "insert some rows into the Files table on the database and check if certain fileName's exist." in {
-      val result = for{
+      val result = for {
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
@@ -143,7 +141,7 @@ class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
 
   "DBFilesTable#selectFileIdFromFileName" should {
     "insert some rows into the Files table on the database and retrieve fileId's by giving fileName's." in {
-      val result = for{
+      val result = for {
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
@@ -157,7 +155,7 @@ class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
 
   "DBFilesTable#selectFileNameFromFileId" should {
     "insert some rows into the Files table on the database and retrieve fileName's by giving FileId's." in {
-      val result = for{
+      val result = for {
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))

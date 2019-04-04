@@ -1,16 +1,14 @@
 package api.utils
 
-import java.text.SimpleDateFormat
-import java.util.{Calendar, Date}
+import java.util.Calendar
 
 import api.services.DayType
-import org.scalatest.{AsyncWordSpec, FlatSpec}
 import api.utils.DateUtils._
 import org.scalatestplus.play.PlaySpec
 
-class DateUtilsSuite extends PlaySpec{
+class DateUtilsSuite extends PlaySpec {
 
-  val calendar = Calendar.getInstance()
+  private val calendar = Calendar.getInstance()
 
   "DateUtils#stringToDateFormat" should {
     "convert a string in a certain format into a Date object. (yyyy-MM-dd HH:mm:ss format)" in {
@@ -135,10 +133,10 @@ class DateUtilsSuite extends PlaySpec{
     "remove the time from a date." in {
       calendar.set(2019, 1 - 1, 1, 16, 0, 0)
       val date1 = calendar.getTime
-      removeTimeFromDate(date1).toString mustBe "Tue Jan 01 00:00:00 GMT 2019"
+      getTimeFromDate(date1).toString mustBe "Tue Jan 01 00:00:00 GMT 2019"
       calendar.set(2020, 1 - 1, 1, 22, 0, 0)
       val date2 = calendar.getTime
-      removeTimeFromDate(date2).toString mustBe "Wed Jan 01 00:00:00 GMT 2020"
+      getTimeFromDate(date2).toString mustBe "Wed Jan 01 00:00:00 GMT 2020"
     }
   }
 
@@ -148,25 +146,25 @@ class DateUtilsSuite extends PlaySpec{
   }
 
   "DateUtils#dateToStringFormat" should {
-    "convert a date to its string format in a certain format. (yyyy-MM-dd HH:mm:ss format)" in{
+    "convert a date to its string format in a certain format. (yyyy-MM-dd HH:mm:ss format)" in {
       calendar.set(2019, 1 - 1, 1, 12, 0, 0)
       val date = calendar.getTime
       dateToStringFormat(date, "yyyy-MM-dd HH:mm:ss") mustBe "2019-01-01 12:00:00"
     }
 
-    "convert a date to its string format in a certain format. (dd-MM-yyyy HH:mm:ss format)" in{
+    "convert a date to its string format in a certain format. (dd-MM-yyyy HH:mm:ss format)" in {
       calendar.set(2019, 2 - 1, 1, 14, 30, 0)
       val date = calendar.getTime
       dateToStringFormat(date, "dd-MM-yyyy HH:mm:ss") mustBe "01-02-2019 14:30:00"
     }
 
-    "convert a date to its string format in a certain format. (yyyy/MM/dd HH:mm:ss format)" in{
+    "convert a date to its string format in a certain format. (yyyy/MM/dd HH:mm:ss format)" in {
       calendar.set(2020, 6 - 1, 15, 16, 15, 45)
       val date = calendar.getTime
       dateToStringFormat(date, "yyyy/MM/dd HH:mm:ss") mustBe "2020/06/15 16:15:45"
     }
 
-    "convert a date to its string format in a certain format. (dd/MM/yyyy HH:mm:ss format)" in{
+    "convert a date to its string format in a certain format. (dd/MM/yyyy HH:mm:ss format)" in {
       calendar.set(2021, 12 - 1, 25, 20, 30, 40)
       val date = calendar.getTime
       dateToStringFormat(date, "dd/MM/yyyy HH:mm:ss") mustBe "25/12/2021 20:30:40"
@@ -244,6 +242,5 @@ class DateUtilsSuite extends PlaySpec{
     }
 
   }
-
 
 }

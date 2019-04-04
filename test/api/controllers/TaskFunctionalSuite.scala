@@ -6,64 +6,52 @@ import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
 import api.dtos.{FileDTO, TaskDTO}
 import api.services.{PeriodType, SchedulingType}
-import database.repositories.{FileRepository, FileRepositoryImpl, TaskRepository, TaskRepositoryImpl}
-import org.scalatest.{AsyncWordSpec, BeforeAndAfterAll, BeforeAndAfterEach}
-import org.scalatestplus.play.PlaySpec
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.{Application, Mode}
-import play.api.inject.Injector
-import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Json
 import api.utils.DateUtils._
 import api.utils.UUIDGenerator
-import play.api.test.FakeRequest
-import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
 import api.validators.Error._
-import play.api.libs.json.JsArray
-import slick.jdbc.MySQLProfile.api._
 import database.mappings.FileMappings._
 import database.mappings.TaskMappings._
-
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.concurrent.duration.Duration
+import database.repositories.{FileRepository, TaskRepository}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import org.scalatestplus.play.PlaySpec
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.Json
+import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.meta.MTable
 
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext}
 
-class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll with BeforeAndAfterEach{
+class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll with BeforeAndAfterEach {
 
-  /**
-    * new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-    * new SimpleDateFormat("dd-MM-yyyy HH:mm:ss")
-    * new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
-    * new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
-    */
+  private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
-  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+  private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
+  private val dtbase: Database = appBuilder.injector.instanceOf[Database]
+  private implicit val fileRepo: FileRepository = appBuilder.injector.instanceOf[FileRepository]
+  private implicit val taskRepo: TaskRepository = appBuilder.injector.instanceOf[TaskRepository]
+  private implicit val uuidGen: UUIDGenerator = appBuilder.injector.instanceOf[UUIDGenerator]
+  private implicit val actorSystem: ActorSystem = ActorSystem()
+  private implicit val mat: Materializer = ActorMaterializer()
 
-  lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
-  val dtbase: Database = appBuilder.injector.instanceOf[Database]
-  implicit val fileRepo: FileRepository = appBuilder.injector.instanceOf[FileRepository]
-  implicit val taskRepo: TaskRepository = appBuilder.injector.instanceOf[TaskRepository]
-  implicit val uuidGen: UUIDGenerator = appBuilder.injector.instanceOf[UUIDGenerator]
-  implicit val actorSystem: ActorSystem = ActorSystem()
-  implicit val mat: Materializer = ActorMaterializer()
+  private val LOCALHOST = "localhost:9000"
 
-  val LOCALHOST = "localhost:9000"
+  private val taskUUID1: String = UUID.randomUUID().toString
+  private val taskUUID2: String = UUID.randomUUID().toString
+  private val taskUUID3: String = UUID.randomUUID().toString
+  private val taskUUID4: String = UUID.randomUUID().toString
 
-  val taskUUID1: String = UUID.randomUUID().toString
-  val taskUUID2: String = UUID.randomUUID().toString
-  val taskUUID3: String = UUID.randomUUID().toString
-  val taskUUID4: String = UUID.randomUUID().toString
+  private val fileUUID1: String = UUID.randomUUID().toString
+  private val fileUUID2: String = UUID.randomUUID().toString
+  private val fileUUID3: String = UUID.randomUUID().toString
+  private val fileUUID4: String = UUID.randomUUID().toString
 
-  val fileUUID1: String = UUID.randomUUID().toString
-  val fileUUID2: String = UUID.randomUUID().toString
-  val fileUUID3: String = UUID.randomUUID().toString
-  val fileUUID4: String = UUID.randomUUID().toString
+  private val id = uuidGen.generateUUID
 
-  val id = uuidGen.generateUUID
-
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     val result = for {
       _ <- dtbase.run(createFilesTableAction)
       _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", getCurrentDateTimestamp))
@@ -77,17 +65,17 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
     println(Await.result(fileRepo.selectAllFiles, Duration.Inf))
   }
 
-  override def afterAll = {
+  override def afterAll: Unit = {
     Await.result(dtbase.run(dropTasksTableAction), Duration.Inf)
     Await.result(dtbase.run(dropFilesTableAction), Duration.Inf)
   }
 
-  override def afterEach = {
+  override def afterEach: Unit = {
     Await.result(taskRepo.deleteAllTasks, Duration.Inf)
   }
 
   "GET /" should {
-    "receive a GET request"  in {
+    "receive a GET request" in {
       val fakeRequest = FakeRequest(GET, "/")
         .withHeaders(HOST -> LOCALHOST)
 
@@ -107,7 +95,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -128,7 +116,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -150,7 +138,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -171,7 +159,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -193,7 +181,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -214,7 +202,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -236,7 +224,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -260,7 +248,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -281,7 +269,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -302,7 +290,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -323,7 +311,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -344,7 +332,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -368,7 +356,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -392,7 +380,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -416,7 +404,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -440,7 +428,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -464,7 +452,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -488,7 +476,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -512,7 +500,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -536,7 +524,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -560,7 +548,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -584,7 +572,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -609,7 +597,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -619,11 +607,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       val task = Await.result(taskRepo.selectTask(id), Duration.Inf)
       task.isDefined mustBe true
-      task.get.startDateAndTime.get mustBe "Some(Mon Jul 01 08:00:00 BST 2019)"
-      task.get.endDateAndTime.get mustBe "Some(Wed Jan 01 08:00:00 GMT 2020)"
+      task.get.startDateAndTime.get.toString mustBe "Mon Jul 01 08:00:00 BST 2019"
+      task.get.endDateAndTime.get.toString mustBe "Wed Jan 01 08:00:00 GMT 2020"
     }
-
-
 
     "receive a POST request with a JSON body with incorrect periodic task data. (missing Periodic fields)" in {
       val fakeRequest = FakeRequest(POST, "/task")
@@ -636,7 +622,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -657,7 +643,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -681,7 +667,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -705,7 +691,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -729,7 +715,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -753,7 +739,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -777,7 +763,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -800,7 +786,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -823,7 +809,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -846,7 +832,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -1124,7 +1110,6 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
 
     }
 
-
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with schedulingDate)" in {
       val fakeRequest = FakeRequest(POST, "/task")
         .withHeaders(HOST -> LOCALHOST)
@@ -1139,7 +1124,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val result = for{
+      val result = for {
         routeResult <- routeOption.get
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
@@ -1428,7 +1413,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val dto1 = TaskDTO("asd1", "test1", SchedulingType.RunOnce)
       val dto2 = TaskDTO("asd2", "test2", SchedulingType.Periodic, Some(stringToDateFormat("2020-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Daily), Some(2), Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")))
       val dto3 = TaskDTO("asd3", "test3", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Monthly), Some(1), None, Some(12), Some(12))
-      val result = for{
+      val result = for {
         _ <- taskRepo.insertInTasksTable(dto1)
         _ <- taskRepo.insertInTasksTable(dto2)
         res <- taskRepo.insertInTasksTable(dto3)
@@ -1535,7 +1520,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val task = for{
+      val task = for {
         _ <- routeOption.get
         res <- taskRepo.selectTask("11231bd5-6f92-496c-9fe7-75bc180467b0")
       } yield res
@@ -1543,10 +1528,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       println(bodyText)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      task.map{
-        elem => elem.isDefined mustBe true
-        val resultDto = TaskDTO("11231bd5-6f92-496c-9fe7-75bc180467b0", "test1", SchedulingType.RunOnce)
-        elem.get mustBe Json.toJsObject(resultDto).toString
+      task.map {
+        elem =>
+          elem.isDefined mustBe true
+          val resultDto = TaskDTO("11231bd5-6f92-496c-9fe7-75bc180467b0", "test1", SchedulingType.RunOnce)
+          elem.get mustBe Json.toJsObject(resultDto).toString
       }
 
     }
@@ -1571,7 +1557,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val task = for{
+      val task = for {
         _ <- routeOption.get
         res <- taskRepo.selectTask(id)
       } yield res
@@ -1579,7 +1565,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       println(bodyText)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      task.map{ elem =>
+      task.map { elem =>
         elem.isDefined mustBe true
         val resultDto = TaskDTO("asd1", "test4", SchedulingType.RunOnce)
         elem.get mustBe Json.toJsObject(resultDto).toString
@@ -1605,7 +1591,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val task = for{
+      val task = for {
         _ <- routeOption.get
         res <- taskRepo.selectTask(id)
       } yield res
@@ -1613,7 +1599,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       println(bodyText)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      task.map{ elem =>
+      task.map { elem =>
         elem.isDefined mustBe true
         val resultDto = TaskDTO(id, "test2", SchedulingType.RunOnce, Some(stringToDateFormat("2020-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Daily), Some(2), Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")))
         elem.get mustBe resultDto
@@ -1648,7 +1634,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       println(bodyText)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidUpdateTaskFormat) + "]"
-      task.map{ elem =>
+      task.map { elem =>
         elem.isDefined mustBe true
         elem.get mustBe Json.toJsObject(dto1).toString
       }
@@ -1789,7 +1775,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       println(bodyText)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      task.map{ elem =>
+      task.map { elem =>
         elem.isDefined mustBe true
         val resultDto = dto2.copy(period = Some(5))
         elem.get mustBe resultDto
@@ -1851,7 +1837,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val task = for{
+      val task = for {
         _ <- routeOption.get
         res <- taskRepo.selectTask(id)
       } yield res
@@ -1859,13 +1845,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       println(bodyText)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      task.map{ elem =>
+      task.map { elem =>
         elem.isDefined mustBe true
         val resultDTO = dto3.copy(endDateAndTime = Some(stringToDateFormat("2050-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), totalOccurrences = None, currentOccurrences = None)
         elem.get mustBe Json.toJsObject(resultDTO).toString
       }
     }
-
 
     "receive a PATCH request changing the occurrences of a task." in {
       val dto1 = TaskDTO("asd1", "test1", SchedulingType.RunOnce)
@@ -1886,7 +1871,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val task = for{
+      val task = for {
         _ <- routeOption.get
         res <- taskRepo.selectTask(id)
       } yield res
@@ -1929,7 +1914,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       println(bodyText)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      task.map{ elem =>
+      task.map { elem =>
         elem.isDefined mustBe true
         val resultDTO = dto2.copy(endDateAndTime = None, totalOccurrences = Some(5), currentOccurrences = Some(5))
         elem.get mustBe Json.toJsObject(dto2).toString
@@ -1966,7 +1951,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       println(bodyText)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      task.map{ elem =>
+      task.map { elem =>
         elem.isDefined mustBe true
         val resultDto = TaskDTO("11231bd5-6f92-496c-9fe7-75bc180467b0", "test4", SchedulingType.RunOnce, Some(stringToDateFormat("2050-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
         elem.get mustBe Json.toJsObject(resultDto).toString
@@ -1998,7 +1983,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           }
         """))
       val routeOption = route(app, fakeRequest)
-      val task = for{
+      val task = for {
         _ <- routeOption.get
         res <- taskRepo.selectTask(id)
       } yield res
@@ -2006,7 +1991,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       println(bodyText)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      task.map{ elem =>
+      task.map { elem =>
         elem.isDefined mustBe true
         val resultDto = TaskDTO("11231bd5-6f92-496c-9fe7-75bc180467b0", "test4", SchedulingType.Periodic, Some(stringToDateFormat("2050-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Yearly), Some(2), None, Some(6), Some(6))
         elem.get mustBe Json.toJsObject(resultDto).toString
@@ -2041,7 +2026,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
            }
         """))
       val routeOption = route(app, fakeRequest)
-      val task = for{
+      val task = for {
         _ <- routeOption.get
         res <- taskRepo.selectTask("11231bd5-6f92-496c-9fe7-75bc180467b0")
       } yield res
@@ -2075,7 +2060,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
            }
         """))
       val routeOption = route(app, fakeRequest)
-      val task = for{
+      val task = for {
         _ <- routeOption.get
         res <- taskRepo.selectTask("11231bd5-6f92-496c-9fe7-75bc180467b0")
       } yield res
@@ -2110,7 +2095,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
            }
         """))
       val routeOption = route(app, fakeRequest)
-      val tasks = for{
+      val tasks = for {
         _ <- routeOption.get
         task1 <- taskRepo.selectTask("11231bd5-6f92-496c-9fe7-75bc180467b0")
         task2 <- taskRepo.selectTask("asd4")
@@ -2189,7 +2174,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
            }
         """))
       val routeOption = route(app, fakeRequest)
-      val task = for{
+      val task = for {
         _ <- routeOption.get
         res <- taskRepo.selectTask("11231bd5-6f92-496c-9fe7-75bc180467b0")
       } yield res
@@ -2235,7 +2220,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val fakeRequest = FakeRequest(DELETE, "/task/" + id)
         .withHeaders(HOST -> LOCALHOST)
       val routeOption = route(app, fakeRequest)
-      val tasks = for{
+      val tasks = for {
         _ <- routeOption.get
         res <- taskRepo.selectAllTasks
       } yield res

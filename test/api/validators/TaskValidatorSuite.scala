@@ -1,6 +1,6 @@
 package api.validators
 
-import java.util.{Calendar, UUID}
+import java.util.Calendar
 
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
@@ -15,19 +15,20 @@ import play.api.inject.guice.GuiceApplicationBuilder
 
 import scala.concurrent.ExecutionContext
 
-class TaskValidatorSuite extends PlaySpec{
+class TaskValidatorSuite extends PlaySpec {
 
-  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
-  lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
+  private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+  private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
   Guice.createInjector(appBuilder.applicationModule).injectMembers(this)
-  implicit val fileRepo: FileRepository = new FakeFileRepository
-  implicit val taskRepo: TaskRepository = new FakeTaskRepository
-  implicit val UUIDGen: UUIDGenerator = new FakeUUIDGenerator
-  implicit val actorSystem: ActorSystem = ActorSystem()
-  implicit val mat: Materializer = ActorMaterializer()
 
-  val validator = new TaskValidator
-  val calendar = Calendar.getInstance()
+  private implicit val fileRepo: FileRepository = new FakeFileRepository
+  private implicit val taskRepo: TaskRepository = new FakeTaskRepository
+  private implicit val UUIDGen: UUIDGenerator = new FakeUUIDGenerator
+  private implicit val actorSystem: ActorSystem = ActorSystem()
+  private implicit val mat: Materializer = ActorMaterializer()
+
+  private val validator = new TaskValidator
+  private val calendar = Calendar.getInstance()
 
   "TaskValidator#scheduleValidator" should {
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (RunOnce task with no startDate)" in {
@@ -301,7 +302,8 @@ class TaskValidatorSuite extends PlaySpec{
       val startDate = calendar.getTime
       calendar.set(2030, 12 - 1, 25, 0, 0, 0)
       val schedulingDate = calendar.getTime
-      validator.scheduleValidator(dto).toString mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Personalized, Some(startDate), None, None, None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("asd1", "asd1", None, None, None, Some(DayType.Weekend), Some(8), None, Some(Criteria.First)), SchedulingDTO("asd1", "asd1", Some(schedulingDate)), SchedulingDTO("asd1", "asd1", None, Some(13), Some(6), None, None, Some(2032)))))).toString
+      validator.scheduleValidator(dto).toString mustBe
+        Right(TaskDTO("asd1", "test1", SchedulingType.Personalized, Some(startDate), None, None, None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("asd1", "asd1", None, None, None, Some(DayType.Weekend), Some(8), None, Some(Criteria.First)), SchedulingDTO("asd1", "asd1", Some(schedulingDate)), SchedulingDTO("asd1", "asd1", None, Some(13), Some(6), None, None, Some(2032)))))).toString
     }
 
     "receive an invalid CreateTaskDTO with missing fields. (Periodic task without any other fields)" in {

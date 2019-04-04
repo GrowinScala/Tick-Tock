@@ -1,20 +1,16 @@
-import java.sql.Timestamp
+import java.io.File
 import java.text.SimpleDateFormat
-import java.util.{Calendar, Date, TimeZone}
+import java.util.{Calendar, Date}
 
-import api.dtos.{CreateExclusionDTO, TaskDTO}
-import api.services.{PeriodType, SchedulingType, TaskService}
-import slick.jdbc.MySQLProfile.api._
+import api.services.TaskService
 import api.utils.DateUtils._
-import api.utils.{DefaultUUIDGenerator, UUIDGenerator}
+import api.utils.DefaultUUIDGenerator
 import api.validators.TaskValidator
+import com.typesafe.config.ConfigFactory
 import database.repositories.{FileRepositoryImpl, TaskRepositoryImpl}
-import executionengine.ExecutionJob
-import play.api.libs.json.Json
+import slick.jdbc.MySQLProfile.api._
 
-import scala.concurrent.duration.Duration
-import scala.collection._
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.ExecutionContext
 
 implicit val ec = ExecutionContext.Implicits.global
 val db = Database.forConfig("dbinfo")
@@ -24,21 +20,28 @@ implicit val uuidGen = new DefaultUUIDGenerator
 
 val validator = new TaskValidator()
 
-//val result = validator.isValidExclusionFormat(Some(List(CreateExclusionDTO(None, Some(15)))), "asd1")
-
-/*val calendar = Calendar.getInstance()
-calendar.set(2030, 12 - 1, 25, 0, 0, 0)
-val schedulingDate = calendar.getTime*/
-
-/*val exeJob = new ExecutionJob("asd", "asd", SchedulingType.RunOnce)
-
-exeJob.calculateDelay(Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))*/
-
 val calendar = Calendar.getInstance()
 
 calendar.setTime(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))
 
+print(calendar.getTime)
 val ts = new TaskService()
 
-println(ts.getDateFromCalendar(1, 1, 2030))
+def getDateFromCalendar(day: Int, month: Int, year: Int, timezone: Option[String] = None): Date = {
+  val dateCalendar = Calendar.getInstance
+  //println(dateCalendar)
+  if(timezone.isDefined) dateCalendar.setTimeZone(parseTimezone(timezone.get).get)
+  dateCalendar.set(year, month-1, day)
+  println(dateCalendar + "ola")
+  dateCalendar.getTime
+}
 
+println(getDateFromCalendar(1, 1, 2030))
+
+def removeTimeFromDate(date: Date): Date = {
+  val sdf = new SimpleDateFormat("yyyy-MM-dd")
+  val string = sdf.format(date)
+  sdf.parse(string)
+}
+
+removeTimeFromDate(calendar.getTime)
