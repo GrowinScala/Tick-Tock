@@ -1,9 +1,9 @@
 package api.services
 
-import akka.actor.{ActorSystem, Props}
-import api.dtos.{ExclusionDTO, SchedulingDTO, TaskDTO}
+import akka.actor.{ ActorSystem, Props }
+import api.dtos.{ ExclusionDTO, SchedulingDTO, TaskDTO }
 import api.utils.DateUtils._
-import database.repositories.{FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository}
+import database.repositories.{ FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository }
 import executionengine.ExecutionJob
 import org.scalatestplus.play.PlaySpec
 import play.api.Mode

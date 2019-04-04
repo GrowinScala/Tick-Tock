@@ -2,7 +2,7 @@ package api.utils
 
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
-import java.util.{Calendar, Date, TimeZone}
+import java.util.{ Calendar, Date, TimeZone }
 
 import api.services.DayType
 import api.services.DayType.DayType
@@ -11,8 +11,6 @@ import scala.concurrent.ExecutionContext
 import scala.util.Try
 
 object DateUtils {
-
-  implicit val ec: ExecutionContext = ExecutionContext.global
 
   //---------------------------------------------------------
   //# DATE FORMATS

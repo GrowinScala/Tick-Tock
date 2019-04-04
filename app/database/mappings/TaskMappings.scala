@@ -3,7 +3,7 @@ package database.mappings
 import java.sql.Timestamp
 import java.util.Date
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{ Json, OFormat }
 import slick.dbio.Effect
 import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._

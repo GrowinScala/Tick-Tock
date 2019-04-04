@@ -4,7 +4,7 @@ import api.services.Criteria.Criteria
 import api.services.DayType.DayType
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
-import play.api.libs.json.{JsPath, Json, OWrites, Reads}
+import play.api.libs.json.{ JsPath, Json, OWrites, Reads }
 
 import scala.concurrent.ExecutionContext
 

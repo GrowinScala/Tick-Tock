@@ -21,7 +21,7 @@ case class UpdateSchedulingDTO(
 
 object UpdateSchedulingDTO {
 
-  implicit val ec:ExecutionContext = ExecutionContext.global
+  implicit val ec: ExecutionContext = ExecutionContext.global
 
   /**
    * Implicit that defines how an UpdateSchedulingDTO is read from the JSON request.

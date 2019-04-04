@@ -1,13 +1,15 @@
 package database.repositories
 
+import java.util.Date
+
 import api.dtos.TaskDTO
-import api.services.{PeriodType, SchedulingType}
+import api.services.{ PeriodType, SchedulingType }
 import database.mappings.FileMappings._
 import database.mappings.TaskMappings._
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ Await, ExecutionContext, Future }
 
 /**
  * Class that handles the data layer for the scheduled tasks.
@@ -19,9 +21,11 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
-  private def taskRowToTaskDTO(task: TaskRow): Future[TaskDTO] = {
-    dtbase.run(getFileByFileId(task.fileId).map(_.fileName).result.head).map { name =>
-      task.period match {
+  private def taskRowToTaskDTO(maybeTask: Option[TaskRow]): Future[Option[TaskDTO]] = {
+    val task = maybeTask.getOrElse(TaskRow("", "", 0))
+    dtbase.run(getFileByFileId(task.fileId).map(_.fileName).result.headOption).map { maybeName =>
+      val name = maybeName.getOrElse("")
+      Some(task.period match {
         case 0 /*RunOnce*/ => TaskDTO(task.taskId, name, SchedulingType.RunOnce, task.startDateAndTime)
         case 1 /*Minutely*/ => TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Minutely), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
         case 2 /*Hourly*/ => TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Hourly), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
@@ -29,35 +33,41 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
         case 4 /*Weekly*/ => TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Weekly), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
         case 5 /*Monthly*/ => TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Monthly), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
         case 6 /*Yearly*/ => TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Yearly), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
-      }
+      })
     }
   }
 
   private def taskDTOToTaskRow(task: TaskDTO): Future[TaskRow] = {
-    dtbase.run(getFileByFileName(task.fileName).result.head.map(_.fileId)).map { fileId =>
-      task.taskType match {
-        case SchedulingType.RunOnce =>
-          TaskRow(task.taskId, fileId, 0, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
-        case SchedulingType.Periodic =>
-          task.periodType.get match {
-            case PeriodType.Minutely =>
-              TaskRow(task.taskId, fileId, 1, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
-            case PeriodType.Hourly =>
-              TaskRow(task.taskId, fileId, 2, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
-            case PeriodType.Daily =>
-              TaskRow(task.taskId, fileId, 3, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
-            case PeriodType.Weekly =>
-              TaskRow(task.taskId, fileId, 4, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
-            case PeriodType.Monthly =>
-              TaskRow(task.taskId, fileId, 5, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
-            case PeriodType.Yearly =>
-              TaskRow(task.taskId, fileId, 6, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
-          }
-        case SchedulingType.Personalized =>
-          TaskRow(task.taskId, fileId, 7, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
+
+    dtbase.run(getFileByFileName(task.fileName).result.headOption)
+      .map(maybeRow => maybeRow.getOrElse(FileRow("", "", new Date())).fileId)
+      .map { fileId =>
+        task.taskType match {
+
+          case SchedulingType.RunOnce =>
+            TaskRow(task.taskId, fileId, 0, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
+
+          case SchedulingType.Periodic =>
+            task.periodType.get match {
+              case PeriodType.Minutely =>
+                TaskRow(task.taskId, fileId, 1, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
+              case PeriodType.Hourly =>
+                TaskRow(task.taskId, fileId, 2, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
+              case PeriodType.Daily =>
+                TaskRow(task.taskId, fileId, 3, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
+              case PeriodType.Weekly =>
+                TaskRow(task.taskId, fileId, 4, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
+              case PeriodType.Monthly =>
+                TaskRow(task.taskId, fileId, 5, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
+              case PeriodType.Yearly =>
+                TaskRow(task.taskId, fileId, 6, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
+            }
+
+          case SchedulingType.Personalized =>
+            TaskRow(task.taskId, fileId, 7, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
+        }
       }
 
-    }
   }
 
   /**
@@ -69,7 +79,8 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
     dtbase.run(selectAllFromTasksTable.result).flatMap { seq =>
       Future.sequence {
         seq.map { elem =>
-          dtbase.run(getFileByFileId(elem.fileId).map(_.fileName).result.head).map { name =>
+          dtbase.run(getFileByFileId(elem.fileId).map(_.fileName).result.headOption).map { maybeName =>
+            val name = maybeName.getOrElse("")
             elem.period match {
               case 0 /*RunOnce*/ => TaskDTO(elem.taskId, name, SchedulingType.RunOnce, elem.startDateAndTime)
               case 1 /*Minutely*/ => TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Minutely), elem.value, elem.endDateAndTime, elem.totalOccurrences, elem.currentOccurrences, elem.timezone)
@@ -94,23 +105,29 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
   def selectTask(id: String): Future[Option[TaskDTO]] = {
     dtbase.run(getTaskByTaskId(id).result).flatMap { seq =>
       if (seq.isEmpty) Future.successful(None)
-      else taskRowToTaskDTO(seq.head).map(elem => Some(elem))
+      else taskRowToTaskDTO(seq.headOption)
     }
   }
 
   def selectFileIdByTaskId(id: String): Future[Option[String]] = {
     selectTask(id).flatMap { elem =>
-      if (elem.isDefined) dtbase.run(getFileByFileName(elem.get.fileName).result.head.map(_.fileId)).map(item => Some(item)) //TODO: Improve implementation.
+      if (elem.isDefined) dtbase.run(getFileByFileName(elem.get.fileName).result.headOption
+        .map(maybeRow => maybeRow.getOrElse(FileRow("", "", new Date()))))
+        .map(_.fileId).map(item => Some(item))
       else Future.successful(None)
     }
   }
 
   def selectTotalOccurrencesByTaskId(id: String): Future[Option[Int]] = {
-    dtbase.run(getTaskByTaskId(id).result.head.map(_.totalOccurrences))
+    dtbase.run(getTaskByTaskId(id).result.headOption)
+      .map(maybeRow => maybeRow.getOrElse(TaskRow("", "", 0)))
+      .map(_.totalOccurrences)
   }
 
   def selectCurrentOccurrencesByTaskId(id: String): Future[Option[Int]] = {
-    dtbase.run(getTaskByTaskId(id).result.head.map(_.currentOccurrences))
+    dtbase.run(getTaskByTaskId(id).result.headOption
+      .map(maybeRow => maybeRow.getOrElse(TaskRow("", "", 0)))
+      .map(_.currentOccurrences))
   }
 
   def decrementCurrentOccurrencesByTaskId(id: String): Future[Unit] = {

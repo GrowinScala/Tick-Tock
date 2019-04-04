@@ -1,6 +1,6 @@
-import api.utils.{DefaultUUIDGenerator, UUIDGenerator}
+import api.utils.{ DefaultUUIDGenerator, UUIDGenerator }
 import com.google.inject.AbstractModule
-import database.repositories.{FileRepository, FileRepositoryImpl, TaskRepository, TaskRepositoryImpl}
+import database.repositories.{ FileRepository, FileRepositoryImpl, TaskRepository, TaskRepositoryImpl }
 import database.utils.DatabaseUtils._
 import slick.jdbc.MySQLProfile.api._
 

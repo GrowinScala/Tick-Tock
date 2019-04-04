@@ -1,11 +1,14 @@
 package database.repositories
 
+import java.util.Date
+
 import api.dtos.FileDTO
+import api.utils.DateUtils
 import database.mappings.FileMappings._
 import javax.inject.Inject
 import slick.jdbc.MySQLProfile.api._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository {
 
@@ -26,16 +29,16 @@ class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository {
   }
 
   def selectFileById(id: String): Future[Option[FileDTO]] = {
-    dtbase.run(getFileByFileId(id).result).map { seq =>
-      if (seq.isEmpty) None
-      else Some(fileRowToFileDTO(seq.head))
+    dtbase.run(getFileByFileId(id).result.headOption).map {
+      case Some(value) => Some(fileRowToFileDTO(value))
+      case None => None
     }
   }
 
   def selectFileByName(name: String): Future[Option[FileDTO]] = {
-    dtbase.run(getFileByFileName(name).result).map { seq =>
-      if (seq.isEmpty) None
-      else Some(fileRowToFileDTO(seq.head))
+    dtbase.run(getFileByFileName(name).result.headOption).map {
+      case Some(value) => Some(fileRowToFileDTO(value))
+      case None => None
     }
   }
 
@@ -68,13 +71,18 @@ class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository {
   def existsCorrespondingFileName(fileName: String): Future[Boolean] = {
     selectFileByName(fileName).map(elem => elem.isDefined)
   }
-  
+
   /**
    * Retrieves a fileId of a row on the database by providing the fileName.
    * @param fileName Name of the file given by the user on the database.
    */
   def selectFileIdFromFileName(fileName: String): Future[String] = {
-    dtbase.run(getFileByFileName(fileName).result.head.map(_.fileId))
+    dtbase.run(getFileByFileName(fileName)
+      .result
+      .headOption
+      .map(row =>
+        row.getOrElse(FileRow("", "", DateUtils.getTimeFromDate(new Date())))))
+      .map(_.fileId)
   }
 
   /**
@@ -82,7 +90,12 @@ class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository {
    * @param fileId Id of the file on the database.
    */
   def selectFileNameFromFileId(fileId: String): Future[String] = {
-    dtbase.run(getFileByFileId(fileId).map(_.fileName).result.head)
+    dtbase.run(getFileByFileId(fileId)
+      .result
+      .headOption
+      .map(row =>
+        row.getOrElse(FileRow("", "", DateUtils.getTimeFromDate(new Date())))))
+      .map(_.fileName)
   }
 
   /**
@@ -90,7 +103,8 @@ class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository {
    * @param file FileDTO to be inserted on the database.
    */
   def insertInFilesTable(file: FileDTO): Future[Boolean] = {
-    dtbase.run(insertFile(FileRow(file.fileId, file.fileName, file.uploadDate)).map(i => i == 1))
+    dtbase.run(insertFile(FileRow(file.fileId, file.fileName, file.uploadDate))
+      .map(numberInsertions => numberInsertions == 1))
   }
 
 }

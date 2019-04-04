@@ -1,24 +1,24 @@
 package api.controllers
 
-import java.nio.file.{Files, Paths, StandardCopyOption}
+import java.nio.file.{ Files, Paths, StandardCopyOption }
 
 import api.dtos.FileDTO
 import api.utils.DateUtils._
 import api.utils.UUIDGenerator
 import api.validators.Error._
 import com.typesafe.config.ConfigFactory
-import database.repositories.{FileRepository, TaskRepository}
-import javax.inject.{Inject, Singleton}
+import database.repositories.{ FileRepository, TaskRepository }
+import javax.inject.{ Inject, Singleton }
 import org.apache.commons.io.FilenameUtils
 import play.api.libs.json._
 import play.api.mvc._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
 class FileController @Inject() (cc: ControllerComponents)(implicit exec: ExecutionContext, implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository, implicit val UUIDGen: UUIDGenerator) extends AbstractController(cc) {
 
- private val conf = ConfigFactory.load()
+  private val conf = ConfigFactory.load()
 
   def index: Action[AnyContent] = Action {
     Ok("It works!")
