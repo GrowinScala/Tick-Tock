@@ -83,54 +83,29 @@ class FileMappingsSuite extends PlaySpec with BeforeAndAfterAll with BeforeAndAf
     }
   }
 
-  "FileMappings#updateFileByFileId" should {
-    "update a FileRow by giving the corresponding fileId." in {
-      val updateResult1 = Await.result(dtbase.run(updateFileByFileId(uuid1, FileRow(uuid5, "test5", stringToDateFormat("2020-01-05 00:00:00", "yyyy-MM-dd HH:mm:ss")))), Duration.Inf)
-      updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getFileByFileId(uuid5).result), Duration.Inf)
-      selectResult1.head.toString mustBe "FileRow(" + uuid5 + ",test5,Sun Jan 05 00:00:00 GMT 2020)"
-      val selectResult2 = Await.result(dtbase.run(getFileByFileId(uuid1).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateFileByFileId(uuid5, FileRow(uuid1, "test1", stringToDateFormat("2020-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))), Duration.Inf)
-      updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getFileByFileId(uuid5).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getFileByFileId(uuid1).result), Duration.Inf)
-      selectResult4.head.toString mustBe "FileRow(" + uuid1 + ",test1,Wed Jan 01 00:00:00 GMT 2020)"
-    }
-  }
-
   "FileMappings#updateFileByFileName" should {
     "update a FileRow by giving the corresponding fileName." in {
-      val updateResult1 = Await.result(dtbase.run(updateFileByFileName("test1", FileRow(uuid5, "test5", stringToDateFormat("2020-01-05 00:00:00", "yyyy-MM-dd HH:mm:ss")))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateFileByFileName(uuid1, "test5")), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getFileByFileId(uuid5).result), Duration.Inf)
-      selectResult1.head.toString mustBe "FileRow(" + uuid5 + ",test5,Sun Jan 05 00:00:00 GMT 2020)"
-      val selectResult2 = Await.result(dtbase.run(getFileByFileId(uuid1).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateFileByFileName("test5", FileRow(uuid1, "test1", stringToDateFormat("2020-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getFileByFileId(uuid1).result), Duration.Inf)
+      selectResult1.head.toString mustBe "FileRow(" + uuid1 + ",test5,Wed Jan 01 00:00:00 GMT 2020)"
+      val updateResult2 = Await.result(dtbase.run(updateFileByFileName(uuid1, "test1")), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getFileByFileId(uuid5).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getFileByFileId(uuid1).result), Duration.Inf)
-      selectResult4.head.toString mustBe "FileRow(" + uuid1 + ",test1,Wed Jan 01 00:00:00 GMT 2020)"
+      val selectResult2 = Await.result(dtbase.run(getFileByFileId(uuid1).result), Duration.Inf)
+      selectResult2.head.toString mustBe "FileRow(" + uuid1 + ",test1,Wed Jan 01 00:00:00 GMT 2020)"
     }
   }
 
   "FileMappings#updateFileByUploadDate" should {
     "update a FileRow by giving the corresponding uploadDate." in {
-      val updateResult1 = Await.result(dtbase.run(updateFileByUploadDate(stringToDateFormat("2020-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"), FileRow(uuid5, "test5", stringToDateFormat("2020-01-05 00:00:00", "yyyy-MM-dd HH:mm:ss")))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateFileByUploadDate(uuid1, stringToDateFormat("2020-01-05 00:00:00", "yyyy-MM-dd HH:mm:ss"))), Duration.Inf)
       updateResult1 mustBe 1
       val selectResult1 = Await.result(dtbase.run(getFileByFileId(uuid5).result), Duration.Inf)
-      selectResult1.head.toString mustBe "FileRow(" + uuid5 + ",test5,Sun Jan 05 00:00:00 GMT 2020)"
-      val selectResult2 = Await.result(dtbase.run(getFileByFileId(uuid1).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateFileByUploadDate(stringToDateFormat("2020-01-05 00:00:00", "yyyy-MM-dd HH:mm:ss"), FileRow(uuid1, "test1", stringToDateFormat("2020-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))), Duration.Inf)
+      selectResult1.head.toString mustBe "FileRow(" + uuid1 + ",test1,Sun Jan 05 00:00:00 GMT 2020)"
+      val updateResult2 = Await.result(dtbase.run(updateFileByUploadDate(uuid1, stringToDateFormat("2020-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getFileByFileId(uuid5).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getFileByFileId(uuid1).result), Duration.Inf)
-      selectResult4.head.toString mustBe "FileRow(" + uuid1 + ",test1,Wed Jan 01 00:00:00 GMT 2020)"
+      val selectResult2 = Await.result(dtbase.run(getFileByFileId(uuid1).result), Duration.Inf)
+      selectResult2.head.toString mustBe "FileRow(" + uuid1 + ",test1,Wed Jan 01 00:00:00 GMT 2020)"
     }
   }
 

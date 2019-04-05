@@ -131,154 +131,107 @@ class SchedulingMappingsSuite extends PlaySpec with BeforeAndAfterAll with Befor
 
   }
 
-  "SchedulingMappings#updateSchedulingBySchedulingId" should {
-    "update a SchedulingRow by giving the corresponding schedulingId." in {
-      val updateResult1 = Await.result(dtbase.run(updateSchedulingBySchedulingId(schedulingUUID1, SchedulingRow(schedulingUUID4, taskUUID2, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
-      updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "SchedulingRow(" + schedulingUUID4 + "," + taskUUID2 + ",Some(Tue Jan 01 00:00:00 GMT 2030),None,None,None,None,None,None)"
-      val selectResult2 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateSchedulingBySchedulingId(schedulingUUID4, SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
-      updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result), Duration.Inf)
-      selectResult4.head.toString mustBe "SchedulingRow(" + schedulingUUID1 + "," + taskUUID1 + ",Some(Tue Jan 01 00:00:00 GMT 2030),None,None,None,None,None,None)"
-    }
-  }
-
   "SchedulingMappings#updateSchedulingByTaskId" should {
     "update a SchedulingRow by giving the corresponding taskId." in {
-      val updateResult1 = Await.result(dtbase.run(updateSchedulingByTaskId(taskUUID1, SchedulingRow(schedulingUUID4, taskUUID2, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateSchedulingByTaskId(schedulingUUID1, taskUUID3)), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "SchedulingRow(" + schedulingUUID4 + "," + taskUUID2 + ",Some(Tue Jan 01 00:00:00 GMT 2030),None,None,None,None,None,None)"
-      val selectResult2 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateSchedulingByTaskId(taskUUID3, SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result), Duration.Inf)
+      selectResult1.head.toString mustBe "SchedulingRow(" + schedulingUUID1 + "," + taskUUID3 + ",Some(Tue Jan 01 00:00:00 GMT 2030),None,None,None,None,None,None)"
+      val updateResult2 = Await.result(dtbase.run(updateSchedulingByTaskId(schedulingUUID1, taskUUID1)), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result), Duration.Inf)
-      selectResult3.head.toString mustBe "SchedulingRow(" + schedulingUUID1 + "," + taskUUID1 + ",Some(Tue Jan 01 00:00:00 GMT 2030),None,None,None,None,None,None)"
+      val selectResult2 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result), Duration.Inf)
+      selectResult2.head.toString mustBe "SchedulingRow(" + schedulingUUID1 + "," + taskUUID1 + ",Some(Tue Jan 01 00:00:00 GMT 2030),None,None,None,None,None,None)"
     }
   }
 
   "SchedulingMappings#updateSchedulingBySchedulingDate" should {
     "update a SchedulingRow by giving the corresponding schedulingDate." in {
-      val updateResult1 = Await.result(dtbase.run(updateSchedulingBySchedulingDate(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"), SchedulingRow(schedulingUUID4, taskUUID2, Some(stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateSchedulingBySchedulingDate(schedulingUUID1, stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "SchedulingRow(" + schedulingUUID4 + "," + taskUUID2 + ",Some(Mon Jan 01 00:00:00 GMT 2035),None,None,None,None,None,None)"
-      val selectResult2 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateSchedulingBySchedulingDate(stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"), SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result), Duration.Inf)
+      selectResult1.head.toString mustBe "SchedulingRow(" + schedulingUUID1 + "," + taskUUID1 + ",Some(Mon Jan 01 00:00:00 GMT 2035),None,None,None,None,None,None)"
+      val updateResult2 = Await.result(dtbase.run(updateSchedulingBySchedulingDate(schedulingUUID1, stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result), Duration.Inf)
-      selectResult4.head.toString mustBe "SchedulingRow(" + schedulingUUID1 + "," + taskUUID1 + ",Some(Tue Jan 01 00:00:00 GMT 2030),None,None,None,None,None,None)"
+      val selectResult2 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result), Duration.Inf)
+      selectResult2.head.toString mustBe "SchedulingRow(" + schedulingUUID1 + "," + taskUUID1 + ",Some(Tue Jan 01 00:00:00 GMT 2030),None,None,None,None,None,None)"
     }
   }
 
   "SchedulingMappings#updateSchedulingByDay" should {
     "update a SchedulingRow by giving the corresponding day." in {
-      val updateResult1 = Await.result(dtbase.run(updateSchedulingByDay(15, SchedulingRow(schedulingUUID4, taskUUID1, None, Some(10), Some(3), None, Some(5)))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateSchedulingByDay(schedulingUUID2, 10)), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "SchedulingRow(" + schedulingUUID4 + "," + taskUUID1 + ",None,Some(10),Some(3),None,Some(5),None,None)"
-      val selectResult2 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID2).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateSchedulingByDay(10, SchedulingRow(schedulingUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5)))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID2).result), Duration.Inf)
+      selectResult1.head.toString mustBe "SchedulingRow(" + schedulingUUID2 + "," + taskUUID2 + ",None,Some(10),Some(3),None,Some(5),None,None)"
+      val updateResult2 = Await.result(dtbase.run(updateSchedulingByDay(schedulingUUID2, 15)), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID2).result), Duration.Inf)
-      selectResult4.head.toString mustBe "SchedulingRow(" + schedulingUUID2 + "," + taskUUID2 + ",None,Some(15),Some(3),None,Some(5),None,None)"
+      val selectResult2 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID2).result), Duration.Inf)
+      selectResult2.head.toString mustBe "SchedulingRow(" + schedulingUUID2 + "," + taskUUID2 + ",None,Some(15),Some(3),None,Some(5),None,None)"
     }
   }
 
   "SchedulingMappings#updateSchedulingByDayOfWeek" should {
     "update a SchedulingRow by giving the corresponding dayOfWeek." in {
-      val updateResult1 = Await.result(dtbase.run(updateSchedulingByDayOfWeek(3, SchedulingRow(schedulingUUID4, taskUUID1, None, Some(15), Some(5), None, Some(5)))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateSchedulingByDayOfWeek(schedulingUUID2, 5)), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "SchedulingRow(" + schedulingUUID4 + "," + taskUUID1 + ",None,Some(15),Some(5),None,Some(5),None,None)"
-      val selectResult2 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID2).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateSchedulingByDayOfWeek(5, SchedulingRow(schedulingUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5)))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID2).result), Duration.Inf)
+      selectResult1.head.toString mustBe "SchedulingRow(" + schedulingUUID2 + "," + taskUUID2 + ",None,Some(15),Some(5),None,Some(5),None,None)"
+      val updateResult2 = Await.result(dtbase.run(updateSchedulingByDayOfWeek(schedulingUUID2, 3)), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID2).result), Duration.Inf)
-      selectResult4.head.toString mustBe "SchedulingRow(" + schedulingUUID2 + "," + taskUUID2 + ",None,Some(15),Some(3),None,Some(5),None,None)"
+      val selectResult2 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID2).result), Duration.Inf)
+      selectResult2.head.toString mustBe "SchedulingRow(" + schedulingUUID2 + "," + taskUUID2 + ",None,Some(15),Some(3),None,Some(5),None,None)"
     }
   }
 
   "SchedulingMappings#updateSchedulingByDayType" should {
     "update a SchedulingRow by giving the corresponding dayType." in {
-      val updateResult1 = Await.result(dtbase.run(updateSchedulingByDayType(DayType.Weekday, SchedulingRow(schedulingUUID4, taskUUID1, None, None, None, Some(DayType.Weekend), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateSchedulingByDayType(schedulingUUID3, DayType.Weekend)), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "SchedulingRow(" + schedulingUUID4 + "," + taskUUID1 + ",None,None,None,Some(Weekend),None,Some(2030),Some(First))"
-      val selectResult2 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID3).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateSchedulingByDayType(DayType.Weekend, SchedulingRow(schedulingUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID3).result), Duration.Inf)
+      selectResult1.head.toString mustBe "SchedulingRow(" + schedulingUUID3 + "," + taskUUID3 + ",None,None,None,Some(Weekend),None,Some(2030),Some(First))"
+      val updateResult2 = Await.result(dtbase.run(updateSchedulingByDayType(schedulingUUID3, DayType.Weekday)), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID3).result), Duration.Inf)
-      selectResult4.head.toString mustBe "SchedulingRow(" + schedulingUUID3 + "," + taskUUID3 + ",None,None,None,Some(Weekday),None,Some(2030),Some(First))"
+      val selectResult2 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID3).result), Duration.Inf)
+      selectResult2.head.toString mustBe "SchedulingRow(" + schedulingUUID3 + "," + taskUUID3 + ",None,None,None,Some(Weekday),None,Some(2030),Some(First))"
     }
   }
 
   "SchedulingMappings#updateSchedulingByMonth" should {
     "update a SchedulingRow by giving the corresponding month." in {
-      val updateResult1 = Await.result(dtbase.run(updateSchedulingByMonth(5, SchedulingRow(schedulingUUID4, taskUUID1, None, Some(15), Some(5), None, Some(2)))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateSchedulingByMonth(schedulingUUID2, 2)), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "SchedulingRow(" + schedulingUUID4 + "," + taskUUID1 + ",None,Some(15),Some(5),None,Some(2),None,None)"
-      val selectResult2 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID2).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateSchedulingByMonth(2, SchedulingRow(schedulingUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5)))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID2).result), Duration.Inf)
+      selectResult1.head.toString mustBe "SchedulingRow(" + schedulingUUID2 + "," + taskUUID2 + ",None,Some(15),Some(3),None,Some(2),None,None)"
+      val updateResult2 = Await.result(dtbase.run(updateSchedulingByMonth(schedulingUUID2, 5)), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID2).result), Duration.Inf)
-      selectResult4.head.toString mustBe "SchedulingRow(" + schedulingUUID2 + "," + taskUUID2 + ",None,Some(15),Some(3),None,Some(5),None,None)"
+      val selectResult2 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID2).result), Duration.Inf)
+      selectResult2.head.toString mustBe "SchedulingRow(" + schedulingUUID2 + "," + taskUUID2 + ",None,Some(15),Some(3),None,Some(5),None,None)"
     }
   }
 
   "SchedulingMappings#updateSchedulingByYear" should {
     "update a SchedulingRow by giving the corresponding year." in {
-      val updateResult1 = Await.result(dtbase.run(updateSchedulingByYear(2030, SchedulingRow(schedulingUUID4, taskUUID1, None, None, None, Some(DayType.Weekday), None, Some(2035), Some(Criteria.First)))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateSchedulingByYear(schedulingUUID3, 2035)), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "SchedulingRow(" + schedulingUUID4 + "," + taskUUID1 + ",None,None,None,Some(Weekday),None,Some(2035),Some(First))"
-      val selectResult2 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID3).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateSchedulingByYear(2035, SchedulingRow(schedulingUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID3).result), Duration.Inf)
+      selectResult1.head.toString mustBe "SchedulingRow(" + schedulingUUID3 + "," + taskUUID3 + ",None,None,None,Some(Weekday),None,Some(2035),Some(First))"
+      val updateResult2 = Await.result(dtbase.run(updateSchedulingByYear(schedulingUUID3, 2030)), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID3).result), Duration.Inf)
-      selectResult4.head.toString mustBe "SchedulingRow(" + schedulingUUID3 + "," + taskUUID3 + ",None,None,None,Some(Weekday),None,Some(2030),Some(First))"
+      val selectResult2 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID3).result), Duration.Inf)
+      selectResult2.head.toString mustBe "SchedulingRow(" + schedulingUUID3 + "," + taskUUID3 + ",None,None,None,Some(Weekday),None,Some(2030),Some(First))"
     }
   }
 
   "SchedulingMappings#updateSchedulingByCriteria" should {
     "update a SchedulingRow by giving the corresponding criteria." in {
-      val updateResult1 = Await.result(dtbase.run(updateSchedulingByCriteria(Criteria.First, SchedulingRow(schedulingUUID4, taskUUID1, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.Second)))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateSchedulingByCriteria(schedulingUUID3, Criteria.Second)), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "SchedulingRow(" + schedulingUUID4 + "," + taskUUID1 + ",None,None,None,Some(Weekday),None,Some(2030),Some(Second))"
-      val selectResult2 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID3).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateSchedulingByCriteria(Criteria.Second, SchedulingRow(schedulingUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID3).result), Duration.Inf)
+      selectResult1.head.toString mustBe "SchedulingRow(" + schedulingUUID3 + "," + taskUUID3 + ",None,None,None,Some(Weekday),None,Some(2030),Some(Second))"
+      val updateResult2 = Await.result(dtbase.run(updateSchedulingByCriteria(schedulingUUID3, Criteria.First)), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID3).result), Duration.Inf)
-      selectResult4.head.toString mustBe "SchedulingRow(" + schedulingUUID3 + "," + taskUUID3 + ",None,None,None,Some(Weekday),None,Some(2030),Some(First))"
+      val selectResult2 = Await.result(dtbase.run(getSchedulingBySchedulingId(schedulingUUID3).result), Duration.Inf)
+      selectResult2.head.toString mustBe "SchedulingRow(" + schedulingUUID3 + "," + taskUUID3 + ",None,None,None,Some(Weekday),None,Some(2030),Some(First))"
     }
   }
 

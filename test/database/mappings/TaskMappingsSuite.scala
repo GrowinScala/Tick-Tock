@@ -133,32 +133,13 @@ class TaskMappingsSuite extends PlaySpec with BeforeAndAfterAll with BeforeAndAf
     }
   }
 
-  "TaskMappings#updateTaskByTaskId" should {
-    "update a TaskRow by giving the corresponding taskId." in {
-      val updateResult1 = Await.result(dtbase.run(updateTaskByTaskId(taskUUID1, TaskRow(taskUUID4, fileUUID2, 0))), Duration.Inf)
-      updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getTaskByTaskId(taskUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "TaskRow(" + taskUUID4 + "," + fileUUID2 + ",0,None,None,None,None,None,None)"
-      val selectResult2 = Await.result(dtbase.run(getTaskByTaskId(taskUUID1).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateTaskByTaskId(taskUUID4, TaskRow(taskUUID1, fileUUID1, 0))), Duration.Inf)
-      updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getTaskByTaskId(taskUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getTaskByTaskId(taskUUID1).result), Duration.Inf)
-      selectResult4.head.toString mustBe "TaskRow(" + taskUUID1 + "," + fileUUID1 + ",0,None,None,None,None,None,None)"
-    }
-  }
-
   "TaskMappings#updateTaskByFileId" should {
     "update a TaskRow by giving the corresponding fileId." in {
-      val updateResult1 = Await.result(dtbase.run(updateTaskByFileId(fileUUID1, TaskRow(taskUUID4, fileUUID2, 0))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateTaskByFileId(taskUUID1, fileUUID2)), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getTaskByTaskId(taskUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "TaskRow(" + taskUUID4 + "," + fileUUID2 + ",0,None,None,None,None,None,None)"
-      val selectResult2 = Await.result(dtbase.run(getTaskByTaskId(taskUUID1).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateTaskByFileId(fileUUID3, TaskRow(taskUUID1, fileUUID1, 0))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getTaskByTaskId(taskUUID1).result), Duration.Inf)
+      selectResult1.head.toString mustBe "TaskRow(" + taskUUID1 + "," + fileUUID2 + ",0,None,None,None,None,None,None)"
+      val updateResult2 = Await.result(dtbase.run(updateTaskByFileId(taskUUID1, fileUUID1)), Duration.Inf)
       updateResult2 mustBe 1
       val selectResult3 = Await.result(dtbase.run(getTaskByTaskId(taskUUID1).result), Duration.Inf)
       selectResult3.head.toString mustBe "TaskRow(" + taskUUID1 + "," + fileUUID1 + ",0,None,None,None,None,None,None)"
@@ -167,120 +148,92 @@ class TaskMappingsSuite extends PlaySpec with BeforeAndAfterAll with BeforeAndAf
 
   "TaskMappings#updateTaskByPeriod" should {
     "update a TaskRow by giving the corresponding period." in {
-      val updateResult1 = Await.result(dtbase.run(updateTaskByPeriod(0, TaskRow(taskUUID4, fileUUID2, 1, Some(5), Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(stringToDateFormat("2040-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateTaskByPeriod(taskUUID2, 5)), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getTaskByTaskId(taskUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "TaskRow(" + taskUUID4 + "," + fileUUID2 + ",1,Some(5),Some(Tue Jan 01 00:00:00 GMT 2030),Some(Sun Jan 01 00:00:00 GMT 2040),None,None,None)"
-      val selectResult2 = Await.result(dtbase.run(getTaskByTaskId(taskUUID1).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateTaskByPeriod(1, TaskRow(taskUUID1, fileUUID1, 0))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getTaskByTaskId(taskUUID2).result), Duration.Inf)
+      selectResult1.head.toString mustBe "TaskRow(" + taskUUID2 + "," + fileUUID2 + ",5,Some(3),Some(Tue Jan 01 00:00:00 GMT 2030),None,Some(10),Some(10),None)"
+      val updateResult2 = Await.result(dtbase.run(updateTaskByPeriod(taskUUID2, 4)), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getTaskByTaskId(taskUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getTaskByTaskId(taskUUID1).result), Duration.Inf)
-      selectResult4.head.toString mustBe "TaskRow(" + taskUUID1 + "," + fileUUID1 + ",0,None,None,None,None,None,None)"
+      val selectResult2 = Await.result(dtbase.run(getTaskByTaskId(taskUUID2).result), Duration.Inf)
+      selectResult2.head.toString mustBe "TaskRow(" + taskUUID2 + "," + fileUUID2 + ",4,Some(3),Some(Tue Jan 01 00:00:00 GMT 2030),None,Some(10),Some(10),None)"
     }
   }
 
   "TaskMappings#updateTaskByValue" should {
     "update a TaskRow by giving the corresponding value." in {
-      val updateResult1 = Await.result(dtbase.run(updateTaskByValue(3, TaskRow(taskUUID4, fileUUID1, 1, Some(5), Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(stringToDateFormat("2040-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateTaskByValue(taskUUID2, 5)), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getTaskByTaskId(taskUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "TaskRow(" + taskUUID4 + "," + fileUUID1 + ",1,Some(5),Some(Tue Jan 01 00:00:00 GMT 2030),Some(Sun Jan 01 00:00:00 GMT 2040),None,None,None)"
-      val selectResult2 = Await.result(dtbase.run(getTaskByTaskId(taskUUID2).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateTaskByValue(5, TaskRow(taskUUID2, fileUUID2, 4, Some(3), Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, Some(10), Some(10)))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getTaskByTaskId(taskUUID2).result), Duration.Inf)
+      selectResult1.head.toString mustBe "TaskRow(" + taskUUID2 + "," + fileUUID2 + ",4,Some(5),Some(Tue Jan 01 00:00:00 GMT 2030),None,Some(10),Some(10),None)"
+      val updateResult2 = Await.result(dtbase.run(updateTaskByValue(taskUUID2, 3)), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getTaskByTaskId(taskUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getTaskByTaskId(taskUUID2).result), Duration.Inf)
-      selectResult4.head.toString mustBe "TaskRow(" + taskUUID2 + "," + fileUUID2 + ",4,Some(3),Some(Tue Jan 01 00:00:00 GMT 2030),None,Some(10),Some(10),None)"
+      val selectResult2 = Await.result(dtbase.run(getTaskByTaskId(taskUUID2).result), Duration.Inf)
+      selectResult2.head.toString mustBe "TaskRow(" + taskUUID2 + "," + fileUUID2 + ",4,Some(3),Some(Tue Jan 01 00:00:00 GMT 2030),None,Some(10),Some(10),None)"
     }
   }
 
   "TaskMappings#updateTaskByStartDateAndTime" should {
     "update a TaskRow by giving the corresponding startDateAndTime." in {
-      val updateResult1 = Await.result(dtbase.run(updateTaskByStartDateAndTime(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"), TaskRow(taskUUID4, fileUUID1, 1, Some(5), Some(stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(stringToDateFormat("2040-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
-      updateResult1 mustBe 2
-      val selectResult1 = Await.result(dtbase.run(getTaskByTaskId(taskUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "TaskRow(" + taskUUID4 + "," + fileUUID1 + ",1,Some(5),Some(Mon Jan 01 00:00:00 GMT 2035),Some(Sun Jan 01 00:00:00 GMT 2040),None,None,None)"
+      val updateResult1 = Await.result(dtbase.run(updateTaskByStartDateAndTime(taskUUID2, stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))), Duration.Inf)
+      updateResult1 mustBe 1
+      val selectResult1 = Await.result(dtbase.run(getTaskByTaskId(taskUUID2).result), Duration.Inf)
+      selectResult1.head.toString mustBe "TaskRow(" + taskUUID2 + "," + fileUUID2 + ",4,Some(3),Some(Mon Jan 01 00:00:00 GMT 2035),None,Some(10),Some(10),None)"
+      val updateResult2 = Await.result(dtbase.run(updateTaskByStartDateAndTime(taskUUID2, stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))), Duration.Inf)
+      updateResult2 mustBe 1
       val selectResult2 = Await.result(dtbase.run(getTaskByTaskId(taskUUID2).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateTaskByStartDateAndTime(stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"), TaskRow(taskUUID2, fileUUID2, 4, Some(3), Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, Some(10), Some(10)))), Duration.Inf)
-      updateResult2 mustBe 2
-      val selectResult3 = Await.result(dtbase.run(getTaskByTaskId(taskUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getTaskByTaskId(taskUUID2).result), Duration.Inf)
-      selectResult4.head.toString mustBe "TaskRow(" + taskUUID2 + "," + fileUUID2 + ",4,Some(3),Some(Tue Jan 01 00:00:00 GMT 2030),None,Some(10),Some(10),None)"
+      selectResult2.head.toString mustBe "TaskRow(" + taskUUID2 + "," + fileUUID2 + ",4,Some(3),Some(Tue Jan 01 00:00:00 GMT 2030),None,Some(10),Some(10),None)"
     }
   }
 
   "TaskMappings#updateTaskByEndDateAndTime" should {
     "update a TaskRow by giving the corresponding endDateAndTime." in {
-      val updateResult1 = Await.result(dtbase.run(updateTaskByEndDateAndTime(stringToDateFormat("2040-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"), TaskRow(taskUUID4, fileUUID1, 1, Some(5), Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(stringToDateFormat("2045-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateTaskByEndDateAndTime(taskUUID3, stringToDateFormat("2045-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getTaskByTaskId(taskUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "TaskRow(" + taskUUID4 + "," + fileUUID1 + ",1,Some(5),Some(Tue Jan 01 00:00:00 GMT 2030),Some(Sun Jan 01 00:00:00 GMT 2045),None,None,None)"
-      val selectResult2 = Await.result(dtbase.run(getTaskByTaskId(taskUUID3).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateTaskByEndDateAndTime(stringToDateFormat("2045-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"), TaskRow(taskUUID3, fileUUID3, 7, None, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(stringToDateFormat("2040-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, Some("PST")))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getTaskByTaskId(taskUUID3).result), Duration.Inf)
+      selectResult1.head.toString mustBe "TaskRow(" + taskUUID3 + "," + fileUUID3 + ",7,None,Some(Tue Jan 01 00:00:00 GMT 2030),Some(Sun Jan 01 00:00:00 GMT 2045),None,None,None)"
+      val updateResult2 = Await.result(dtbase.run(updateTaskByEndDateAndTime(taskUUID3, stringToDateFormat("2040-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getTaskByTaskId(taskUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getTaskByTaskId(taskUUID3).result), Duration.Inf)
-      selectResult4.head.toString mustBe "TaskRow(" + taskUUID3 + "," + fileUUID3 + ",7,None,Some(Tue Jan 01 00:00:00 GMT 2030),Some(Sun Jan 01 00:00:00 GMT 2040),None,None,Some(PST))"
+      val selectResult2 = Await.result(dtbase.run(getTaskByTaskId(taskUUID3).result), Duration.Inf)
+      selectResult2.head.toString mustBe "TaskRow(" + taskUUID3 + "," + fileUUID3 + ",7,None,Some(Tue Jan 01 00:00:00 GMT 2030),Some(Sun Jan 01 00:00:00 GMT 2040),None,None,Some(PST))"
     }
   }
 
   "TaskMappings#updateTaskByTotalOccurrences" should {
     "update a TaskRow by giving the corresponding totalOccurrences." in {
-      val updateResult1 = Await.result(dtbase.run(updateTaskByTotalOccurrences(10, TaskRow(taskUUID4, fileUUID1, 4, Some(3), Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, Some(5), Some(5)))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateTaskByTotalOccurrences(taskUUID2, 5)), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getTaskByTaskId(taskUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "TaskRow(" + taskUUID4 + "," + fileUUID1 + ",4,Some(3),Some(Tue Jan 01 00:00:00 GMT 2030),None,Some(5),Some(5),None)"
-      val selectResult2 = Await.result(dtbase.run(getTaskByTaskId(taskUUID2).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateTaskByTotalOccurrences(5, TaskRow(taskUUID2, fileUUID2, 4, Some(3), Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, Some(10), Some(10)))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getTaskByTaskId(taskUUID2).result), Duration.Inf)
+      selectResult1.head.toString mustBe "TaskRow(" + taskUUID2 + "," + fileUUID2 + ",4,Some(3),Some(Tue Jan 01 00:00:00 GMT 2030),None,Some(5),Some(5),None)"
+      val updateResult2 = Await.result(dtbase.run(updateTaskByTotalOccurrences(taskUUID2, 10)), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getTaskByTaskId(taskUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getTaskByTaskId(taskUUID2).result), Duration.Inf)
-      selectResult4.head.toString mustBe "TaskRow(" + taskUUID2 + "," + fileUUID2 + ",4,Some(3),Some(Tue Jan 01 00:00:00 GMT 2030),None,Some(10),Some(10),None)"
+      val selectResult2 = Await.result(dtbase.run(getTaskByTaskId(taskUUID2).result), Duration.Inf)
+      selectResult2.head.toString mustBe "TaskRow(" + taskUUID2 + "," + fileUUID2 + ",4,Some(3),Some(Tue Jan 01 00:00:00 GMT 2030),None,Some(10),Some(10),None)"
     }
   }
 
   "TaskMappings#updateTaskByCurrentOccurrences" should {
     "update a TaskRow by giving the corresponding currentOccurrences." in {
-      val updateResult1 = Await.result(dtbase.run(updateTaskByCurrentOccurrences(10, TaskRow(taskUUID4, fileUUID1, 4, Some(3), Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, Some(5), Some(5)))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateTaskByCurrentOccurrences(taskUUID2, 3)), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getTaskByTaskId(taskUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "TaskRow(" + taskUUID4 + "," + fileUUID1 + ",4,Some(3),Some(Tue Jan 01 00:00:00 GMT 2030),None,Some(5),Some(5),None)"
-      val selectResult2 = Await.result(dtbase.run(getTaskByTaskId(taskUUID2).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateTaskByCurrentOccurrences(5, TaskRow(taskUUID2, fileUUID2, 4, Some(3), Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, Some(10), Some(10)))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getTaskByTaskId(taskUUID2).result), Duration.Inf)
+      selectResult1.head.toString mustBe "TaskRow(" + taskUUID2 + "," + fileUUID2 + ",4,Some(3),Some(Tue Jan 01 00:00:00 GMT 2030),None,Some(5),Some(5),None)"
+      val updateResult2 = Await.result(dtbase.run(updateTaskByCurrentOccurrences(taskUUID2, 10)), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getTaskByTaskId(taskUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getTaskByTaskId(taskUUID2).result), Duration.Inf)
-      selectResult4.head.toString mustBe "TaskRow(" + taskUUID2 + "," + fileUUID2 + ",4,Some(3),Some(Tue Jan 01 00:00:00 GMT 2030),None,Some(10),Some(10),None)"
+      val selectResult2 = Await.result(dtbase.run(getTaskByTaskId(taskUUID2).result), Duration.Inf)
+      selectResult2.head.toString mustBe "TaskRow(" + taskUUID2 + "," + fileUUID2 + ",4,Some(3),Some(Tue Jan 01 00:00:00 GMT 2030),None,Some(10),Some(10),None)"
     }
   }
 
   "TaskMappings#updateTaskByTimezone" should {
     "update a TaskRow by giving the corresponding timezone." in {
-      val updateResult1 = Await.result(dtbase.run(updateTaskByTimezone("PST", TaskRow(taskUUID4, fileUUID2, 7, None, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(stringToDateFormat("2040-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, Some("EST")))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateTaskByTimezone(taskUUID3, "EST")), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getTaskByTaskId(taskUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "TaskRow(" + taskUUID4 + "," + fileUUID2 + ",7,None,Some(Tue Jan 01 00:00:00 GMT 2030),Some(Sun Jan 01 00:00:00 GMT 2040),None,None,Some(EST))"
-      val selectResult2 = Await.result(dtbase.run(getTaskByTaskId(taskUUID3).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateTaskByTimezone("EST", TaskRow(taskUUID3, fileUUID3, 7, None, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(stringToDateFormat("2040-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, Some("PST")))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getTaskByTaskId(taskUUID3).result), Duration.Inf)
+      selectResult1.head.toString mustBe "TaskRow(" + taskUUID3 + "," + fileUUID3 + ",7,None,Some(Tue Jan 01 00:00:00 GMT 2030),Some(Sun Jan 01 00:00:00 GMT 2040),None,None,Some(EST))"
+      val updateResult2 = Await.result(dtbase.run(updateTaskByTimezone(taskUUID3, "PST")), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getTaskByTaskId(taskUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getTaskByTaskId(taskUUID3).result), Duration.Inf)
-      selectResult4.head.toString mustBe "TaskRow(" + taskUUID3 + "," + fileUUID3 + ",7,None,Some(Tue Jan 01 00:00:00 GMT 2030),Some(Sun Jan 01 00:00:00 GMT 2040),None,None,Some(PST))"
+      val selectResult2 = Await.result(dtbase.run(getTaskByTaskId(taskUUID3).result), Duration.Inf)
+      selectResult2.head.toString mustBe "TaskRow(" + taskUUID3 + "," + fileUUID3 + ",7,None,Some(Tue Jan 01 00:00:00 GMT 2030),Some(Sun Jan 01 00:00:00 GMT 2040),None,None,Some(PST))"
     }
   }
 
