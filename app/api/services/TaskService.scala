@@ -1,19 +1,19 @@
 package api.services
 
 import java.time.Duration
-import java.util.{Calendar, Date}
+import java.util.{ Calendar, Date }
 
-import akka.actor.{ActorRef, ActorSystem, Props}
-import api.dtos.{ExclusionDTO, SchedulingDTO, TaskDTO}
+import akka.actor.{ ActorRef, ActorSystem, Props }
+import api.dtos.{ ExclusionDTO, SchedulingDTO, TaskDTO }
 import api.services.Criteria.Criteria
-import api.utils.DateUtils.{dateToDayTypeString, _}
-import database.repositories.{FileRepository, TaskRepository}
+import api.utils.DateUtils.{ dateToDayTypeString, _ }
+import database.repositories.{ FileRepository, TaskRepository }
 import executionengine.ExecutionJob
-import executionengine.ExecutionJob.{Cancel, Execute}
-import javax.inject.{Inject, Singleton}
+import executionengine.ExecutionJob.{ Cancel, Execute }
+import javax.inject.{ Inject, Singleton }
 
 import scala.collection._
-import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor}
+import scala.concurrent.{ Await, ExecutionContext, ExecutionContextExecutor }
 
 /**
  * Object that contains all methods for the task scheduling related to the service layer.
@@ -399,7 +399,7 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = list.filter(date =>  dayType == dateToDayTypeString(date))
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
           addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case ExclusionDTO(_, _, None, None, None, Some(dayType), None, Some(year), Some(criteria)) =>
@@ -741,8 +741,7 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-            addDateToQueueByCriteria(criteria, list, returnQueue)
-
+          addDateToQueueByCriteria(criteria, list, returnQueue)
 
         case SchedulingDTO(_, _, None, None, None, Some(dayType), None, None, Some(criteria)) =>
           val list = for {
@@ -934,13 +933,13 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
           addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), Some(month), Some(year), Some(criteria)) =>
-        val date = getDateFromCalendar(day, month, year, task.timezone)
-        if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) returnQueue :+ date
+          val date = getDateFromCalendar(day, month, year, task.timezone)
+          if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) returnQueue :+ date
 
         case _ => println("Exclusion borked.")
 
       }
-      if(returnQueue.isEmpty) None else Some(returnQueue.sortBy(_.getTime))
+      if (returnQueue.isEmpty) None else Some(returnQueue.sortBy(_.getTime))
     } else None
 
   }
@@ -953,10 +952,10 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
     dateCalendar.getTime
   }
 
-  private def addDateToQueueByCriteria(criteria: Criteria, dates: IndexedSeq[Date],returnQueue: mutable.Queue[Date]): mutable.Queue[Date] = {
+  private def addDateToQueueByCriteria(criteria: Criteria, dates: IndexedSeq[Date], returnQueue: mutable.Queue[Date]): mutable.Queue[Date] = {
     criteria match {
-      case first if first == Criteria.First && dates.nonEmpty  => returnQueue += dates(dates.size - 1)
-      case second if second == Criteria.Second && dates.size >=4 => returnQueue += dates(3)
+      case first if first == Criteria.First && dates.nonEmpty => returnQueue += dates(dates.size - 1)
+      case second if second == Criteria.Second && dates.size >= 4 => returnQueue += dates(3)
       case third if third == Criteria.Third && dates.size >= 3 => returnQueue += dates(2)
       case fourth if fourth == Criteria.Fourth && dates.size >= 2 => returnQueue += dates(1)
       case last if last == Criteria.Last && dates.nonEmpty => returnQueue += dates(0)

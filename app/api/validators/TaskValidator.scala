@@ -246,7 +246,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
         if (oldExclusion.isDefined) {
           exclusion.exclusionDate match {
             case Some(_) =>
-              val exclusionDate = exclusionDates.head
+              val exclusionDate = exclusionDates.headOption.flatten
               if (exclusionDate.isDefined && exclusion.day.isEmpty && exclusion.dayOfWeek.isEmpty &&
                 exclusion.dayType.isEmpty && exclusion.month.isEmpty && exclusion.year.isEmpty && exclusion.criteria.isEmpty) {
                 iter(exclusions.tail, exclusionDates.tail, ExclusionDTO(exclusion.exclusionId.get, taskId, exclusionDate) :: toReturn)
@@ -286,15 +286,17 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
 
   private def getOldExclusionWithExclusionId(exclusionId: Option[String], oldExclusions: Option[List[ExclusionDTO]]): Option[ExclusionDTO] = {
     def iter(oldExclusions: Option[List[ExclusionDTO]]): Option[ExclusionDTO] = {
-      if ((oldExclusions.isEmpty && oldExclusions.get.isEmpty) || exclusionId.isEmpty) None
-      else if (oldExclusions.get.head.exclusionId.equals(exclusionId.get)) Some(oldExclusions.get.head) else iter(Some(oldExclusions.get.tail))
+      if ((oldExclusions.isDefined && oldExclusions.get.isEmpty) || exclusionId.isEmpty) None
+      else if (oldExclusions.get.head.exclusionId.equals(exclusionId.get)) oldExclusions.map(_.head)
+      else iter(oldExclusions.map(_.tail))
     }
     iter(oldExclusions)
   }
 
   private def areValidExclusions(exclusions: Option[List[ExclusionDTO]], startDate: Option[Date], endDate: Option[Date]): List[(Boolean, Error)] = {
     if (exclusions.isDefined) {
-      if (startDate.isDefined) calendar.setTime(startDate.get) else calendar.setTime(new Date())
+      if (startDate.isDefined) calendar.setTime(startDate.get)
+      else calendar.setTime(new Date())
       List(
         (areValidExclusionDateValues(exclusions, endDate), invalidExclusionDateValue),
         (areValidExclusionDayValues(exclusions), invalidExclusionDayValue),
@@ -308,17 +310,17 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
   }
 
   private def existsAtLeastOneExclusionDate(exclusions: Option[List[CreateExclusionDTO]]): Boolean = {
-    if (exclusions.isDefined) {
-      exclusions.get.foreach(elem => if (elem.exclusionDate.isEmpty) false)
-      true
-    } else false
+    exclusions match {
+      case Some(list) => list.exists(_.exclusionDate.nonEmpty)
+      case None => false
+    }
   }
 
   private def existsAtLeastOneUpdateExclusionDate(exclusions: Option[List[UpdateExclusionDTO]]): Boolean = {
-    if (exclusions.isDefined) {
-      exclusions.get.foreach(elem => if (elem.exclusionDate.isEmpty) false)
-      true
-    } else false
+    exclusions match {
+      case Some(list) => list.exists(_.exclusionDate.nonEmpty)
+      case None => false
+    }
   }
 
   private def areValidExclusionFormats(exclusions: Option[List[CreateExclusionDTO]], exclusionDates: List[Option[Date]], taskId: String): Option[List[ExclusionDTO]] = {
