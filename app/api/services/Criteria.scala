@@ -10,5 +10,5 @@ object Criteria extends Enumeration {
   lazy val Fourth: Criteria = "Fourth"
   lazy val Last: Criteria = "Last"
 
-  val criteriaList: List[Criteria] = List(First,Second,Third,Fourth,Last)
+  val criteriaList: List[Criteria] = List(First, Second, Third, Fourth, Last)
 }
