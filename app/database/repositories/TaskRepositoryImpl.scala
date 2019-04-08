@@ -1,13 +1,13 @@
 package database.repositories
 
 import api.dtos.TaskDTO
-import api.services.{PeriodType, SchedulingType}
+import api.services.{ PeriodType, SchedulingType }
 import database.mappings.FileMappings._
 import database.mappings.TaskMappings._
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ Await, ExecutionContext, Future }
 
 /**
  * Class that handles the data layer for the scheduled tasks.
@@ -135,8 +135,9 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
    * @param task - information to update the task with
    * @return an Int with information of the updated task
    */
-  def updateTaskById(id: String, task: TaskDTO): Future[Int] = {
-    taskDTOToTaskRow(task).flatMap(elem => dtbase.run(updateTaskByTaskId(id, elem)))
+  def updateTaskById(id: String, task: TaskDTO): Future[Boolean] = {
+    deleteTaskById(id)
+    insertInTasksTable(task)
   }
 
   /**

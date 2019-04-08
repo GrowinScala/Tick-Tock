@@ -1,17 +1,17 @@
 package api.validators
 
-import java.util.{Calendar, Date, TimeZone, UUID}
+import java.util.{ Calendar, Date, TimeZone, UUID }
 
 import api.dtos._
-import api.services.{Criteria, DayType, SchedulingType}
+import api.services.{ Criteria, DayType, SchedulingType }
 import api.utils.DateUtils._
 import api.utils.UUIDGenerator
 import api.validators.Error._
-import database.repositories.{FileRepository, TaskRepository}
-import javax.inject.{Inject, Singleton}
+import database.repositories.{ FileRepository, TaskRepository }
+import javax.inject.{ Inject, Singleton }
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{ Await, ExecutionContext }
 import scala.util.Try
 
 /**
@@ -691,7 +691,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
                 case 30 => scheduling.month.get != 2
 
                 case 31 =>
-                    scheduling.month.get != 2 && scheduling.month.get != 4 && scheduling.month.get != 6 &&
+                  scheduling.month.get != 2 && scheduling.month.get != 4 && scheduling.month.get != 6 &&
                     scheduling.month.get != 9 && scheduling.month.get != 11
 
               }

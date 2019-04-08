@@ -5,8 +5,8 @@ import java.util.Date
 
 import api.services.Criteria.Criteria
 import api.services.DayType.DayType
-import api.services.{Criteria, DayType}
-import play.api.libs.json.{Json, OFormat}
+import api.services.{ Criteria, DayType }
+import play.api.libs.json.{ Json, OFormat }
 import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._
 
@@ -34,7 +34,7 @@ object SchedulingMappings {
   //---------------------------------------------------------
 
   class SchedulingsTable(tag: Tag) extends Table[SchedulingRow](tag, "schedulings") {
-    def schedulingId = column[String]("schedulingId", O.Length(36))
+    def schedulingId = column[String]("schedulingId", O.PrimaryKey, O.Length(36))
     def taskId = column[String]("taskId", O.Length(36))
     def schedulingDate = column[Option[Date]]("schedulingDate")
     def day = column[Option[Int]]("day")
@@ -127,40 +127,36 @@ object SchedulingMappings {
     schedulingsTable += scheduling
   }
 
-  def updateSchedulingBySchedulingId(schedulingId: String, scheduling: SchedulingRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getSchedulingBySchedulingId(schedulingId).update(scheduling)
+  def updateSchedulingByTaskId(schedulingId: String, taskId: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getSchedulingBySchedulingId(schedulingId).map(_.taskId).update(taskId)
   }
 
-  def updateSchedulingByTaskId(taskId: String, scheduling: SchedulingRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getSchedulingByTaskId(taskId).update(scheduling)
+  def updateSchedulingBySchedulingDate(schedulingId: String, schedulingDate: Date): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getSchedulingBySchedulingId(schedulingId).map(_.schedulingDate).update(Some(schedulingDate))
   }
 
-  def updateSchedulingBySchedulingDate(schedulingDate: Date, scheduling: SchedulingRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getSchedulingBySchedulingDate(schedulingDate).update(scheduling)
+  def updateSchedulingByDay(schedulingId: String, day: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getSchedulingBySchedulingId(schedulingId).map(_.day).update(Some(day))
   }
 
-  def updateSchedulingByDay(day: Int, scheduling: SchedulingRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getSchedulingByDay(day).update(scheduling)
+  def updateSchedulingByDayOfWeek(schedulingId: String, dayOfWeek: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getSchedulingBySchedulingId(schedulingId).map(_.dayOfWeek).update(Some(dayOfWeek))
   }
 
-  def updateSchedulingByDayOfWeek(dayOfWeek: Int, scheduling: SchedulingRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getSchedulingByDayOfWeek(dayOfWeek).update(scheduling)
+  def updateSchedulingByDayType(schedulingId: String, dayType: DayType): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getSchedulingBySchedulingId(schedulingId).map(_.dayType).update(Some(dayType))
   }
 
-  def updateSchedulingByDayType(dayType: DayType, scheduling: SchedulingRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getSchedulingByDayType(dayType).update(scheduling)
+  def updateSchedulingByMonth(schedulingId: String, month: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getSchedulingBySchedulingId(schedulingId).map(_.month).update(Some(month))
   }
 
-  def updateSchedulingByMonth(month: Int, scheduling: SchedulingRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getSchedulingByMonth(month).update(scheduling)
+  def updateSchedulingByYear(schedulingId: String, year: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getSchedulingBySchedulingId(schedulingId).map(_.year).update(Some(year))
   }
 
-  def updateSchedulingByYear(year: Int, scheduling: SchedulingRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getSchedulingByYear(year).update(scheduling)
-  }
-
-  def updateSchedulingByCriteria(criteria: Criteria, scheduling: SchedulingRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getSchedulingByCriteria(criteria).update(scheduling)
+  def updateSchedulingByCriteria(schedulingId: String, criteria: Criteria): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getSchedulingBySchedulingId(schedulingId).map(_.criteria).update(Some(criteria))
   }
 
   def deleteSchedulingBySchedulingId(schedulingId: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {

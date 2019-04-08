@@ -1,7 +1,7 @@
 package database.repositories
 
 import api.dtos.TaskDTO
-import api.services.{PeriodType, SchedulingType}
+import api.services.{ PeriodType, SchedulingType }
 import api.utils.DateUtils._
 
 import scala.concurrent.Future
@@ -82,8 +82,8 @@ class FakeTaskRepository extends TaskRepository {
    * @param task - information to update the task with
    * @return an Int with information of the updated task
    */
-  def updateTaskById(id: String, task: TaskDTO): Future[Int] = {
-    Future.successful(1)
+  def updateTaskById(id: String, task: TaskDTO): Future[Boolean] = {
+    Future.successful(true)
   }
 
   /**

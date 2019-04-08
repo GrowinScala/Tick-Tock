@@ -1,18 +1,18 @@
 package api.services
 
 import java.time.Duration
-import java.util.{Calendar, Date}
+import java.util.{ Calendar, Date }
 
-import akka.actor.{ActorRef, ActorSystem, Props}
-import api.dtos.{ExclusionDTO, SchedulingDTO, TaskDTO}
-import api.utils.DateUtils.{dateToDayTypeString, _}
-import database.repositories.{FileRepository, TaskRepository}
+import akka.actor.{ ActorRef, ActorSystem, Props }
+import api.dtos.{ ExclusionDTO, SchedulingDTO, TaskDTO }
+import api.utils.DateUtils.{ dateToDayTypeString, _ }
+import database.repositories.{ FileRepository, TaskRepository }
 import executionengine.ExecutionJob
-import executionengine.ExecutionJob.{Cancel, Execute}
-import javax.inject.{Inject, Singleton}
+import executionengine.ExecutionJob.{ Cancel, Execute }
+import javax.inject.{ Inject, Singleton }
 
 import scala.collection._
-import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor}
+import scala.concurrent.{ Await, ExecutionContext, ExecutionContextExecutor }
 
 /**
  * Object that contains all methods for the task scheduling related to the service layer.
@@ -1300,7 +1300,7 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
   def getDateFromCalendar(day: Int, month: Int, year: Int, timezone: Option[String] = None): Date = {
     val dateCalendar = Calendar.getInstance
     if (timezone.isDefined) dateCalendar.setTimeZone(parseTimezone(timezone.get).get)
-    dateCalendar.set(year, month - 1, day)
-    dateCalendar.getTime
+    dateCalendar.set(year, month, day)
+    removeTimeFromDate(dateCalendar.getTime)
   }
 }

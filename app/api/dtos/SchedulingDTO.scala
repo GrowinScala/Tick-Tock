@@ -4,7 +4,7 @@ import java.util.Date
 
 import api.services.Criteria.Criteria
 import api.services.DayType.DayType
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{ Json, OFormat }
 
 case class SchedulingDTO(
   schedulingId: String,

@@ -5,7 +5,7 @@ import database.mappings.FileMappings._
 import javax.inject.Inject
 import slick.jdbc.MySQLProfile.api._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository {
 
@@ -68,7 +68,7 @@ class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository {
   def existsCorrespondingFileName(fileName: String): Future[Boolean] = {
     selectFileByName(fileName).map(elem => elem.isDefined)
   }
-  
+
   /**
    * Retrieves a fileId of a row on the database by providing the fileName.
    * @param fileName Name of the file given by the user on the database.

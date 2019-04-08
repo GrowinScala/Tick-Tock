@@ -1,9 +1,9 @@
 package api.controllers
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
-import api.utils.{FakeUUIDGenerator, UUIDGenerator}
-import database.repositories.{FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository}
+import akka.stream.{ ActorMaterializer, Materializer }
+import api.utils.{ FakeUUIDGenerator, UUIDGenerator }
+import database.repositories.{ FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository }
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.Injector
