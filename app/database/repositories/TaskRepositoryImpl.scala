@@ -8,8 +8,7 @@ import database.mappings.FileMappings._
 import database.mappings.TaskMappings._
 import slick.jdbc.MySQLProfile.api._
 
-import scala.concurrent.duration._
-import scala.concurrent.{ Await, ExecutionContext, Future }
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * Class that handles the data layer for the scheduled tasks.
@@ -132,7 +131,7 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
 
   def decrementCurrentOccurrencesByTaskId(id: String): Future[Unit] = {
     selectCurrentOccurrencesByTaskId(id).map {
-      elem => Await.result(dtbase.run(getTaskByTaskId(id).map(_.currentOccurrences).update(Some(elem.get - 1))), 5 seconds)
+      elem => dtbase.run(getTaskByTaskId(id).map(_.currentOccurrences).update(Some(elem.get - 1)))
     }
   }
 
