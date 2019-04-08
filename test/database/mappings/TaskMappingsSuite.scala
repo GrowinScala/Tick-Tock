@@ -70,13 +70,11 @@ class TaskMappingsSuite extends PlaySpec with BeforeAndAfterAll with BeforeAndAf
     }
   }
 
-  for (i <- 1 to 100) {
-    "TaskMappings#selectTaskByValue" + i should {
-      "return the correct TaskRow when given an existing value." in {
-        val result = Await.result(dtbase.run(getTaskByValue(3).result), Duration.Inf)
-        result.size mustBe 1
-        result.head.toString mustBe "TaskRow(" + taskUUID2 + "," + fileUUID2 + ",4,Some(3),Some(Tue Jan 01 00:00:00 GMT 2030),None,Some(10),Some(10),None)"
-      }
+  "TaskMappings#selectTaskByValue" should {
+    "return the correct TaskRow when given an existing value." in {
+      val result = Await.result(dtbase.run(getTaskByValue(3).result), Duration.Inf)
+      result.size mustBe 1
+      result.head.toString mustBe "TaskRow(" + taskUUID2 + "," + fileUUID2 + ",4,Some(3),Some(Tue Jan 01 00:00:00 GMT 2030),None,Some(10),Some(10),None)"
     }
   }
 

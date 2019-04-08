@@ -20,6 +20,8 @@ import scala.concurrent.{ ExecutionContext, Future }
 @Singleton
 class TaskController @Inject() (cc: ControllerComponents)(implicit exec: ExecutionContext, implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository, implicit val UUIDGen: UUIDGenerator) extends AbstractController(cc) {
 
+  val taskValidator = new TaskValidator()
+
   /**
    * Method that runs when a GET request is made on localhost:9000/
    *
@@ -42,17 +44,17 @@ class TaskController @Inject() (cc: ControllerComponents)(implicit exec: Executi
       errors =>
         Future.successful(BadRequest(Json.obj("status" -> "Error:", "message" -> JsError.toJson(errors)))),
       task => {
-        val taskValidator = new TaskValidator
-        val validationResult = taskValidator.scheduleValidator(task)
-        validationResult match {
-          case Left(errorList) =>
-            Future.successful(BadRequest(JsArray(errorList.map(error => Json.toJsObject(error)).toIndexedSeq)))
-          case Right(taskDto) =>
-            taskRepo.insertInTasksTable(taskDto)
-            val taskService = new TaskService
-            taskService.scheduleTask(taskDto)
-            val url = routes.TaskController.getScheduleById(taskDto.taskId).absoluteURL(request.secure)(request).stripSuffix("/").trim
-            Future.successful(Ok("Task received => " + url))
+        taskValidator.scheduleValidator(task).flatMap {
+          {
+            case Left(errorList) =>
+              Future.successful(BadRequest(JsArray(errorList.map(error => Json.toJsObject(error)).toIndexedSeq)))
+            case Right(taskDto) =>
+              taskRepo.insertInTasksTable(taskDto)
+              val taskService = new TaskService
+              taskService.scheduleTask(taskDto)
+              val url = routes.TaskController.getScheduleById(taskDto.taskId).absoluteURL(request.secure)(request).stripSuffix("/").trim
+              Future.successful(Ok("Task received => " + url))
+          }
         }
       })
   }
@@ -94,18 +96,17 @@ class TaskController @Inject() (cc: ControllerComponents)(implicit exec: Executi
     jsonResult.fold(
       errors => Future.successful(BadRequest("Error replacing scheduled task : \n" + errors)),
       task => {
-        val taskValidator = new TaskValidator
-        val validationResult = taskValidator.updateValidator(id, task)
-        validationResult match {
-          case Left(errorList) =>
-            Future.successful(BadRequest(JsArray(errorList.map(error => Json.toJsObject(error)).toIndexedSeq)))
-          case Right(taskDto) =>
-            taskRepo.updateTaskById(id, taskDto)
-            val taskService = new TaskService
-            taskService.replaceTask(id, taskDto)
-            val url = routes.TaskController.getScheduleById(id).absoluteURL(request.secure)(request).stripSuffix("/").trim
-            Future.successful(Ok("Task received => " + url))
-        }
+        taskValidator.updateValidator(id, task).flatMap(
+          {
+            case Left(errorList) =>
+              Future.successful(BadRequest(JsArray(errorList.map(error => Json.toJsObject(error)).toIndexedSeq)))
+            case Right(taskDto) =>
+              taskRepo.updateTaskById(id, taskDto)
+              val taskService = new TaskService
+              taskService.replaceTask(id, taskDto)
+              val url = routes.TaskController.getScheduleById(id).absoluteURL(request.secure)(request).stripSuffix("/").trim
+              Future.successful(Ok("Task received => " + url))
+          })
       })
 
   } //TODO - implement exception when periodicity is implemented
@@ -131,17 +132,17 @@ class TaskController @Inject() (cc: ControllerComponents)(implicit exec: Executi
       errors =>
         Future.successful(BadRequest(Json.obj("status" -> "Error:", "message" -> JsError.toJson(errors)))),
       task => {
-        val taskValidator = new TaskValidator
-        val validationResult = taskValidator.scheduleValidator(task)
-        validationResult match {
-          case Left(errorList) =>
-            Future.successful(BadRequest(JsArray(errorList.map(error => Json.toJsObject(error)).toIndexedSeq)))
-          case Right(taskDto) =>
-            taskRepo.updateTaskById(id, taskDto)
-            val taskService = new TaskService
-            taskService.replaceTask(id, taskDto)
-            val url = routes.TaskController.getScheduleById(id).absoluteURL(request.secure)(request).stripSuffix("/").trim
-            Future.successful(Ok("Task received => " + url))
+        taskValidator.scheduleValidator(task).flatMap {
+          {
+            case Left(errorList) =>
+              Future.successful(BadRequest(JsArray(errorList.map(error => Json.toJsObject(error)).toIndexedSeq)))
+            case Right(taskDto) =>
+              taskRepo.updateTaskById(id, taskDto)
+              val taskService = new TaskService
+              taskService.replaceTask(id, taskDto)
+              val url = routes.TaskController.getScheduleById(id).absoluteURL(request.secure)(request).stripSuffix("/").trim
+              Future.successful(Ok("Task received => " + url))
+          }
         }
       })
 
