@@ -5,7 +5,7 @@ import java.util.UUID
 import api.services.{ Criteria, DayType }
 import api.utils.DateUtils.stringToDateFormat
 import database.mappings.ExclusionMappings._
-import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
+import org.scalatest.{ AsyncWordSpec, BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec }
 import org.scalatestplus.play.PlaySpec
 import play.api.inject.guice.GuiceApplicationBuilder
 import slick.jdbc.MySQLProfile.api._
@@ -29,19 +29,13 @@ class ExclusionMappingsSuite extends PlaySpec with BeforeAndAfterAll with Before
 
   override def beforeAll(): Unit = {
     Await.result(dtbase.run(createExclusionsTableAction), Duration.Inf)
+    Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
+    Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5)))), Duration.Inf)
+    Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
   }
 
   override def afterAll(): Unit = {
     Await.result(dtbase.run(dropExclusionsTableAction), Duration.Inf)
-  }
-
-  override def beforeEach(): Unit = {
-
-    Await.result(dtbase.run(deleteAllFromExclusionsTable), Duration.Inf)
-    Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
-    Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5)))), Duration.Inf)
-    Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
-
   }
 
   "ExclusionMappings#selectExclusionByExclusionId" should {
@@ -151,7 +145,7 @@ class ExclusionMappingsSuite extends PlaySpec with BeforeAndAfterAll with Before
       val updateResult1 = Await.result(dtbase.run(updateExclusionByExclusionDate(exclusionUUID1, stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))), Duration.Inf)
       updateResult1 mustBe 1
       val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID1).result), Duration.Inf)
-      selectResult1.head.toString mustBe "ExclusionRow(" + exclusionUUID1 + "," + taskUUID2 + ",Some(Mon Jan 01 00:00:00 GMT 2035),None,None,None,None,None,None)"
+      selectResult1.head.toString mustBe "ExclusionRow(" + exclusionUUID1 + "," + taskUUID1 + ",Some(Mon Jan 01 00:00:00 GMT 2035),None,None,None,None,None,None)"
       val updateResult2 = Await.result(dtbase.run(updateExclusionByExclusionDate(exclusionUUID1, stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))), Duration.Inf)
       updateResult2 mustBe 1
       val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID1).result), Duration.Inf)

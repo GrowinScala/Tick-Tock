@@ -50,7 +50,6 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
     } yield res
     Await.result(result, Duration.Inf)
     Await.result(dtbase.run(createTasksTableAction), Duration.Inf)
-
   }
 
   override def afterAll: Unit = {

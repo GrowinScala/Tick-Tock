@@ -5,7 +5,7 @@ import java.util.UUID
 import api.services.{ Criteria, DayType }
 import api.utils.DateUtils._
 import database.mappings.SchedulingMappings._
-import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
+import org.scalatest.{ AsyncWordSpec, BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec }
 import org.scalatestplus.play.PlaySpec
 import play.api.inject.guice.GuiceApplicationBuilder
 import slick.jdbc.MySQLProfile.api._
@@ -29,17 +29,13 @@ class SchedulingMappingsSuite extends PlaySpec with BeforeAndAfterAll with Befor
 
   override def beforeAll(): Unit = {
     Await.result(dtbase.run(createSchedulingsTableAction), Duration.Inf)
+    Await.result(dtbase.run(insertScheduling(SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
+    Await.result(dtbase.run(insertScheduling(SchedulingRow(schedulingUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5)))), Duration.Inf)
+    Await.result(dtbase.run(insertScheduling(SchedulingRow(schedulingUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
   }
 
   override def afterAll(): Unit = {
     Await.result(dtbase.run(dropSchedulingsTableAction), Duration.Inf)
-  }
-
-  override def beforeEach(): Unit = {
-    Await.result(dtbase.run(deleteAllFromSchedulingsTable), Duration.Inf)
-    Await.result(dtbase.run(insertScheduling(SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
-    Await.result(dtbase.run(insertScheduling(SchedulingRow(schedulingUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5)))), Duration.Inf)
-    Await.result(dtbase.run(insertScheduling(SchedulingRow(schedulingUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
   }
 
   "SchedulingMappings#selectSchedulingBySchedulingId" should {

@@ -73,7 +73,7 @@ trait TaskRepository {
    * @param task - information to update the task with
    * @return an Int with information of the updated task
    */
-  def updateTaskById(id: String, task: TaskDTO): Future[Int]
+  def updateTaskById(id: String, task: TaskDTO): Future[Boolean]
 
   /**
    * Inserts a task (row) on the tasks table on the database.
