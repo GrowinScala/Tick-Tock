@@ -36,7 +36,7 @@ object TaskMappings {
   //# TABLE MAPPINGS
   //---------------------------------------------------------
   class TasksTable(tag: Tag) extends Table[TaskRow](tag, "tasks") {
-    def taskId = column[String]("taskId", O.Length(36))
+    def taskId = column[String]("taskId", O.PrimaryKey, O.Length(36))
     def fileId = column[String]("fileId", O.Length(36))
     def period = column[Int]("period")
     def value = column[Option[Int]]("value")
@@ -105,40 +105,36 @@ object TaskMappings {
     tasksTable += task
   }
 
-  def updateTaskByTaskId(taskId: String, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getTaskByTaskId(taskId).update(task)
+  def updateTaskByFileId(taskId: String, fileId: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getTaskByTaskId(taskId).map(_.fileId).update(fileId)
   }
 
-  def updateTaskByFileId(fileId: String, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getTaskByFileId(fileId).update(task)
+  def updateTaskByPeriod(taskId: String, period: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getTaskByTaskId(taskId).map(_.period).update(period)
   }
 
-  def updateTaskByPeriod(period: Int, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getTaskByPeriod(period).update(task)
+  def updateTaskByValue(taskId: String, value: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getTaskByTaskId(taskId).map(_.value).update(Some(value))
   }
 
-  def updateTaskByValue(value: Int, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getTaskByValue(value).update(task)
+  def updateTaskByStartDateAndTime(taskId: String, startDateAndTime: Date): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getTaskByTaskId(taskId).map(_.startDateAndTime).update(Some(startDateAndTime))
   }
 
-  def updateTaskByStartDateAndTime(startDateAndTime: Date, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getTaskByStartDateAndTime(startDateAndTime).update(task)
+  def updateTaskByEndDateAndTime(taskId: String, endDateAndTime: Date): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getTaskByTaskId(taskId).map(_.endDateAndTime).update(Some(endDateAndTime))
   }
 
-  def updateTaskByEndDateAndTime(endDateAndTime: Date, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getTaskByEndDateAndTime(endDateAndTime).update(task)
+  def updateTaskByTotalOccurrences(taskId: String, totalOccurrences: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getTaskByTaskId(taskId).map(_.totalOccurrences).update(Some(totalOccurrences))
   }
 
-  def updateTaskByTotalOccurrences(totalOccurrences: Int, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getTaskByTotalOccurrences(totalOccurrences).update(task)
+  def updateTaskByCurrentOccurrences(taskId: String, currentOccurrences: Int): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getTaskByTaskId(taskId).map(_.currentOccurrences).update(Some(currentOccurrences))
   }
 
-  def updateTaskByCurrentOccurrences(currentOccurrences: Int, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getTaskByCurrentOccurrences(currentOccurrences).update(task)
-  }
-
-  def updateTaskByTimezone(timezone: String, task: TaskRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getTaskByTimezone(timezone).update(task)
+  def updateTaskByTimezone(taskId: String, timezone: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getTaskByTaskId(taskId).map(_.timezone).update(Some(timezone))
   }
 
   def deleteTaskByTaskId(taskId: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {

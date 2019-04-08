@@ -1,823 +1,965 @@
-package api.validators
+package api.services
 
-import java.util.{Calendar, Date, TimeZone, UUID}
+import java.time.Duration
+import java.util.{ Calendar, Date }
 
-import api.dtos._
-import api.services.Criteria.criteriaList
-import api.services.{DayType, SchedulingType}
-import api.utils.DateUtils._
-import api.utils.UUIDGenerator
-import api.validators.Error._
-import database.repositories.{FileRepository, TaskRepository}
-import javax.inject.{Inject, Singleton}
+import akka.actor.{ ActorRef, ActorSystem, Props }
+import api.dtos.{ ExclusionDTO, SchedulingDTO, TaskDTO }
+import api.services.Criteria.Criteria
+import api.utils.DateUtils.{ dateToDayTypeString, _ }
+import database.repositories.{ FileRepository, TaskRepository }
+import executionengine.ExecutionJob
+import executionengine.ExecutionJob.{ Cancel, Execute }
+import javax.inject.{ Inject, Singleton }
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
-import scala.util.Try
+import scala.collection._
+import scala.concurrent.{ Await, ExecutionContext, ExecutionContextExecutor }
 
 /**
- * Object that handles the validation for the received JSON's on the HTTP request controller classes.
+ * Object that contains all methods for the task scheduling related to the service layer.
  */
 @Singleton
-class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository, implicit val UUIDGen: UUIDGenerator) {
+class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository) {
+
+  val system = ActorSystem("ExecutionSystem")
+  implicit val sd: ExecutionContextExecutor = system.dispatcher
 
   implicit val ec: ExecutionContext = ExecutionContext.global
-  val calendar: Calendar = Calendar.getInstance
 
-  //---------------------------------------------------------
-  //# TASK VALIDATORS
-  //---------------------------------------------------------
+  var actorMap: scala.collection.immutable.Map[String, ActorRef] = scala.collection.immutable.Map[String, ActorRef]()
 
-  def scheduleValidator(task: CreateTaskDTO): Either[List[Error], TaskDTO] = {
-    val taskId = UUIDGen.generateUUID
-    val startDate = isValidStartDateFormat(task.startDateAndTime, task.timezone)
-    val endDate = isValidEndDateFormat(task.endDateAndTime, task.timezone)
-    val timezone = isValidTimezone(task.timezone)
-    val exclusionDates = areValidExclusionDateFormats(task.exclusions, startDate, endDate)
-    val exclusions = areValidExclusionFormats(task.exclusions, exclusionDates, taskId)
-    val schedulingDates = areValidSchedulingDateFormats(task.schedulings, startDate, endDate)
-    val schedulings = areValidSchedulingFormats(task.schedulings, schedulingDates, taskId)
+  /**
+   * Schedules a task by giving the storageName to be executed once immediately.
+   */
+  def scheduleTask(task: TaskDTO): Unit = {
 
-    val errorList: List[(Boolean, Error)] = (List(
-      (isValidCreateTask(task), invalidCreateTaskFormat),
-      (task.startDateAndTime.isEmpty || startDate.isDefined, invalidStartDateFormat),
-      (isValidStartDateValue(startDate), invalidStartDateValue),
-      (isValidFileName(Some(task.fileName)), invalidFileName),
-      (isValidTaskType(Some(task.taskType)), invalidTaskType),
-      (isValidPeriodType(task.periodType), invalidPeriodType),
-      (isValidPeriod(task.period), invalidPeriod),
-      (task.endDateAndTime.isEmpty || endDate.isDefined, invalidEndDateFormat),
-      (isValidEndDateValue(startDate, endDate), invalidEndDateValue),
-      (isValidOccurrences(task.occurrences), invalidOccurrences),
-      (task.timezone.isEmpty || timezone.isDefined, invalidTimezone),
-      (task.exclusions.isEmpty || exclusions.isDefined, invalidExclusionFormat),
-      ((exclusionDates.isEmpty && !existsAtLeastOneExclusionDate(task.exclusions)) || exclusionDates.nonEmpty, invalidExclusionDateFormat),
-      (task.schedulings.isEmpty || schedulings.isDefined, invalidSchedulingFormat),
-      ((schedulingDates.isEmpty && !existsAtLeastOneSchedulingDate(task.schedulings)) || schedulingDates.nonEmpty, invalidSchedulingDateFormat))
-      ::: areValidExclusions(exclusions, startDate, endDate)
-      ::: areValidSchedulings(schedulings, startDate, endDate)).filter(errorList => errorList match {
-        case (isValid, _) => !isValid
-      })
+    val fileId = Await.result(fileRepo.selectFileIdFromFileName(task.fileName), scala.concurrent.duration.Duration.Inf)
 
-    if (errorList.isEmpty) Right(TaskDTO(taskId, task.fileName, task.taskType, startDate, task.periodType, task.period, endDate, task.occurrences, task.occurrences, if (timezone.isDefined) Some(timezone.get.getID) else None, exclusions, schedulings))
-    else Left(errorList.unzip match {
-      case (_, errors) => errors
-    })
-  }
-
-  def updateValidator(id: String, task: UpdateTaskDTO): Either[List[Error], TaskDTO] = {
-    val oldDTO = Await.result(taskRepo.selectTask(id), Duration.Inf)
-    if (oldDTO.isDefined) {
-      val startDate = isValidStartDateFormat(task.startDateAndTime, task.timezone)
-      val endDate = isValidEndDateFormat(task.endDateAndTime, task.timezone)
-      val timezone = isValidTimezone(task.timezone)
-      val exclusionDates = areValidUpdateExclusionDateFormats(task.exclusions, startDate, endDate)
-      val exclusions = areValidUpdateExclusionFormats(oldDTO.get.exclusions, task.exclusions, exclusionDates, id)
-      val schedulingDates = areValidUpdateSchedulingDateFormats(task.schedulings, startDate, endDate)
-      val schedulings = areValidUpdateSchedulingFormats(oldDTO.get.schedulings, task.schedulings, schedulingDates, id)
-
-      val errorList: List[(Boolean, Error)] = (List(
-        (isValidUpdateTask(task, oldDTO.get), invalidUpdateTaskFormat),
-        (isValidUUID(task.taskId), invalidTaskUUID),
-        (task.startDateAndTime.isEmpty || startDate.isDefined, invalidStartDateFormat),
-        (isValidStartDateValue(startDate), invalidStartDateValue),
-        (isValidFileName(task.fileName), invalidFileName),
-        (isValidTaskType(task.taskType) || task.taskType.isEmpty, invalidTaskType),
-        (isValidPeriodType(task.periodType), invalidPeriodType),
-        (isValidPeriod(task.period), invalidPeriod),
-        (task.endDateAndTime.isEmpty || endDate.isDefined, invalidEndDateFormat),
-        (isValidOccurrences(task.occurrences), invalidOccurrences),
-        (task.timezone.isEmpty || timezone.isDefined, invalidTimezone),
-        (task.exclusions.isEmpty || exclusions.isDefined, invalidExclusionFormat),
-        ((exclusionDates.isEmpty && !existsAtLeastOneUpdateExclusionDate(task.exclusions)) || exclusionDates.isDefined, invalidExclusionDateFormat),
-        (task.schedulings.isEmpty || schedulings.isDefined, invalidSchedulingFormat),
-        ((schedulingDates.isEmpty && !existsAtLeastOneUpdateSchedulingDate(task.schedulings)) || schedulingDates.isDefined, invalidSchedulingDateFormat))
-        ::: areValidExclusions(exclusions, startDate, endDate)
-        ::: areValidSchedulings(schedulings, startDate, endDate)).filter(!_._1)
-
-      val oldStartDate = if (oldDTO.get.startDateAndTime.isDefined) oldDTO.get.startDateAndTime else None
-      val oldPeriodType = if (oldDTO.get.periodType.isDefined) oldDTO.get.periodType else None
-      val oldPeriod = if (oldDTO.get.period.isDefined) oldDTO.get.period else None
-      val oldEndDate = if (oldDTO.get.endDateAndTime.isDefined) oldDTO.get.endDateAndTime else None
-      val oldTotalOccurrences = if (oldDTO.get.totalOccurrences.isDefined) oldDTO.get.totalOccurrences else None
-      val oldCurrentOccurrences = if (oldDTO.get.currentOccurrences.isDefined) oldDTO.get.currentOccurrences else None
-      val oldTimezone = if (oldDTO.get.timezone.isDefined) oldDTO.get.timezone else None
-      val oldExclusions = if (oldDTO.get.exclusions.isDefined) oldDTO.get.exclusions else None
-      val oldSchedulings = if (oldDTO.get.schedulings.isDefined) oldDTO.get.schedulings else None
-
-      if (errorList.isEmpty) {
-        Right(TaskDTO(
-          task.taskId.getOrElse(oldDTO.get.taskId), //taskId
-          task.fileName.getOrElse(oldDTO.get.fileName), //fileName
-          task.taskType.getOrElse(oldDTO.get.taskType), //taskType
-          if (startDate.isDefined) startDate else oldStartDate, //startDate
-          if (task.periodType.isDefined) task.periodType else oldPeriodType, //periodType
-          if (task.period.isDefined) task.period else oldPeriod, //period
-          if (task.occurrences.isDefined && oldEndDate.isDefined) None else if (endDate.isDefined) endDate else oldEndDate, //endDate
-          if (endDate.isDefined && oldTotalOccurrences.isDefined) None else if (task.occurrences.isDefined) task.occurrences else oldTotalOccurrences, //totalOccurrences
-          if (endDate.isDefined && oldCurrentOccurrences.isDefined) None else if (task.occurrences.isDefined) task.occurrences else oldCurrentOccurrences, //currentOccurrences
-          if (task.timezone.isDefined) Some(timezone.get.getID) else oldTimezone, //timezone
-          if (task.exclusions.isDefined) exclusions else oldExclusions, //exclusions
-          if (task.schedulings.isDefined) schedulings else oldSchedulings //schedulings
-        ))
-      } else Left(errorList.unzip match {
-        case (_, errors) => errors
-      })
-    } else Left(List(invalidEndpointId))
-  }
-
-  private def isValidCreateTask(task: CreateTaskDTO): Boolean = {
     task.taskType match {
+
       case SchedulingType.RunOnce =>
-        task.periodType.isEmpty &&
-          task.period.isEmpty &&
-          task.endDateAndTime.isEmpty &&
-          task.occurrences.isEmpty &&
-          task.exclusions.isEmpty &&
-          task.schedulings.isEmpty
-      case SchedulingType.Periodic =>
-        task.periodType.isDefined && task.period.isDefined && task.schedulings.isEmpty &&
-          ((task.endDateAndTime.isDefined && task.occurrences.isEmpty) || (task.endDateAndTime.isEmpty && task.occurrences.isDefined))
+        val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.RunOnce, task.startDateAndTime, None, None, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo))
+        actorMap += (task.taskId -> actorRef)
+        actorRef ! Execute
+
       case SchedulingType.Personalized =>
-        task.periodType.isEmpty && task.period.isEmpty && task.schedulings.isDefined &&
-          ((task.endDateAndTime.isDefined && task.occurrences.isEmpty) || (task.endDateAndTime.isEmpty && task.occurrences.isDefined))
-      case _ => false
+        val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Personalized, task.startDateAndTime, None, task.endDateAndTime, task.timezone, calculateExclusions(task), calculateSchedulings(task), fileRepo, taskRepo))
+        actorMap += (task.taskId -> actorRef)
+        actorRef ! Execute
+
+      case SchedulingType.Periodic =>
+
+        task.periodType.get match {
+
+          case PeriodType.Minutely =>
+            val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofMinutes(task.period.get)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo))
+            actorMap += (task.taskId -> actorRef)
+            actorRef ! Execute
+
+          case PeriodType.Hourly =>
+            val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofHours(task.period.get)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo))
+            actorMap += (task.taskId -> actorRef)
+            actorRef ! Execute
+
+          case PeriodType.Daily =>
+            val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo))
+            actorMap += (task.taskId -> actorRef)
+            actorRef ! Execute
+
+          case PeriodType.Weekly =>
+            val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get * 7)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo))
+            actorMap += (task.taskId -> actorRef)
+            actorRef ! Execute
+
+          case PeriodType.Monthly =>
+            val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get * 30)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo))
+            actorMap += (task.taskId -> actorRef)
+            actorRef ! Execute
+
+          case PeriodType.Yearly =>
+            val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get * 365)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo))
+            actorMap += (task.taskId -> actorRef)
+            actorRef ! Execute
+        }
     }
   }
 
-  private def isValidUpdateTask(task: UpdateTaskDTO, oldTask: TaskDTO): Boolean = {
-    if (task.taskType.isDefined && task.taskType.get.equals("Periodic")) {
-      (task.startDateAndTime.isDefined || oldTask.startDateAndTime.isDefined) &&
-        (task.periodType.isDefined || oldTask.periodType.isDefined) &&
-        (task.period.isDefined || oldTask.period.isDefined) &&
-        (task.endDateAndTime.isDefined || oldTask.endDateAndTime.isDefined || task.occurrences.isDefined || oldTask.totalOccurrences.isDefined)
-    } else {
-      (task.taskId.isDefined || task.fileName.isDefined || task.taskType.isDefined || task.startDateAndTime.isDefined ||
-        task.periodType.isDefined || task.period.isDefined || task.endDateAndTime.isDefined || task.occurrences.isDefined) &&
-        !(task.endDateAndTime.isDefined && task.occurrences.isDefined)
+  def replaceTask(id: String, task: TaskDTO): Unit = {
+    if (actorMap.contains(id)) {
+      actorMap(id) ! Cancel
+      actorMap -= id
     }
-
+    scheduleTask(task)
   }
 
-  private def isValidUUID(uuid: Option[String]): Boolean = {
-    if (uuid.isDefined) {
-      val parsedUUID = Try(Some(UUID.fromString(uuid.get))).getOrElse(None)
-      parsedUUID.isDefined
-    } else true
-  }
-
-  private def isValidStartDateFormat(startDate: Option[String], timezone: Option[String]): Option[Date] = {
-    if (startDate.isDefined) {
-      if (timezone.isDefined && isValidTimezone(timezone).isDefined) parseDateWithTimezone(startDate.get, timezone.get)
-      else parseDate(startDate.get)
-    } else None
-  }
-
-  /**
-   * Checks if the date given is valid, (if it already happened or not)
-   *
-   * @param startDate The Date to be checked
-   * @return Returns a ValidationError if its not valid. None otherwise.
-   */
-  private def isValidStartDateValue(startDate: Option[Date]): Boolean = {
-    if (startDate.isDefined) startDate.get.after(getCurrentDate)
-    else true
-  }
-
-  /**
-   * Checks if the file with the given fileName exists.
-   *
-   * @param fileName The fileName to be checked.
-   * @return Returns a ValidationError if its not valid. None otherwise.
-   */
-  private def isValidFileName(fileName: Option[String]): Boolean = {
-    if (fileName.isDefined) Await.result(fileRepo.existsCorrespondingFileName(fileName.get), Duration.Inf)
-    else true
-  }
-
-  private def isValidTaskType(taskType: Option[String]): Boolean = {
-    if (taskType.isDefined) taskType.get.equals("RunOnce") || taskType.get.equals("Periodic") || taskType.get.equals("Personalized")
-    else false
-  }
-
-  private def isValidPeriodType(periodType: Option[String]): Boolean = {
-    periodType.isEmpty ||
-      periodType.get.equals("Minutely") ||
-      periodType.get.equals("Hourly") ||
-      periodType.get.equals("Daily") ||
-      periodType.get.equals("Weekly") ||
-      periodType.get.equals("Monthly") ||
-      periodType.get.equals("Yearly")
-  }
-
-  private def isValidPeriod(period: Option[Int]): Boolean = {
-    period.isEmpty || period.get > 0
-  }
-
-  private def isValidEndDateFormat(endDate: Option[String], timezone: Option[String]): Option[Date] = {
-    if (endDate.isDefined) {
-      if (timezone.isDefined && isValidTimezone(timezone).isDefined) parseDateWithTimezone(endDate.get, timezone.get)
-      else parseDate(endDate.get)
-    } else None
-  }
-
-  private def isValidEndDateValue(startDate: Option[Date], endDate: Option[Date]): Boolean = {
-    if (startDate.isDefined && endDate.isDefined) endDate.isEmpty || (endDate.get.after(startDate.get) && endDate.get.after(getCurrentDate))
-    else true
-  }
-
-  private def isValidOccurrences(occurrences: Option[Int]): Boolean = {
-    occurrences.isEmpty || occurrences.get > 0
-  }
-
-  private def isValidTimezone(timezone: Option[String]): Option[TimeZone] = {
-    if (timezone.isDefined) {
-      val parsedTimezone = parseTimezone(timezone.get)
-      if (parsedTimezone.isDefined) parsedTimezone
-      else None
-    } else None
-  }
-
-  //TODO fix exclusionDates.tail
-  private def areValidUpdateExclusionFormats(oldExclusions: Option[List[ExclusionDTO]], exclusions: Option[List[UpdateExclusionDTO]], exclusionDates: Option[List[Option[Date]]], taskId: String): Option[List[ExclusionDTO]] = {
-    def iter(exclusions: List[UpdateExclusionDTO], exclusionDates: List[Option[Date]], toReturn: List[ExclusionDTO]): Option[List[ExclusionDTO]] = {
-      if (exclusions.isEmpty) None
-      else {
-        val exclusion = exclusions.head
-        val oldExclusion = getOldExclusionWithExclusionId(exclusion.exclusionId, oldExclusions)
-        if (oldExclusion.isDefined) {
-          exclusion.exclusionDate match {
-            case Some(_) =>
-              val exclusionDate = exclusionDates.headOption.flatten
-              if (exclusionDate.isDefined && exclusion.day.isEmpty && exclusion.dayOfWeek.isEmpty &&
-                exclusion.dayType.isEmpty && exclusion.month.isEmpty && exclusion.year.isEmpty && exclusion.criteria.isEmpty) {
-                iter(exclusions.tail, exclusionDates.tail, ExclusionDTO(exclusion.exclusionId.get, taskId, exclusionDate) :: toReturn)
-              } else None
-            case None =>
-              if (exclusion.taskId.isDefined || exclusion.exclusionDate.isDefined || exclusion.day.isDefined
-                || exclusion.dayOfWeek.isDefined || exclusion.dayType.isDefined || exclusion.month.isDefined || exclusion.year.isDefined
-                || exclusion.criteria.isDefined) {
-                iter(exclusions.tail, exclusionDates.tail, ExclusionDTO(exclusion.exclusionId.get, taskId, None, exclusion.day, exclusion.dayOfWeek, exclusion.dayType, exclusion.month, exclusion.year, exclusion.criteria) :: toReturn)
-              } else None
+  def calculateExclusions(task: TaskDTO): Option[mutable.Queue[Date]] = {
+    if (task.exclusions.isDefined) {
+      val startCalendar = Calendar.getInstance
+      val endCalendar = Calendar.getInstance
+      if (task.startDateAndTime.isDefined) startCalendar.setTime(task.startDateAndTime.get) else startCalendar.setTime(new Date())
+      if (task.taskType != SchedulingType.RunOnce) {
+        if (task.totalOccurrences.isDefined) {
+          endCalendar.setTime(task.startDateAndTime.get)
+          task.periodType.get match {
+            case PeriodType.Yearly => endCalendar.add(Calendar.YEAR, task.currentOccurrences.get)
+            case PeriodType.Monthly => endCalendar.add(Calendar.MONTH, task.currentOccurrences.get)
+            case PeriodType.Weekly => endCalendar.add(Calendar.WEEK_OF_YEAR, task.currentOccurrences.get)
+            case PeriodType.Daily => endCalendar.add(Calendar.DAY_OF_MONTH, task.currentOccurrences.get)
+            case PeriodType.Hourly => endCalendar.add(Calendar.HOUR_OF_DAY, task.currentOccurrences.get)
+            case PeriodType.Minutely => endCalendar.add(Calendar.MINUTE, task.currentOccurrences.get)
           }
-        } else None
+        } else endCalendar.setTime(task.endDateAndTime.get)
       }
-    }
-    exclusions match {
-      case Some(exclusionList) => iter(exclusionList, exclusionDates.getOrElse(List(None)), Nil)
-      case None => None
-    }
-  }
+      val returnQueue: mutable.Queue[Date] = new mutable.Queue[Date]
+      task.exclusions.get.foreach {
+        case ExclusionDTO(_, _, Some(date), None, None, None, None, None, None) => returnQueue += date
+        case ExclusionDTO(_, _, None, Some(day), None, None, None, None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(println(_))
+          list.foreach(date => returnQueue += date)
 
-  private def areValidUpdateExclusionDateFormats(exclusions: Option[List[UpdateExclusionDTO]], startDate: Option[Date], endDate: Option[Date]): Option[List[Option[Date]]] = {
-    def iter(list: List[UpdateExclusionDTO], toReturn: List[Option[Date]]): Option[List[Option[Date]]] = {
-      if (list.nonEmpty) {
-        val exclusion = list.head
-        exclusion.exclusionDate match {
-          case Some(date) =>
-            val parsedDate = parseDate(date)
-            if (parsedDate.isDefined) iter(list.tail, parsedDate :: toReturn)
-            else None
-          case None => iter(list.tail, None :: toReturn)
-        }
-      } else Some(toReturn)
-    }
-    if (exclusions.isDefined) iter(exclusions.getOrElse(Nil), Nil)
-    else None
-  }
+        case ExclusionDTO(_, _, None, None, Some(dayOfWeek), None, None, None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) returnQueue += date)
 
-  //TODO exclisionID getOrElse can give empty string
-  private def getOldExclusionWithExclusionId(exclusionId: Option[String], oldExclusions: Option[List[ExclusionDTO]]): Option[ExclusionDTO] = {
-    def iter(oldExclusions: Option[List[ExclusionDTO]]): Option[ExclusionDTO] = {
-      if ((oldExclusions.isDefined && oldExclusions.get.isEmpty) || exclusionId.isEmpty) None
-      else if (oldExclusions.get.head.exclusionId.equals(exclusionId.getOrElse(""))) oldExclusions.map(_.head)
-      else iter(oldExclusions.map(_.tail))
-    }
-    iter(oldExclusions)
-  }
+        case ExclusionDTO(_, _, None, None, None, Some(dayType), None, None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayType == dateToDayTypeString(date)) returnQueue += date)
 
-  private def areValidExclusions(exclusions: Option[List[ExclusionDTO]], startDate: Option[Date], endDate: Option[Date]): List[(Boolean, Error)] = {
-    if (exclusions.isDefined) {
-      if (startDate.isDefined) calendar.setTime(startDate.get)
-      else calendar.setTime(new Date())
-      List(
-        (areValidExclusionDateValues(exclusions, endDate), invalidExclusionDateValue),
-        (areValidExclusionDayValues(exclusions), invalidExclusionDayValue),
-        (areValidExclusionDayOfWeekValues(exclusions), invalidExclusionDayOfWeekValue),
-        (areValidExclusionDayTypeValues(exclusions), invalidExclusionDayTypeValue),
-        (areValidExclusionMonthValues(exclusions), invalidExclusionMonthValue),
-        (areValidExclusionYearValues(exclusions), invalidExclusionYearValue),
-        (areValidExclusionCriteriaValues(exclusions), invalidExclusionCriteriaValue))
-    } else Nil
+        case ExclusionDTO(_, _, None, None, None, None, Some(month), None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => returnQueue += date)
 
-  }
+        case ExclusionDTO(_, _, None, None, None, None, None, Some(year), None) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => returnQueue += date)
 
-  private def existsAtLeastOneExclusionDate(exclusions: Option[List[CreateExclusionDTO]]): Boolean = {
-    exclusions match {
-      case Some(list) => list.exists(_.exclusionDate.nonEmpty)
-      case None => false
-    }
-  }
+        case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), None, None, None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) returnQueue += date)
 
-  private def existsAtLeastOneUpdateExclusionDate(exclusions: Option[List[UpdateExclusionDTO]]): Boolean = {
-    exclusions match {
-      case Some(list) => list.exists(_.exclusionDate.nonEmpty)
-      case None => false
-    }
-  }
+        case ExclusionDTO(_, _, None, Some(day), None, Some(dayType), None, None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayType == dateToDayTypeString(date)) returnQueue += date)
 
-  private def areValidExclusionFormats(exclusions: Option[List[CreateExclusionDTO]], exclusionDates: List[Option[Date]], taskId: String): Option[List[ExclusionDTO]] = {
-    def iter(list: List[CreateExclusionDTO], dateList: List[Option[Date]], toReturn: List[ExclusionDTO]): Option[List[ExclusionDTO]] = {
-      if (list.isEmpty) Some(toReturn)
-      else {
-        val exclusion = list.head
-        exclusion.exclusionDate match {
-          case Some(_) =>
-            val exclusionDate = dateList.headOption.flatten
-            if (exclusion.day.isEmpty && exclusion.dayOfWeek.isEmpty && exclusion.dayType.isEmpty && exclusion.month.isEmpty && exclusion.year.isEmpty)
-              iter(list.tail, Try(dateList.tail).getOrElse(Nil), ExclusionDTO(UUIDGen.generateUUID, taskId, exclusionDate) :: toReturn)
-            else None
-          case None =>
-            if (exclusion.day.isDefined || exclusion.dayOfWeek.isDefined || exclusion.dayType.isDefined || exclusion.month.isDefined || exclusion.year.isDefined)
-              iter(list.tail, Try(dateList.tail).getOrElse(Nil), ExclusionDTO(UUIDGen.generateUUID, taskId, None, exclusion.day, exclusion.dayOfWeek, exclusion.dayType, exclusion.month, exclusion.year, exclusion.criteria) :: toReturn)
-            else None
-        }
+        case ExclusionDTO(_, _, None, Some(day), None, None, Some(month), None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => returnQueue += date)
+
+        case ExclusionDTO(_, _, None, Some(day), None, None, None, Some(year), None) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => returnQueue += date)
+
+        case ExclusionDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), None, None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) returnQueue += date)
+
+        case ExclusionDTO(_, _, None, None, Some(dayOfWeek), None, Some(month), None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) returnQueue += date)
+
+        case ExclusionDTO(_, _, None, None, Some(dayOfWeek), None, None, Some(year), None) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) returnQueue += date)
+
+        case ExclusionDTO(_, _, None, None, None, Some(dayType), Some(month), None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayType == dateToDayTypeString(date)) returnQueue += date)
+
+        case ExclusionDTO(_, _, None, None, None, Some(dayType), None, Some(year), None) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayType == dateToDayTypeString(date)) returnQueue += date)
+
+        case ExclusionDTO(_, _, None, None, None, None, Some(month), Some(year), None) =>
+          val list = for {
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => returnQueue += date)
+
+        case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), None, None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) returnQueue += date)
+
+        case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), None, Some(month), None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) returnQueue += date)
+
+        case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), None, None, Some(year), None) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) returnQueue += date)
+
+        case ExclusionDTO(_, _, None, Some(day), None, Some(dayType), Some(month), None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayType == dateToDayTypeString(date)) returnQueue += date)
+
+        case ExclusionDTO(_, _, None, Some(day), None, Some(dayType), None, Some(year), None) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayType == dateToDayTypeString(date)) returnQueue += date)
+
+        case ExclusionDTO(_, _, None, Some(day), None, None, Some(month), Some(year), None) =>
+          returnQueue += getDateFromCalendar(day, month, year, task.timezone)
+
+        case ExclusionDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), Some(month), None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) returnQueue += date)
+
+        case ExclusionDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), None, Some(year), None) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) returnQueue += date)
+
+        case ExclusionDTO(_, _, None, None, None, Some(dayType), Some(month), Some(year), None) =>
+          val list = for {
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayType == dateToDayTypeString(date)) returnQueue += date)
+
+        case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), Some(month), None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) returnQueue += date)
+
+        case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), None, Some(year), None) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) returnQueue += date)
+
+        case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), None, Some(month), Some(year), None) =>
+          val date = getDateFromCalendar(day, month, year, task.timezone)
+          if (dayOfWeek == dateToDayOfWeekInt(date)) returnQueue += date
+
+        case ExclusionDTO(_, _, None, Some(day), None, Some(dayType), Some(month), Some(year), None) =>
+          val date = getDateFromCalendar(day, month, year, task.timezone)
+          if (dayType == dateToDayTypeString(date)) returnQueue += date
+
+        case ExclusionDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), Some(month), Some(year), None) =>
+          val list = for {
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) returnQueue += date)
+
+        case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), Some(month), Some(year), None) =>
+          val date = getDateFromCalendar(day, month, year, task.timezone)
+          if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) returnQueue += date
+
+        case ExclusionDTO(_, _, None, Some(day), None, None, None, None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          addDateToQueueByCriteria(criteria, list, returnQueue)
+
+        case ExclusionDTO(_, _, None, None, Some(dayOfWeek), None, None, None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          addDateToQueueByCriteria(criteria, list, returnQueue)
+
+        case ExclusionDTO(_, _, None, None, None, Some(dayType), None, None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case ExclusionDTO(_, _, None, None, None, None, Some(month), None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          addDateToQueueByCriteria(criteria, list, returnQueue)
+
+        case ExclusionDTO(_, _, None, None, None, None, None, Some(year), Some(criteria)) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          addDateToQueueByCriteria(criteria, list, returnQueue)
+
+        case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), None, None, None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case ExclusionDTO(_, _, None, Some(day), None, Some(dayType), None, None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case ExclusionDTO(_, _, None, Some(day), None, None, Some(month), None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          addDateToQueueByCriteria(criteria, list, returnQueue)
+
+        case ExclusionDTO(_, _, None, Some(day), None, None, None, Some(year), Some(criteria)) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          addDateToQueueByCriteria(criteria, list, returnQueue)
+
+        case ExclusionDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), None, None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case ExclusionDTO(_, _, None, None, Some(dayOfWeek), None, Some(month), None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case ExclusionDTO(_, _, None, None, Some(dayOfWeek), None, None, Some(year), Some(criteria)) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case ExclusionDTO(_, _, None, None, None, Some(dayType), Some(month), None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case ExclusionDTO(_, _, None, None, None, Some(dayType), None, Some(year), Some(criteria)) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case ExclusionDTO(_, _, None, None, None, None, Some(month), Some(year), Some(criteria)) =>
+          val list = for {
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          addDateToQueueByCriteria(criteria, list, returnQueue)
+
+        case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), None, None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), None, Some(month), None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), None, None, Some(year), Some(criteria)) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case ExclusionDTO(_, _, None, Some(day), None, Some(dayType), Some(month), None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case ExclusionDTO(_, _, None, Some(day), None, Some(dayType), None, Some(year), Some(criteria)) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case ExclusionDTO(_, _, None, Some(day), None, None, Some(month), Some(year), Some(_)) =>
+          returnQueue += getDateFromCalendar(day, month, year, task.timezone)
+
+        case ExclusionDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), Some(month), None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case ExclusionDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), None, Some(year), Some(criteria)) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case ExclusionDTO(_, _, None, None, None, Some(dayType), Some(month), Some(year), Some(criteria)) =>
+          val list = for {
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), Some(month), None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), None, Some(year), Some(criteria)) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), None, Some(month), Some(year), Some(criteria)) =>
+          val date = getDateFromCalendar(day, month, year, task.timezone)
+          if (dayOfWeek == dateToDayOfWeekInt(date)) returnQueue += date
+
+        case ExclusionDTO(_, _, None, Some(day), None, Some(dayType), Some(month), Some(year), Some(criteria)) =>
+          val date = getDateFromCalendar(day, month, year, task.timezone)
+          if (dayType == dateToDayTypeString(date)) returnQueue += date
+
+        case ExclusionDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), Some(month), Some(year), Some(criteria)) =>
+          val list = for {
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), Some(month), Some(year), Some(criteria)) =>
+          val date = getDateFromCalendar(day, month, year, task.timezone)
+          if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) returnQueue += date
+
+        case _ => println("Exclusion borked.")
+
       }
-    }
-    exclusions match {
-      case Some(exclusionList) => iter(exclusionList, exclusionDates, Nil)
-      case None => None
-    }
+      Some(returnQueue.sortBy(_.getTime))
+    } else None
   }
 
-  private def areValidExclusionDateFormats(exclusions: Option[List[CreateExclusionDTO]], startDate: Option[Date], endDate: Option[Date]): List[Option[Date]] = {
-    def iter(list: List[CreateExclusionDTO], toReturn: List[Option[Date]]): List[Option[Date]] = {
-      if (list.nonEmpty) {
-        val exclusion = list.head
-        exclusion.exclusionDate match {
-          case Some(date) =>
-            val parsedDate = parseDate(date)
-            if (parsedDate.isDefined) iter(list.tail, parsedDate :: toReturn)
-            else List()
-          case None => iter(list.tail, None :: toReturn)
-        }
-      } else toReturn
-    }
-    if (exclusions.isDefined) iter(exclusions.get, Nil)
-    else Nil
-  }
-
-  private def areValidExclusionDateValues(exclusions: Option[List[ExclusionDTO]], endDate: Option[Date]): Boolean = {
-    def iter(list: List[ExclusionDTO]): Boolean = {
-      if (list.nonEmpty) {
-        val exclusion = list.head
-        if (exclusion.exclusionDate.isDefined) {
-          if (exclusion.exclusionDate.get.after(calendar.getTime)) {
-            if (endDate.isDefined)
-              if (endDate.get.after(exclusion.exclusionDate.get)) iter(list.tail)
-              else false
-            else iter(list.tail)
-          } else false
-        } else iter(list.tail)
-      } else true
-    }
-    exclusions match {
-      case Some(list) => iter(list)
-      case None => true
-    }
-
-  }
-
-  private def areValidExclusionDayValues(exclusions: Option[List[ExclusionDTO]]): Boolean = {
-    def iter(list: List[ExclusionDTO]): Boolean = {
-      if (list.nonEmpty) {
-        val exclusion = list.head
-        if (exclusion.day.isDefined) {
-          if (exclusion.day.get >= 1 && exclusion.day.get <= 31) {
-            if (exclusion.month.isDefined) {
-              exclusion.day.get match {
-                case 29 => exclusion.month.get != 2 || (exclusion.year match {
-                  case Some(year) => isLeapYear(year)
-                  case None => false
-                })
-                case 30 => exclusion.month.get != 2
-                case 31 => exclusion.month.get != 2 && exclusion.month.get != 4 && exclusion.month.get != 6 && exclusion.month.get != 9 && exclusion.month.get != 11
-              }
-              if (exclusion.year.isDefined) {
-                if (exclusion.month.get == calendar.get(Calendar.MONTH) && exclusion.year.get == calendar.get(Calendar.YEAR)) if (exclusion.day.get >= calendar.get(Calendar.DAY_OF_MONTH)) iter(list.tail) else false
-                else if (exclusion.year.get >= calendar.get(Calendar.YEAR) && exclusion.month.get >= calendar.get(Calendar.MONTH)) iter(list.tail) else false
-              } else iter(list.tail)
-            } else iter(list.tail)
-          } else false
-        } else iter(list.tail)
-      } else true
-
-    }
-    exclusions match {
-      case Some(list) => iter(list)
-      case None => true
-    }
-
-  }
-
-  private def areValidExclusionDayOfWeekValues(exclusions: Option[List[ExclusionDTO]]): Boolean = {
-    def iter(list: List[ExclusionDTO]): Boolean = {
-      if (list.nonEmpty) {
-        val exclusion = list.head
-        if (exclusion.dayOfWeek.isDefined) {
-          if (exclusion.dayOfWeek.get >= 1 && exclusion.dayOfWeek.get <= 7) {
-            if (exclusion.dayType.isDefined) {
-              if (exclusion.dayOfWeek.get >= 2 && exclusion.dayOfWeek.get <= 6)
-                if (exclusion.dayType.get == DayType.Weekday) iter(list.tail) else false
-              else if (exclusion.dayType.get == DayType.Weekend) iter(list.tail) else false
-            } else iter(list.tail)
-          } else false
-        } else iter(list.tail)
-      } else true
-    }
-    exclusions match {
-      case Some(list) => iter(list)
-      case None => true
-    }
-  }
-
-  private def areValidExclusionDayTypeValues(exclusions: Option[List[ExclusionDTO]]): Boolean = {
-    def iter(list: List[ExclusionDTO]): Boolean = {
-      if (list.nonEmpty) {
-        val exclusion = list.head
-        exclusion.dayType match {
-          case Some(DayType.Weekday) =>
-            exclusion.dayOfWeek match {
-              case Some(value) =>
-                if ((1 to 5).contains(value)) iter(list.tail)
-                else false
-              case None => iter(list.tail)
-            }
-          case Some(DayType.Weekend) =>
-            exclusion.dayOfWeek match {
-              case Some(value) =>
-                if ((6 to 7).contains(value)) iter(list.tail)
-                else false
-              case None => iter(list.tail)
-            }
-          case Some(_) => false
-          case None => iter(list.tail)
-        }
-      } else true
-    }
-    exclusions match {
-      case Some(list) => iter(list)
-      case None => true
-    }
-  }
-
-  private def areValidExclusionMonthValues(exclusions: Option[List[ExclusionDTO]]): Boolean = {
-    def iter(list: List[ExclusionDTO]): Boolean = {
-      if (list.nonEmpty) {
-        val exclusion = list.head
-        if (exclusion.month.isDefined) {
-          if (exclusion.month.get >= 1 && exclusion.month.get <= 12) {
-            if (exclusion.year.isDefined) {
-              if (exclusion.year.get == calendar.get(Calendar.YEAR))
-                if (exclusion.month.get >= calendar.get(Calendar.MONTH)) iter(list.tail) else false
-              else if (exclusion.year.get >= calendar.get(Calendar.YEAR)) iter(list.tail) else false
-            } else iter(list.tail)
-          } else false
-        } else iter(list.tail)
-      } else true
-    }
-    exclusions match {
-      case Some(list) => iter(list)
-      case None => true
-    }
-  }
-
-  private def areValidExclusionYearValues(exclusions: Option[List[ExclusionDTO]]): Boolean = {
-    def iter(list: List[ExclusionDTO]): Boolean = {
-      if (list.nonEmpty) {
-        val exclusion = list.head
-        if (exclusion.year.isDefined) if (exclusion.year.get >= calendar.get(Calendar.YEAR)) iter(list.tail) else false
-        else iter(list.tail)
-      } else true
-    }
-    exclusions match {
-      case Some(list) => iter(list)
-      case None => true
-    }
-  }
-
-  private def areValidExclusionCriteriaValues(exclusions: Option[List[ExclusionDTO]]): Boolean = {
-    def iter(list: List[ExclusionDTO]): Boolean = {
-      if (list.nonEmpty) {
-        val exclusion = list.head
-        if (exclusion.criteria.isDefined)
-          if (criteriaList.contains(exclusion.criteria.get)) iter(list.tail) else false
-        else iter(list.tail)
-      } else true
-    }
-    exclusions match {
-      case Some(list) => iter(list)
-      case None => true
-    }
-  }
-
-  private def isValidSchedulingFormat(schedulings: Option[List[CreateSchedulingDTO]], schedulingDates: Option[List[Option[Date]]], taskId: String): Option[List[SchedulingDTO]] = {
-    def iter(list: List[CreateSchedulingDTO], dateList: Option[List[Option[Date]]], toReturn: List[SchedulingDTO]): Option[List[SchedulingDTO]] = {
-      if (list.isEmpty) Some(toReturn)
-      else {
-        val scheduling = list.head
-        scheduling.schedulingDate match {
-          case Some(_) =>
-            val schedulingDate = schedulingDates.getOrElse(List(None)).headOption.flatten
-            if (scheduling.day.isEmpty && scheduling.dayOfWeek.isEmpty && scheduling.dayType.isEmpty && scheduling.month.isEmpty && scheduling.year.isEmpty)
-              iter(list.tail, dateList.map(_.tail), SchedulingDTO(UUIDGen.generateUUID, taskId, schedulingDate) :: toReturn)
-            else None
-          case None =>
-            if (scheduling.day.isDefined || scheduling.dayOfWeek.isDefined || scheduling.dayType.isDefined || scheduling.month.isDefined || scheduling.year.isDefined)
-              iter(list.tail, None, SchedulingDTO(UUIDGen.generateUUID, taskId, None, scheduling.day, scheduling.dayOfWeek, scheduling.dayType, scheduling.month, scheduling.year, scheduling.criteria) :: toReturn)
-            else None
-        }
-      }
-    }
-    schedulings match {
-      case Some(scheduleList) => iter(scheduleList, schedulingDates, Nil)
-      case None => None
-    }
-  }
-
-  private def areValidUpdateSchedulingFormats(oldSchedulings: Option[List[SchedulingDTO]], schedulings: Option[List[UpdateSchedulingDTO]], schedulingDates: Option[List[Option[Date]]], taskId: String): Option[List[SchedulingDTO]] = {
-    def iter(schedulings: List[UpdateSchedulingDTO], schedulingDates: List[Option[Date]], toReturn: List[SchedulingDTO]): Option[List[SchedulingDTO]] = {
-      if (schedulings.isEmpty) None
-      else {
-        val scheduling = schedulings.head
-        val oldExclusion = getOldSchedulingWithSchedulingId(scheduling.schedulingId, oldSchedulings)
-        if (oldExclusion.isDefined) {
-          scheduling.schedulingDate match {
-            case Some(_) =>
-              val exclusionDate = schedulingDates.head
-              if (exclusionDate.isDefined && scheduling.day.isEmpty && scheduling.dayOfWeek.isEmpty &&
-                scheduling.dayType.isEmpty && scheduling.month.isEmpty && scheduling.year.isEmpty && scheduling.criteria.isEmpty) {
-                iter(schedulings.tail, schedulingDates.tail, SchedulingDTO(scheduling.schedulingId.get, taskId, exclusionDate) :: toReturn)
-              } else None
-            case None =>
-              if (scheduling.taskId.isDefined || scheduling.schedulingDate.isDefined || scheduling.day.isDefined
-                || scheduling.dayOfWeek.isDefined || scheduling.dayType.isDefined || scheduling.month.isDefined || scheduling.year.isDefined
-                || scheduling.criteria.isDefined) {
-                iter(schedulings.tail, schedulingDates.tail, SchedulingDTO(scheduling.schedulingId.get, taskId, None, scheduling.day, scheduling.dayOfWeek, scheduling.dayType, scheduling.month, scheduling.year, scheduling.criteria) :: toReturn)
-              } else None
+  def calculateSchedulings(task: TaskDTO): Option[scala.collection.mutable.Queue[Date]] = {
+    if (task.schedulings.isDefined) {
+      val startCalendar = Calendar.getInstance
+      val endCalendar = Calendar.getInstance
+      if (task.startDateAndTime.isDefined) startCalendar.setTime(task.startDateAndTime.get) else startCalendar.setTime(new Date())
+      if (task.taskType != SchedulingType.RunOnce) {
+        if (task.totalOccurrences.isDefined) {
+          endCalendar.setTime(task.startDateAndTime.get)
+          task.periodType.get match {
+            case PeriodType.Yearly => endCalendar.add(Calendar.YEAR, task.currentOccurrences.get)
+            case PeriodType.Monthly => endCalendar.add(Calendar.MONTH, task.currentOccurrences.get)
+            case PeriodType.Weekly => endCalendar.add(Calendar.WEEK_OF_YEAR, task.currentOccurrences.get)
+            case PeriodType.Daily => endCalendar.add(Calendar.DAY_OF_MONTH, task.currentOccurrences.get)
+            case PeriodType.Hourly => endCalendar.add(Calendar.HOUR_OF_DAY, task.currentOccurrences.get)
+            case PeriodType.Minutely => endCalendar.add(Calendar.MINUTE, task.currentOccurrences.get)
           }
-        } else None
+        } else endCalendar.setTime(task.endDateAndTime.get)
       }
-    }
-    schedulings match {
-      case Some(schedulingList) => iter(schedulingList, schedulingDates.get, Nil)
-      case None => None
-    }
-  }
+      val returnQueue: mutable.Queue[Date] = new mutable.Queue[Date]
+      task.schedulings.get.foreach {
+        case SchedulingDTO(_, _, Some(date), None, None, None, None, None, None) => returnQueue += date
+        case SchedulingDTO(_, _, None, Some(day), None, None, None, None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => returnQueue += date)
 
-  private def areValidUpdateSchedulingDateFormats(schedulings: Option[List[UpdateSchedulingDTO]], startDate: Option[Date], endDate: Option[Date]): Option[List[Option[Date]]] = {
-    def iter(list: List[UpdateSchedulingDTO], toReturn: List[Option[Date]]): Option[List[Option[Date]]] = {
-      if (list.nonEmpty) {
-        val scheduling = list.head
-        scheduling.schedulingDate match {
-          case Some(date) =>
-            val parsedDate = parseDate(date)
-            if (parsedDate.isDefined) iter(list.tail, parsedDate :: toReturn)
-            else None
-          case None => iter(list.tail, None :: toReturn)
-        }
-      } else Some(toReturn)
-    }
-    if (schedulings.isDefined) iter(schedulings.get, Nil)
-    else None
-  }
+        case SchedulingDTO(_, _, None, None, Some(dayOfWeek), None, None, None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) returnQueue += date)
 
-  //TODO exclisionID getOrElse can give empty string
-  private def getOldSchedulingWithSchedulingId(schedulingId: Option[String], oldSchedulings: Option[List[SchedulingDTO]]): Option[SchedulingDTO] = {
-    def iter(oldSchedulings: Option[List[SchedulingDTO]]): Option[SchedulingDTO] = {
-      if ((oldSchedulings.isEmpty && oldSchedulings.get.isEmpty) || schedulingId.isEmpty) None
-      else if (oldSchedulings.get.head.schedulingId.equals(schedulingId.getOrElse(""))) Some(oldSchedulings.get.head)
-      else iter(Some(oldSchedulings.get.tail))
-    }
-    iter(oldSchedulings)
-  }
+        case SchedulingDTO(_, _, None, None, None, Some(dayType), None, None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayType == dateToDayTypeString(date)) returnQueue += date)
 
-  private def areValidSchedulings(schedulings: Option[List[SchedulingDTO]], startDate: Option[Date], endDate: Option[Date]): List[(Boolean, Error)] = {
-    if (schedulings.isDefined) {
-      if (startDate.isDefined) calendar.setTime(startDate.get) else calendar.setTime(new Date())
-      List(
-        (areValidSchedulingDateValues(schedulings, endDate), invalidSchedulingDateValue),
-        (areValidSchedulingDayValues(schedulings), invalidSchedulingDayValue),
-        (areValidSchedulingDayOfWeekValues(schedulings), invalidSchedulingDayOfWeekValue),
-        (areValidSchedulingDayTypeValues(schedulings), invalidSchedulingDayTypeValue),
-        (areValidSchedulingMonthValues(schedulings), invalidSchedulingMonthValue),
-        (areValidSchedulingYearValues(schedulings), invalidSchedulingYearValue),
-        (areValidSchedulingCriteriaValues(schedulings), invalidSchedulingCriteriaValue))
-    } else Nil
-  }
+        case SchedulingDTO(_, _, None, None, None, None, Some(month), None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => returnQueue += date)
 
-  private def existsAtLeastOneSchedulingDate(schedulings: Option[List[CreateSchedulingDTO]]): Boolean = {
+        case SchedulingDTO(_, _, None, None, None, None, None, Some(year), None) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => returnQueue += date)
 
-    schedulings match {
-      case Some(list) => list.exists(_.schedulingDate.nonEmpty)
-      case None => false
-    }
-  }
+        case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), None, None, None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) returnQueue += date)
 
-  private def existsAtLeastOneUpdateSchedulingDate(schedulings: Option[List[UpdateSchedulingDTO]]): Boolean = {
+        case SchedulingDTO(_, _, None, Some(day), None, Some(dayType), None, None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayType == dateToDayTypeString(date)) returnQueue += date)
 
-    schedulings match {
-      case Some(list) => list.exists(_.schedulingDate.nonEmpty)
-      case None => false
-    }
-  }
+        case SchedulingDTO(_, _, None, Some(day), None, None, Some(month), None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => returnQueue += date)
 
-  private def areValidSchedulingFormats(schedulings: Option[List[CreateSchedulingDTO]], schedulingDates: List[Option[Date]], taskId: String): Option[List[SchedulingDTO]] = {
-    def iter(list: List[CreateSchedulingDTO], dateList: List[Option[Date]], toReturn: List[SchedulingDTO]): Option[List[SchedulingDTO]] = {
-      if (list.isEmpty) Some(toReturn)
-      else {
-        val scheduling = list.head
-        scheduling.schedulingDate match {
-          case Some(_) =>
-            val schedulingDate = schedulingDates.headOption.flatten
-            if (scheduling.day.isEmpty && scheduling.dayOfWeek.isEmpty && scheduling.dayType.isEmpty && scheduling.month.isEmpty && scheduling.year.isEmpty)
-              iter(list.tail, Try(dateList.tail).getOrElse(Nil), SchedulingDTO(UUIDGen.generateUUID, taskId, schedulingDate) :: toReturn)
-            else None
-          case None =>
-            if (scheduling.day.isDefined || scheduling.dayOfWeek.isDefined || scheduling.dayType.isDefined || scheduling.month.isDefined || scheduling.year.isDefined)
-              iter(list.tail, Try(dateList.tail).getOrElse(Nil), SchedulingDTO(UUIDGen.generateUUID, taskId, None, scheduling.day, scheduling.dayOfWeek, scheduling.dayType, scheduling.month, scheduling.year, scheduling.criteria) :: toReturn)
-            else None
-        }
+        case SchedulingDTO(_, _, None, Some(day), None, None, None, Some(year), None) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => returnQueue += date)
+
+        case SchedulingDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), None, None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) returnQueue += date)
+
+        case SchedulingDTO(_, _, None, None, Some(dayOfWeek), None, Some(month), None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) returnQueue += date)
+
+        case SchedulingDTO(_, _, None, None, Some(dayOfWeek), None, None, Some(year), None) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) returnQueue += date)
+
+        case SchedulingDTO(_, _, None, None, None, Some(dayType), Some(month), None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayType == dateToDayTypeString(date)) returnQueue += date)
+
+        case SchedulingDTO(_, _, None, None, None, Some(dayType), None, Some(year), None) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayType == dateToDayTypeString(date)) returnQueue += date)
+
+        case SchedulingDTO(_, _, None, None, None, None, Some(month), Some(year), None) =>
+          val list = for {
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => returnQueue += date)
+
+        case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), None, None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) returnQueue += date)
+
+        case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), None, Some(month), None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) returnQueue += date)
+
+        case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), None, None, Some(year), None) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) returnQueue += date)
+
+        case SchedulingDTO(_, _, None, Some(day), None, Some(dayType), Some(month), None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayType == dateToDayTypeString(date)) returnQueue += date)
+
+        case SchedulingDTO(_, _, None, Some(day), None, Some(dayType), None, Some(year), None) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayType == dateToDayTypeString(date)) returnQueue += date)
+
+        case SchedulingDTO(_, _, None, Some(day), None, None, Some(month), Some(year), None) =>
+          returnQueue :+ getDateFromCalendar(day, month, year, task.timezone)
+
+        case SchedulingDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), Some(month), None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) returnQueue += date)
+
+        case SchedulingDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), None, Some(year), None) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) returnQueue += date)
+
+        case SchedulingDTO(_, _, None, None, None, Some(dayType), Some(month), Some(year), None) =>
+          val list = for {
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayType == dateToDayTypeString(date)) returnQueue += date)
+
+        case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), Some(month), None, None) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) returnQueue += date)
+
+        case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), None, Some(year), None) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) returnQueue += date)
+
+        case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), None, Some(month), Some(year), None) =>
+          val date = getDateFromCalendar(day, month, year, task.timezone)
+          if (dayOfWeek == dateToDayOfWeekInt(date)) returnQueue += date
+
+        case SchedulingDTO(_, _, None, Some(day), None, Some(dayType), Some(month), Some(year), None) =>
+          val date = getDateFromCalendar(day, month, year, task.timezone)
+          if (dayType == dateToDayTypeString(date)) returnQueue += date
+
+        case SchedulingDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), Some(month), Some(year), None) =>
+          val list = for {
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) returnQueue += date)
+
+        case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), Some(month), Some(year), None) =>
+          val date = getDateFromCalendar(day, month, year, task.timezone)
+          if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) returnQueue += date
+
+        case SchedulingDTO(_, _, None, Some(day), None, None, None, None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          addDateToQueueByCriteria(criteria, list, returnQueue)
+
+        case SchedulingDTO(_, _, None, None, Some(dayOfWeek), None, None, None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          addDateToQueueByCriteria(criteria, list, returnQueue)
+
+        case SchedulingDTO(_, _, None, None, None, Some(dayType), None, None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case SchedulingDTO(_, _, None, None, None, None, Some(month), None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          addDateToQueueByCriteria(criteria, list, returnQueue)
+
+        case SchedulingDTO(_, _, None, None, None, None, None, Some(year), Some(criteria)) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          addDateToQueueByCriteria(criteria, list, returnQueue)
+
+        case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), None, None, None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case SchedulingDTO(_, _, None, Some(day), None, Some(dayType), None, None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case SchedulingDTO(_, _, None, Some(day), None, None, Some(month), None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          addDateToQueueByCriteria(criteria, list, returnQueue)
+
+        case SchedulingDTO(_, _, None, Some(day), None, None, None, Some(year), Some(criteria)) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          addDateToQueueByCriteria(criteria, list, returnQueue)
+
+        case SchedulingDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), None, None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case SchedulingDTO(_, _, None, None, Some(dayOfWeek), None, Some(month), None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case SchedulingDTO(_, _, None, None, Some(dayOfWeek), None, None, Some(year), Some(criteria)) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case SchedulingDTO(_, _, None, None, None, Some(dayType), Some(month), None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case SchedulingDTO(_, _, None, None, None, Some(dayType), None, Some(year), Some(criteria)) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case SchedulingDTO(_, _, None, None, None, None, Some(month), Some(year), Some(criteria)) =>
+          val list = for {
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          addDateToQueueByCriteria(criteria, list, returnQueue)
+
+        case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), None, None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), None, Some(month), None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), None, None, Some(year), Some(criteria)) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case SchedulingDTO(_, _, None, Some(day), None, Some(dayType), Some(month), None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case SchedulingDTO(_, _, None, Some(day), None, Some(dayType), None, Some(year), Some(criteria)) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case SchedulingDTO(_, _, None, Some(day), None, None, Some(month), Some(year), Some(criteria)) =>
+          returnQueue :+ getDateFromCalendar(day, month, year, task.timezone)
+
+        case SchedulingDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), Some(month), None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case SchedulingDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), None, Some(year), Some(criteria)) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case SchedulingDTO(_, _, None, None, None, Some(dayType), Some(month), Some(year), Some(criteria)) =>
+          val list = for {
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), Some(month), None, Some(criteria)) =>
+          val list = for {
+            year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), None, Some(year), Some(criteria)) =>
+          val list = for {
+            month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), None, Some(month), Some(year), Some(criteria)) =>
+          val date = getDateFromCalendar(day, month, year, task.timezone)
+          if (dayOfWeek == dateToDayOfWeekInt(date)) returnQueue += date
+
+        case SchedulingDTO(_, _, None, Some(day), None, Some(dayType), Some(month), Some(year), Some(criteria)) =>
+          val date = getDateFromCalendar(day, month, year, task.timezone)
+          if (dayType == dateToDayTypeString(date)) returnQueue += date
+
+        case SchedulingDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), Some(month), Some(year), Some(criteria)) =>
+          val list = for {
+            day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
+          } yield getDateFromCalendar(day, month, year, task.timezone)
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
+        case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), Some(month), Some(year), Some(criteria)) =>
+          val date = getDateFromCalendar(day, month, year, task.timezone)
+          if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) returnQueue :+ date
+
+        case _ => println("Exclusion borked.")
+
       }
-    }
-    schedulings match {
-      case Some(schedulingList) => iter(schedulingList, schedulingDates, Nil)
-      case None => None
-    }
+      if (returnQueue.isEmpty) None else Some(returnQueue.sortBy(_.getTime))
+    } else None
+
   }
 
-  private def areValidSchedulingDateFormats(schedulings: Option[List[CreateSchedulingDTO]], startDate: Option[Date], endDate: Option[Date]): List[Option[Date]] = {
-    def iter(list: List[CreateSchedulingDTO], toReturn: List[Option[Date]]): List[Option[Date]] = {
-      if (list.nonEmpty) {
-        val scheduling = list.head
-        scheduling.schedulingDate match {
-          case Some(date) =>
-            val parsedDate = parseDate(date)
-            if (parsedDate.isDefined) iter(list.tail, parsedDate :: toReturn)
-            else Nil
-          case None => iter(list.tail, None :: toReturn)
-        }
-      } else toReturn
-    }
-    if (schedulings.isDefined) iter(schedulings.get, Nil)
-    else Nil
+  //TODO change implementation
+  def getDateFromCalendar(day: Int, month: Int, year: Int, timezone: Option[String] = None): Date = {
+    val dateCalendar = Calendar.getInstance
+    if (timezone.isDefined) dateCalendar.setTimeZone(parseTimezone(timezone.get).get)
+    dateCalendar.set(year, month - 1, day)
+    dateCalendar.getTime
   }
 
-  private def areValidSchedulingDateValues(schedulings: Option[List[SchedulingDTO]], endDate: Option[Date]): Boolean = {
-    def iter(list: List[SchedulingDTO]): Boolean = {
-      if (list.nonEmpty) {
-        val scheduling = list.head
-        if (scheduling.schedulingDate.isDefined) {
-          if (scheduling.schedulingDate.get.after(calendar.getTime)) {
-            if (endDate.isDefined)
-              if (endDate.get.after(scheduling.schedulingDate.get)) iter(list.tail) else false
-            else iter(list.tail)
-          } else false
-        } else iter(list.tail)
-      } else true
-    }
-    schedulings match {
-      case Some(list) => iter(list)
-      case None => true
+  private def addDateToQueueByCriteria(criteria: Criteria, dates: IndexedSeq[Date], returnQueue: mutable.Queue[Date]): mutable.Queue[Date] = {
+    criteria match {
+      case first if first == Criteria.First && dates.nonEmpty => returnQueue += dates(dates.size - 1)
+      case second if second == Criteria.Second && dates.size >= 4 => returnQueue += dates(3)
+      case third if third == Criteria.Third && dates.size >= 3 => returnQueue += dates(2)
+      case fourth if fourth == Criteria.Fourth && dates.size >= 2 => returnQueue += dates(1)
+      case last if last == Criteria.Last && dates.nonEmpty => returnQueue += dates(0)
+      case _ => returnQueue
     }
   }
-
-  private def areValidSchedulingDayValues(schedulings: Option[List[SchedulingDTO]]): Boolean = {
-    def iter(list: List[SchedulingDTO]): Boolean = {
-      if (list.nonEmpty) {
-        val scheduling = list.head
-        if (scheduling.day.isDefined) {
-          if (scheduling.day.get >= 1 && scheduling.day.get <= 31) {
-            if (scheduling.month.isDefined) {
-              scheduling.day.get match {
-                case 29 => scheduling.month.get != 2 || scheduling.year.isEmpty || isLeapYear(scheduling.year.get)
-
-                case 30 => scheduling.month.get != 2
-
-                case 31 => scheduling.month.get != 2 && scheduling.month.get != 4 && scheduling.month.get != 6 &&
-                    scheduling.month.get != 9 && scheduling.month.get != 11
-
-              }
-              if (scheduling.year.isDefined) {
-                if (scheduling.month.get == calendar.get(Calendar.MONTH) && scheduling.year.get == calendar.get(Calendar.YEAR)) if (scheduling.day.get >= calendar.get(Calendar.DAY_OF_MONTH)) iter(list.tail) else false
-                else if (scheduling.year.get >= calendar.get(Calendar.YEAR) && scheduling.month.get >= calendar.get(Calendar.MONTH)) iter(list.tail) else false
-              } else iter(list.tail)
-            } else iter(list.tail)
-          } else false
-        } else iter(list.tail)
-      } else true
-
-    }
-    schedulings match {
-      case Some(list) => iter(list)
-      case None => true
-    }
-  }
-
-  private def areValidSchedulingDayOfWeekValues(schedulings: Option[List[SchedulingDTO]]): Boolean = {
-    def iter(list: List[SchedulingDTO]): Boolean = {
-      if (list.nonEmpty) {
-        val scheduling = list.head
-        if (scheduling.dayOfWeek.isDefined) {
-          if (scheduling.dayOfWeek.get >= 1 && scheduling.dayOfWeek.get <= 7) {
-            if (scheduling.dayType.isDefined) {
-              if (scheduling.dayOfWeek.get >= 2 && scheduling.dayOfWeek.get <= 6)
-                if (scheduling.dayType.get == DayType.Weekday) iter(list.tail) else false
-              else if (scheduling.dayType.get == DayType.Weekend) iter(list.tail) else false
-            } else iter(list.tail)
-          } else false
-        } else iter(list.tail)
-      } else true
-    }
-    schedulings match {
-      case Some(list) => iter(list)
-      case None => true
-    }
-  }
-
-  private def areValidSchedulingDayTypeValues(schedulings: Option[List[SchedulingDTO]]): Boolean = {
-    def iter(list: List[SchedulingDTO]): Boolean = {
-      if (list.nonEmpty) {
-        val scheduling = list.head
-        scheduling.dayType match {
-          case Some(DayType.Weekday) =>
-            scheduling.dayOfWeek match {
-              case Some(dayOfWeek) => if (dayOfWeek >= 2 && dayOfWeek <= 6) iter(list.tail) else false
-              case None => iter(list.tail)
-            }
-          case Some(DayType.Weekend) =>
-            scheduling.dayOfWeek match {
-              case Some(dayOfWeek) => if (dayOfWeek == 1 || dayOfWeek == 7) iter(list.tail) else false
-              case None => iter(list.tail)
-            }
-          case Some(_) => false
-          case None => iter(list.tail)
-        }
-      } else true
-    }
-    schedulings match {
-      case Some(list) => iter(list)
-      case None => true
-    }
-  }
-
-  private def areValidSchedulingMonthValues(schedulings: Option[List[SchedulingDTO]]): Boolean = {
-    def iter(list: List[SchedulingDTO]): Boolean = {
-      if (list.nonEmpty) {
-        val scheduling = list.head
-        if (scheduling.month.isDefined) {
-          if (scheduling.month.get >= 1 && scheduling.month.get <= 12) {
-            if (scheduling.year.isDefined) {
-              if (scheduling.year.get == calendar.get(Calendar.YEAR)) if (scheduling.month.get >= calendar.get(Calendar.MONTH)) iter(list.tail) else false
-              else if (scheduling.year.get >= calendar.get(Calendar.YEAR)) iter(list.tail) else false
-            } else iter(list.tail)
-          } else false
-        } else iter(list.tail)
-      } else true
-    }
-    schedulings match {
-      case Some(list) => iter(list)
-      case None => true
-    }
-  }
-
-  private def areValidSchedulingYearValues(schedulings: Option[List[SchedulingDTO]]): Boolean = {
-    def iter(list: List[SchedulingDTO]): Boolean = {
-      if (list.nonEmpty) {
-        val scheduling = list.head
-        if (scheduling.year.isDefined) if (scheduling.year.get >= calendar.get(Calendar.YEAR)) iter(list.tail) else false
-        else iter(list.tail)
-      } else true
-    }
-    schedulings match {
-      case Some(list) => iter(list)
-      case None => true
-    }
-  }
-
-  private def areValidSchedulingCriteriaValues(schedulings: Option[List[SchedulingDTO]]): Boolean = {
-    def iter(list: List[SchedulingDTO]): Boolean = {
-      if (list.nonEmpty) {
-        val scheduling = list.head
-        if (scheduling.criteria.isDefined)
-          if (criteriaList.contains(scheduling.criteria.get)) iter(list.tail) else false
-        else iter(list.tail)
-      } else true
-    }
-    schedulings match {
-      case Some(list) => iter(list)
-      case None => true
-    }
-  }
-
 }

@@ -2232,15 +2232,4 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
     }
   }
 
-  /*"TaskController#GETtask" should {
-    "receive a GET request" in {
-      val fakeRequest = FakeRequest(POST, "/task")
-        .withHeaders(HOST -> LOCALHOST)
-      val result = route(app, fakeRequest)
-      val bodyText: String = contentAsString(result.get)
-      println(bodyText)
-      status(result.get) mustBe OK
-    }
-  }*/
-
 }

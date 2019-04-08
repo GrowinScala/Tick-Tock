@@ -29,7 +29,7 @@ object FileMappings {
   //# TABLE MAPPINGS
   //---------------------------------------------------------
   class FilesTable(tag: Tag) extends Table[FileRow](tag, "files") {
-    def fileId = column[String]("fileId", O.Length(36))
+    def fileId = column[String]("fileId", O.PrimaryKey, O.Length(36))
     def fileName = column[String]("fileName", O.Length(50))
     def uploadDate = column[Date]("uploadDate")
 
@@ -68,16 +68,12 @@ object FileMappings {
     filesTable += file
   }
 
-  def updateFileByFileId(fileId: String, file: FileRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getFileByFileId(fileId).update(file)
+  def updateFileByFileName(fileId: String, fileName: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getFileByFileId(fileId).map(_.fileName).update(fileName)
   }
 
-  def updateFileByFileName(fileName: String, file: FileRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getFileByFileName(fileName).update(file)
-  }
-
-  def updateFileByUploadDate(uploadDate: Date, file: FileRow): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
-    getFileByUploadDate(uploadDate).update(file)
+  def updateFileByUploadDate(fileId: String, uploadDate: Date): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+    getFileByFileId(fileId).map(_.uploadDate).update(uploadDate)
   }
 
   def deleteFileByFileId(fileId: String): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {

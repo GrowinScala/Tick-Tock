@@ -948,8 +948,8 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
   def getDateFromCalendar(day: Int, month: Int, year: Int, timezone: Option[String] = None): Date = {
     val dateCalendar = Calendar.getInstance
     if (timezone.isDefined) dateCalendar.setTimeZone(parseTimezone(timezone.get).get)
-    dateCalendar.set(year, month - 1, day)
-    dateCalendar.getTime
+    dateCalendar.set(year, month, day)
+    removeTimeFromDate(dateCalendar.getTime)
   }
 
   private def addDateToQueueByCriteria(criteria: Criteria, dates: IndexedSeq[Date], returnQueue: mutable.Queue[Date]): mutable.Queue[Date] = {

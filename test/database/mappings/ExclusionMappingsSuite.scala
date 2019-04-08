@@ -5,7 +5,7 @@ import java.util.UUID
 import api.services.{ Criteria, DayType }
 import api.utils.DateUtils.stringToDateFormat
 import database.mappings.ExclusionMappings._
-import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
+import org.scalatest.{ AsyncWordSpec, BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec }
 import org.scalatestplus.play.PlaySpec
 import play.api.inject.guice.GuiceApplicationBuilder
 import slick.jdbc.MySQLProfile.api._
@@ -29,19 +29,13 @@ class ExclusionMappingsSuite extends PlaySpec with BeforeAndAfterAll with Before
 
   override def beforeAll(): Unit = {
     Await.result(dtbase.run(createExclusionsTableAction), Duration.Inf)
+    Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
+    Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5)))), Duration.Inf)
+    Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
   }
 
   override def afterAll(): Unit = {
     Await.result(dtbase.run(dropExclusionsTableAction), Duration.Inf)
-  }
-
-  override def beforeEach(): Unit = {
-
-    Await.result(dtbase.run(deleteAllFromExclusionsTable), Duration.Inf)
-    Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
-    Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5)))), Duration.Inf)
-    Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
-
   }
 
   "ExclusionMappings#selectExclusionByExclusionId" should {
@@ -133,154 +127,107 @@ class ExclusionMappingsSuite extends PlaySpec with BeforeAndAfterAll with Before
 
   }
 
-  "ExclusionMappings#updateExclusionByExclusionId" should {
-    "update a ExclusionRow by giving the corresponding schedulingId." in {
-      val updateResult1 = Await.result(dtbase.run(updateExclusionByExclusionId(exclusionUUID1, ExclusionRow(exclusionUUID4, taskUUID2, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
-      updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "ExclusionRow(" + exclusionUUID4 + "," + taskUUID2 + ",Some(Tue Jan 01 00:00:00 GMT 2030),None,None,None,None,None,None)"
-      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID1).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateExclusionByExclusionId(exclusionUUID4, ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
-      updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID1).result), Duration.Inf)
-      selectResult4.head.toString mustBe "ExclusionRow(" + exclusionUUID1 + "," + taskUUID1 + ",Some(Tue Jan 01 00:00:00 GMT 2030),None,None,None,None,None,None)"
-    }
-  }
-
   "ExclusionMappings#updateExclusionByTaskId" should {
     "update a ExclusionRow by giving the corresponding taskId." in {
-      val updateResult1 = Await.result(dtbase.run(updateExclusionByTaskId(taskUUID1, ExclusionRow(exclusionUUID4, taskUUID2, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateExclusionByTaskId(exclusionUUID1, taskUUID2)), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "ExclusionRow(" + exclusionUUID4 + "," + taskUUID2 + ",Some(Tue Jan 01 00:00:00 GMT 2030),None,None,None,None,None,None)"
-      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID1).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateExclusionByTaskId(taskUUID3, ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID1).result), Duration.Inf)
+      selectResult1.head.toString mustBe "ExclusionRow(" + exclusionUUID1 + "," + taskUUID2 + ",Some(Tue Jan 01 00:00:00 GMT 2030),None,None,None,None,None,None)"
+      val updateResult2 = Await.result(dtbase.run(updateExclusionByTaskId(exclusionUUID1, taskUUID1)), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID1).result), Duration.Inf)
-      selectResult3.head.toString mustBe "ExclusionRow(" + exclusionUUID1 + "," + taskUUID1 + ",Some(Tue Jan 01 00:00:00 GMT 2030),None,None,None,None,None,None)"
+      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID1).result), Duration.Inf)
+      selectResult2.head.toString mustBe "ExclusionRow(" + exclusionUUID1 + "," + taskUUID1 + ",Some(Tue Jan 01 00:00:00 GMT 2030),None,None,None,None,None,None)"
     }
   }
 
   "ExclusionMappings#updateExclusionByExclusionDate" should {
     "update a ExclusionRow by giving the corresponding schedulingDate." in {
-      val updateResult1 = Await.result(dtbase.run(updateExclusionByExclusionDate(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"), ExclusionRow(exclusionUUID4, taskUUID2, Some(stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateExclusionByExclusionDate(exclusionUUID1, stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "ExclusionRow(" + exclusionUUID4 + "," + taskUUID2 + ",Some(Mon Jan 01 00:00:00 GMT 2035),None,None,None,None,None,None)"
-      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID1).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateExclusionByExclusionDate(stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"), ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID1).result), Duration.Inf)
+      selectResult1.head.toString mustBe "ExclusionRow(" + exclusionUUID1 + "," + taskUUID1 + ",Some(Mon Jan 01 00:00:00 GMT 2035),None,None,None,None,None,None)"
+      val updateResult2 = Await.result(dtbase.run(updateExclusionByExclusionDate(exclusionUUID1, stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID1).result), Duration.Inf)
-      selectResult4.head.toString mustBe "ExclusionRow(" + exclusionUUID1 + "," + taskUUID1 + ",Some(Tue Jan 01 00:00:00 GMT 2030),None,None,None,None,None,None)"
+      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID1).result), Duration.Inf)
+      selectResult2.head.toString mustBe "ExclusionRow(" + exclusionUUID1 + "," + taskUUID1 + ",Some(Tue Jan 01 00:00:00 GMT 2030),None,None,None,None,None,None)"
     }
   }
 
   "ExclusionMappings#updateExclusionByDay" should {
     "update a ExclusionRow by giving the corresponding day." in {
-      val updateResult1 = Await.result(dtbase.run(updateExclusionByDay(15, ExclusionRow(exclusionUUID4, taskUUID1, None, Some(10), Some(3), None, Some(5)))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateExclusionByDay(exclusionUUID2, 10)), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "ExclusionRow(" + exclusionUUID4 + "," + taskUUID1 + ",None,Some(10),Some(3),None,Some(5),None,None)"
-      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID2).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateExclusionByDay(10, ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5)))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID2).result), Duration.Inf)
+      selectResult1.head.toString mustBe "ExclusionRow(" + exclusionUUID2 + "," + taskUUID2 + ",None,Some(10),Some(3),None,Some(5),None,None)"
+      val updateResult2 = Await.result(dtbase.run(updateExclusionByDay(exclusionUUID2, 15)), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID2).result), Duration.Inf)
-      selectResult4.head.toString mustBe "ExclusionRow(" + exclusionUUID2 + "," + taskUUID2 + ",None,Some(15),Some(3),None,Some(5),None,None)"
+      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID2).result), Duration.Inf)
+      selectResult2.head.toString mustBe "ExclusionRow(" + exclusionUUID2 + "," + taskUUID2 + ",None,Some(15),Some(3),None,Some(5),None,None)"
     }
   }
 
   "ExclusionMappings#updateExclusionByDayOfWeek" should {
     "update a ExclusionRow by giving the corresponding dayOfWeek." in {
-      val updateResult1 = Await.result(dtbase.run(updateExclusionByDayOfWeek(3, ExclusionRow(exclusionUUID4, taskUUID1, None, Some(15), Some(5), None, Some(5)))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateExclusionByDayOfWeek(exclusionUUID2, 5)), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "ExclusionRow(" + exclusionUUID4 + "," + taskUUID1 + ",None,Some(15),Some(5),None,Some(5),None,None)"
-      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID2).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateExclusionByDayOfWeek(5, ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5)))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID2).result), Duration.Inf)
+      selectResult1.head.toString mustBe "ExclusionRow(" + exclusionUUID2 + "," + taskUUID2 + ",None,Some(15),Some(5),None,Some(5),None,None)"
+      val updateResult2 = Await.result(dtbase.run(updateExclusionByDayOfWeek(exclusionUUID2, 3)), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID2).result), Duration.Inf)
-      selectResult4.head.toString mustBe "ExclusionRow(" + exclusionUUID2 + "," + taskUUID2 + ",None,Some(15),Some(3),None,Some(5),None,None)"
+      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID2).result), Duration.Inf)
+      selectResult2.head.toString mustBe "ExclusionRow(" + exclusionUUID2 + "," + taskUUID2 + ",None,Some(15),Some(3),None,Some(5),None,None)"
     }
   }
 
   "ExclusionMappings#updateExclusionByDayType" should {
     "update a ExclusionRow by giving the corresponding dayType." in {
-      val updateResult1 = Await.result(dtbase.run(updateExclusionByDayType(DayType.Weekday, ExclusionRow(exclusionUUID4, taskUUID1, None, None, None, Some(DayType.Weekend), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateExclusionByDayType(exclusionUUID3, DayType.Weekend)), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "ExclusionRow(" + exclusionUUID4 + "," + taskUUID1 + ",None,None,None,Some(Weekend),None,Some(2030),Some(First))"
-      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID3).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateExclusionByDayType(DayType.Weekend, ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID3).result), Duration.Inf)
+      selectResult1.head.toString mustBe "ExclusionRow(" + exclusionUUID3 + "," + taskUUID3 + ",None,None,None,Some(Weekend),None,Some(2030),Some(First))"
+      val updateResult2 = Await.result(dtbase.run(updateExclusionByDayType(exclusionUUID3, DayType.Weekday)), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID3).result), Duration.Inf)
-      selectResult4.head.toString mustBe "ExclusionRow(" + exclusionUUID3 + "," + taskUUID3 + ",None,None,None,Some(Weekday),None,Some(2030),Some(First))"
+      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID3).result), Duration.Inf)
+      selectResult2.head.toString mustBe "ExclusionRow(" + exclusionUUID3 + "," + taskUUID3 + ",None,None,None,Some(Weekday),None,Some(2030),Some(First))"
     }
   }
 
   "ExclusionMappings#updateExclusionByMonth" should {
     "update a ExclusionRow by giving the corresponding month." in {
-      val updateResult1 = Await.result(dtbase.run(updateExclusionByMonth(5, ExclusionRow(exclusionUUID4, taskUUID1, None, Some(15), Some(5), None, Some(2)))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateExclusionByMonth(exclusionUUID2, 2)), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "ExclusionRow(" + exclusionUUID4 + "," + taskUUID1 + ",None,Some(15),Some(5),None,Some(2),None,None)"
-      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID2).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateExclusionByMonth(2, ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5)))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID2).result), Duration.Inf)
+      selectResult1.head.toString mustBe "ExclusionRow(" + exclusionUUID2 + "," + taskUUID2 + ",None,Some(15),Some(3),None,Some(2),None,None)"
+      val updateResult2 = Await.result(dtbase.run(updateExclusionByMonth(exclusionUUID2, 5)), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID2).result), Duration.Inf)
-      selectResult4.head.toString mustBe "ExclusionRow(" + exclusionUUID2 + "," + taskUUID2 + ",None,Some(15),Some(3),None,Some(5),None,None)"
+      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID2).result), Duration.Inf)
+      selectResult2.head.toString mustBe "ExclusionRow(" + exclusionUUID2 + "," + taskUUID2 + ",None,Some(15),Some(3),None,Some(5),None,None)"
     }
   }
 
   "ExclusionMappings#updateExclusionByYear" should {
     "update a ExclusionRow by giving the corresponding year." in {
-      val updateResult1 = Await.result(dtbase.run(updateExclusionByYear(2030, ExclusionRow(exclusionUUID4, taskUUID1, None, None, None, Some(DayType.Weekday), None, Some(2035), Some(Criteria.First)))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateExclusionByYear(exclusionUUID3, 2035)), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "ExclusionRow(" + exclusionUUID4 + "," + taskUUID1 + ",None,None,None,Some(Weekday),None,Some(2035),Some(First))"
-      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID3).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateExclusionByYear(2035, ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID3).result), Duration.Inf)
+      selectResult1.head.toString mustBe "ExclusionRow(" + exclusionUUID3 + "," + taskUUID3 + ",None,None,None,Some(Weekday),None,Some(2035),Some(First))"
+      val updateResult2 = Await.result(dtbase.run(updateExclusionByYear(exclusionUUID3, 2030)), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID3).result), Duration.Inf)
-      selectResult4.head.toString mustBe "ExclusionRow(" + exclusionUUID3 + "," + taskUUID3 + ",None,None,None,Some(Weekday),None,Some(2030),Some(First))"
+      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID3).result), Duration.Inf)
+      selectResult2.head.toString mustBe "ExclusionRow(" + exclusionUUID3 + "," + taskUUID3 + ",None,None,None,Some(Weekday),None,Some(2030),Some(First))"
     }
   }
 
   "ExclusionMappings#updateExclusionByCriteria" should {
     "update a ExclusionRow by giving the corresponding criteria." in {
-      val updateResult1 = Await.result(dtbase.run(updateExclusionByCriteria(Criteria.First, ExclusionRow(exclusionUUID4, taskUUID1, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.Second)))), Duration.Inf)
+      val updateResult1 = Await.result(dtbase.run(updateExclusionByCriteria(exclusionUUID3, Criteria.Second)), Duration.Inf)
       updateResult1 mustBe 1
-      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID4).result), Duration.Inf)
-      selectResult1.head.toString mustBe "ExclusionRow(" + exclusionUUID4 + "," + taskUUID1 + ",None,None,None,Some(Weekday),None,Some(2030),Some(Second))"
-      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID3).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      val updateResult2 = Await.result(dtbase.run(updateExclusionByCriteria(Criteria.Second, ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
+      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID3).result), Duration.Inf)
+      selectResult1.head.toString mustBe "ExclusionRow(" + exclusionUUID3 + "," + taskUUID3 + ",None,None,None,Some(Weekday),None,Some(2030),Some(Second))"
+      val updateResult2 = Await.result(dtbase.run(updateExclusionByCriteria(exclusionUUID3, Criteria.First)), Duration.Inf)
       updateResult2 mustBe 1
-      val selectResult3 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID4).result), Duration.Inf)
-      selectResult3.isEmpty mustBe true
-      val selectResult4 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID3).result), Duration.Inf)
-      selectResult4.head.toString mustBe "ExclusionRow(" + exclusionUUID3 + "," + taskUUID3 + ",None,None,None,Some(Weekday),None,Some(2030),Some(First))"
+      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID3).result), Duration.Inf)
+      selectResult2.head.toString mustBe "ExclusionRow(" + exclusionUUID3 + "," + taskUUID3 + ",None,None,None,Some(Weekday),None,Some(2030),Some(First))"
     }
   }
 
