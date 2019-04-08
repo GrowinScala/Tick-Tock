@@ -5,6 +5,7 @@ import java.util.{ Calendar, Date }
 
 import akka.actor.{ ActorRef, ActorSystem, Props }
 import api.dtos.{ ExclusionDTO, SchedulingDTO, TaskDTO }
+import api.services.Criteria.Criteria
 import api.utils.DateUtils.{ dateToDayTypeString, _ }
 import database.repositories.{ FileRepository, TaskRepository }
 import executionengine.ExecutionJob
@@ -307,13 +308,7 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          addDateToQueueByCriteria(criteria, list, returnQueue)
 
         case ExclusionDTO(_, _, None, None, Some(dayOfWeek), None, None, None, Some(criteria)) =>
           val list = for {
@@ -321,13 +316,7 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          addDateToQueueByCriteria(criteria, list, returnQueue)
 
         case ExclusionDTO(_, _, None, None, None, Some(dayType), None, None, Some(criteria)) =>
           val list = for {
@@ -335,95 +324,50 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case ExclusionDTO(_, _, None, None, None, None, Some(month), None, Some(criteria)) =>
           val list = for {
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          addDateToQueueByCriteria(criteria, list, returnQueue)
 
         case ExclusionDTO(_, _, None, None, None, None, None, Some(year), Some(criteria)) =>
           val list = for {
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          addDateToQueueByCriteria(criteria, list, returnQueue)
 
         case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), None, None, None, Some(criteria)) =>
           val list = for {
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case ExclusionDTO(_, _, None, Some(day), None, Some(dayType), None, None, Some(criteria)) =>
           val list = for {
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case ExclusionDTO(_, _, None, Some(day), None, None, Some(month), None, Some(criteria)) =>
           val list = for {
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          addDateToQueueByCriteria(criteria, list, returnQueue)
 
         case ExclusionDTO(_, _, None, Some(day), None, None, None, Some(year), Some(criteria)) =>
           val list = for {
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          addDateToQueueByCriteria(criteria, list, returnQueue)
 
         case ExclusionDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), None, None, Some(criteria)) =>
           val list = for {
@@ -431,162 +375,84 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case ExclusionDTO(_, _, None, None, Some(dayOfWeek), None, Some(month), None, Some(criteria)) =>
           val list = for {
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case ExclusionDTO(_, _, None, None, Some(dayOfWeek), None, None, Some(year), Some(criteria)) =>
           val list = for {
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case ExclusionDTO(_, _, None, None, None, Some(dayType), Some(month), None, Some(criteria)) =>
-          val list: List[Date] = Nil
-          for {
+          val list = for {
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case ExclusionDTO(_, _, None, None, None, Some(dayType), None, Some(year), Some(criteria)) =>
           val list = for {
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case ExclusionDTO(_, _, None, None, None, None, Some(month), Some(year), Some(criteria)) =>
           val list = for {
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          addDateToQueueByCriteria(criteria, list, returnQueue)
 
         case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), None, None, Some(criteria)) =>
           val list = for {
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), None, Some(month), None, Some(criteria)) =>
           val list = for {
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), None, None, Some(year), Some(criteria)) =>
-          val list: List[Date] = Nil
-          for {
+          val list = for {
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case ExclusionDTO(_, _, None, Some(day), None, Some(dayType), Some(month), None, Some(criteria)) =>
           val list = for {
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case ExclusionDTO(_, _, None, Some(day), None, Some(dayType), None, Some(year), Some(criteria)) =>
           val list = for {
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
-        case ExclusionDTO(_, _, None, Some(day), None, None, Some(month), Some(year), Some(criteria)) =>
+        case ExclusionDTO(_, _, None, Some(day), None, None, Some(month), Some(year), Some(_)) =>
           returnQueue += getDateFromCalendar(day, month, year, task.timezone)
 
         case ExclusionDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), Some(month), None, Some(criteria)) =>
@@ -594,72 +460,37 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case ExclusionDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), None, Some(year), Some(criteria)) =>
           val list = for {
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case ExclusionDTO(_, _, None, None, None, Some(dayType), Some(month), Some(year), Some(criteria)) =>
           val list = for {
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), Some(month), None, Some(criteria)) =>
           val list = for {
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), None, Some(year), Some(criteria)) =>
           val list = for {
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), None, Some(month), Some(year), Some(criteria)) =>
           val date = getDateFromCalendar(day, month, year, task.timezone)
@@ -673,15 +504,8 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
           val list = for {
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), Some(month), Some(year), Some(criteria)) =>
           val date = getDateFromCalendar(day, month, year, task.timezone)
@@ -909,13 +733,7 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          addDateToQueueByCriteria(criteria, list, returnQueue)
 
         case SchedulingDTO(_, _, None, None, Some(dayOfWeek), None, None, None, Some(criteria)) =>
           val list = for {
@@ -923,13 +741,7 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          addDateToQueueByCriteria(criteria, list, returnQueue)
 
         case SchedulingDTO(_, _, None, None, None, Some(dayType), None, None, Some(criteria)) =>
           val list = for {
@@ -937,95 +749,50 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case SchedulingDTO(_, _, None, None, None, None, Some(month), None, Some(criteria)) =>
           val list = for {
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          addDateToQueueByCriteria(criteria, list, returnQueue)
 
         case SchedulingDTO(_, _, None, None, None, None, None, Some(year), Some(criteria)) =>
           val list = for {
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          addDateToQueueByCriteria(criteria, list, returnQueue)
 
         case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), None, None, None, Some(criteria)) =>
           val list = for {
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case SchedulingDTO(_, _, None, Some(day), None, Some(dayType), None, None, Some(criteria)) =>
           val list = for {
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case SchedulingDTO(_, _, None, Some(day), None, None, Some(month), None, Some(criteria)) =>
           val list = for {
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          addDateToQueueByCriteria(criteria, list, returnQueue)
 
         case SchedulingDTO(_, _, None, Some(day), None, None, None, Some(year), Some(criteria)) =>
           val list = for {
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          addDateToQueueByCriteria(criteria, list, returnQueue)
 
         case SchedulingDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), None, None, Some(criteria)) =>
           val list = for {
@@ -1033,160 +800,82 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case SchedulingDTO(_, _, None, None, Some(dayOfWeek), None, Some(month), None, Some(criteria)) =>
           val list = for {
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case SchedulingDTO(_, _, None, None, Some(dayOfWeek), None, None, Some(year), Some(criteria)) =>
           val list = for {
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case SchedulingDTO(_, _, None, None, None, Some(dayType), Some(month), None, Some(criteria)) =>
-          val list: List[Date] = Nil
-          for {
+          val list = for {
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case SchedulingDTO(_, _, None, None, None, Some(dayType), None, Some(year), Some(criteria)) =>
           val list = for {
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case SchedulingDTO(_, _, None, None, None, None, Some(month), Some(year), Some(criteria)) =>
           val list = for {
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          addDateToQueueByCriteria(criteria, list, returnQueue)
 
         case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), None, None, Some(criteria)) =>
           val list = for {
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), None, Some(month), None, Some(criteria)) =>
           val list = for {
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), None, None, Some(year), Some(criteria)) =>
-          val list: List[Date] = Nil
-          for {
+          val list = for {
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case SchedulingDTO(_, _, None, Some(day), None, Some(dayType), Some(month), None, Some(criteria)) =>
           val list = for {
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case SchedulingDTO(_, _, None, Some(day), None, Some(dayType), None, Some(year), Some(criteria)) =>
           val list = for {
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case SchedulingDTO(_, _, None, Some(day), None, None, Some(month), Some(year), Some(criteria)) =>
           returnQueue :+ getDateFromCalendar(day, month, year, task.timezone)
@@ -1196,71 +885,37 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case SchedulingDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), None, Some(year), Some(criteria)) =>
           val list = for {
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case SchedulingDTO(_, _, None, None, None, Some(dayType), Some(month), Some(year), Some(criteria)) =>
           val list = for {
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
+
         case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), Some(month), None, Some(criteria)) =>
           val list = for {
             year <- startCalendar.get(Calendar.YEAR) to endCalendar.get(Calendar.YEAR)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), None, Some(year), Some(criteria)) =>
           val list = for {
             month <- startCalendar.get(Calendar.MONTH) to endCalendar.get(Calendar.MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), None, Some(month), Some(year), Some(criteria)) =>
           val date = getDateFromCalendar(day, month, year, task.timezone)
@@ -1274,15 +929,8 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
           val list = for {
             day <- startCalendar.get(Calendar.DAY_OF_MONTH) to endCalendar.get(Calendar.DAY_OF_MONTH)
           } yield getDateFromCalendar(day, month, year, task.timezone)
-          val finalList = Nil
-          list.foreach(date => if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date)) date :: finalList)
-          criteria match {
-            case Criteria.First => returnQueue += list.last
-            case Criteria.Second => returnQueue += list.init.last
-            case Criteria.Third => returnQueue += list.init.init.last
-            case Criteria.Fourth => returnQueue += list.init.init.init.last
-            case Criteria.Last => returnQueue += list.head
-          }
+          val finalList = list.filter(date => dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date))
+          addDateToQueueByCriteria(criteria, finalList, returnQueue)
 
         case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), Some(month), Some(year), Some(criteria)) =>
           val date = getDateFromCalendar(day, month, year, task.timezone)
@@ -1291,7 +939,7 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
         case _ => println("Exclusion borked.")
 
       }
-      Some(returnQueue.sortBy(_.getTime))
+      if (returnQueue.isEmpty) None else Some(returnQueue.sortBy(_.getTime))
     } else None
 
   }
@@ -1302,5 +950,16 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
     if (timezone.isDefined) dateCalendar.setTimeZone(parseTimezone(timezone.get).get)
     dateCalendar.set(year, month, day)
     removeTimeFromDate(dateCalendar.getTime)
+  }
+
+  private def addDateToQueueByCriteria(criteria: Criteria, dates: IndexedSeq[Date], returnQueue: mutable.Queue[Date]): mutable.Queue[Date] = {
+    criteria match {
+      case first if first == Criteria.First && dates.nonEmpty => returnQueue += dates(dates.size - 1)
+      case second if second == Criteria.Second && dates.size >= 4 => returnQueue += dates(3)
+      case third if third == Criteria.Third && dates.size >= 3 => returnQueue += dates(2)
+      case fourth if fourth == Criteria.Fourth && dates.size >= 2 => returnQueue += dates(1)
+      case last if last == Criteria.Last && dates.nonEmpty => returnQueue += dates(0)
+      case _ => returnQueue
+    }
   }
 }
