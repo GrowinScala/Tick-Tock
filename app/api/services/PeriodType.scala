@@ -10,5 +10,7 @@ object PeriodType extends Enumeration {
   lazy val Weekly = "Weekly"
   lazy val Monthly = "Monthly"
   lazy val Yearly = "Yearly"
+
+  val periodTypeList: List[PeriodType] = List(Minutely, Hourly, Daily, Weekly, Monthly, Yearly)
 }
 

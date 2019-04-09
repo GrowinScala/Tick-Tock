@@ -58,6 +58,11 @@ object DateUtils {
     sdf.parse(date)
   }
 
+  def dayOfWeekToDayTypeString(dayOfWeek: Int): DayType = {
+    if ((2 to 6).contains(dayOfWeek)) DayType.Weekday
+    else DayType.Weekend
+  }
+
   def dateToDayOfWeekInt(date: Date): Int = {
     val calendar = Calendar.getInstance()
     calendar.setTime(date)
@@ -66,8 +71,8 @@ object DateUtils {
 
   def dateToDayTypeString(date: Date): DayType = {
     val dayOfWeek = dateToDayOfWeekInt(date)
-    if (dayOfWeek >= 1 && dayOfWeek <= 5) DayType.Weekday
-    else DayType.Weekend
+    if (dayOfWeek == 1 || dayOfWeek == 7) DayType.Weekend
+    else DayType.Weekday
   }
 
   def getTimeFromDate(date: Date): Date = {

@@ -10,7 +10,7 @@ object SchedulingType extends Enumeration {
 
   type SchedulingType = String
 
-  val RunOnce = "RunOnce"
+  lazy val RunOnce = "RunOnce"
   lazy val Periodic = "Periodic"
   lazy val Personalized = "Personalized"
 }

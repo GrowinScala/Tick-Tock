@@ -4,6 +4,7 @@ import java.util.{ Calendar, Date, TimeZone, UUID }
 
 import api.dtos._
 import api.services.Criteria.criteriaList
+import api.services.PeriodType.periodTypeList
 import api.services.{ DayType, SchedulingType }
 import api.utils.DateUtils._
 import api.utils.UUIDGenerator
@@ -11,8 +12,7 @@ import api.validators.Error._
 import database.repositories.{ FileRepository, TaskRepository }
 import javax.inject.{ Inject, Singleton }
 
-import scala.concurrent.duration._
-import scala.concurrent.{ Await, ExecutionContext, Future }
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
 /**
@@ -218,13 +218,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
   }
 
   private def isValidPeriodType(periodType: Option[String]): Boolean = {
-    periodType.isEmpty ||
-      periodType.get.equals("Minutely") ||
-      periodType.get.equals("Hourly") ||
-      periodType.get.equals("Daily") ||
-      periodType.get.equals("Weekly") ||
-      periodType.get.equals("Monthly") ||
-      periodType.get.equals("Yearly")
+    periodType.isEmpty || periodTypeList.contains(periodType.getOrElse(""))
   }
 
   private def isValidPeriod(period: Option[Int]): Boolean = {
@@ -634,7 +628,6 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
   }
 
   private def existsAtLeastOneSchedulingDate(schedulings: Option[List[CreateSchedulingDTO]]): Boolean = {
-
     schedulings match {
       case Some(list) => list.exists(_.schedulingDate.nonEmpty)
       case None => false
@@ -642,7 +635,6 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
   }
 
   private def existsAtLeastOneUpdateSchedulingDate(schedulings: Option[List[UpdateSchedulingDTO]]): Boolean = {
-
     schedulings match {
       case Some(list) => list.exists(_.schedulingDate.nonEmpty)
       case None => false
