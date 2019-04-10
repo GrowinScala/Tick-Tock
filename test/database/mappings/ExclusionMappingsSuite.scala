@@ -44,395 +44,418 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
   "ExclusionMappings#selectExclusionByExclusionId" should {
     "return the correct ExclusionRow when given an existing exclusionId." in {
 
-      val result = for {
+      for {
         result1 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
         result2 <- dtbase.run(getExclusionByExclusionId(exclusionUUID2).result)
-      } yield List(
-        result1.size mustBe 1,
-        result1.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, None, None),
-        result2.size mustBe 1,
-        result2.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None))
-
-      result.map(assertions => assert(assertions.forall(_ == Succeeded)))
+      } yield {
+        result1.size mustBe 1
+        result1.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, None, None)
+        result2.size mustBe 1
+        result2.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None)
+      }
     }
   }
 
   "ExclusionMappings#selectExclusionByTaskId" should {
     "return the correct ExclusionRow when given an existing taskId." in {
 
-      val result = for {
+      for {
         result1 <- dtbase.run(getExclusionByTaskId(taskUUID1).result)
         result2 <- dtbase.run(getExclusionByTaskId(taskUUID2).result)
-      } yield List(
-        result1.size mustBe 1,
-        result1.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, None, None),
-        result2.size mustBe 1,
-        result2.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None))
-
-      result.map(assertions => assert(assertions.forall(_ == Succeeded)))
+      } yield {
+        result1.size mustBe 1
+        result1.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, None, None)
+        result2.size mustBe 1
+        result2.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None)
+      }
     }
   }
 
   "ExclusionMappings#selectExclusionBySchedulingDate" should {
     "return the correct ExclusionRow when given an existing schedulingDate." in {
 
-      val result = for {
+      for {
         result <- dtbase.run(getExclusionByExclusionDate(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")).result)
-      } yield List(
-        result.size mustBe 1,
-        result.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, None, None))
-
-      result.map(assertions => assert(assertions.forall(_ == Succeeded)))
+      } yield {
+        result.size mustBe 1
+        result.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, None, None)
+      }
     }
   }
 
   "ExclusionMappings#selectExclusionByDay" should {
     "return the correct ExclusionRow when given an existing day." in {
 
-      val result = for {
+      for {
         result <- dtbase.run(getExclusionByDay(15).result)
-      } yield List(
-        result.size mustBe 1,
-        result.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None))
-
-      result.map(assertions => assert(assertions.forall(_ == Succeeded)))
+      } yield {
+        result.size mustBe 1
+        result.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None)
+      }
     }
   }
 
   "ExclusionMappings#selectExclusionByDayOfWeek" should {
     "return the correct ExclusionRow when given an existing dayOfWeek." in {
 
-      val result = for {
+      for {
         result <- dtbase.run(getExclusionByDayOfWeek(3).result)
-      } yield List(
-        result.size mustBe 1,
-        result.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None))
-
-      result.map(assertions => assert(assertions.forall(_ == Succeeded)))
+      } yield {
+        result.size mustBe 1
+        result.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None)
+      }
     }
   }
 
   "ExclusionMappings#selectExclusionByDayType" should {
     "return the correct ExclusionRow when given an existing dayType." in {
 
-      val result = for {
+      for {
         result <- dtbase.run(getExclusionByDayType(DayType.Weekday).result)
-      } yield List(
-        result.size mustBe 1,
-        result.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(First)))
-
-      result.map(assertions => assert(assertions.forall(_ == Succeeded)))
+      } yield {
+        result.size mustBe 1
+        result.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(First))
+      }
     }
   }
 
   "ExclusionMappings#selectExclusionByMonth" should {
     "return the correct ExclusionRow when given an existing month." in {
 
-      val result = for {
+      for {
         result <- dtbase.run(getExclusionByMonth(5).result)
-      } yield List(
-        result.size mustBe 1,
-        result.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None))
-
-      result.map(assertions => assert(assertions.forall(_ == Succeeded)))
+      } yield {
+        result.size mustBe 1
+        result.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None)
+      }
     }
   }
 
   "ExclusionMappings#selectExclusionByYear" should {
     "return the correct ExclusionRow when given an existing year." in {
 
-      val result = for {
+      for {
         result <- dtbase.run(getExclusionByYear(2030).result)
-      } yield List(
-        result.size mustBe 1,
-        result.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(First)))
-
-      result.map(assertions => assert(assertions.forall(_ == Succeeded)))
+      } yield {
+        result.size mustBe 1
+        result.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(First))
+      }
     }
   }
 
   "ExclusionMappings#selectExclusionByCriteria" should {
     "return the correct ExclusionRow when given an existing taskId." in {
 
-      val result = for {
+      for {
         result <- dtbase.run(getExclusionByCriteria(Criteria.First).result)
-      } yield List(
-        result.size mustBe 1,
-        result.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(First)))
-
-      result.map(assertions => assert(assertions.forall(_ == Succeeded)))
+      } yield {
+        result.size mustBe 1
+        result.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(First))
+      }
     }
   }
 
   "ExclusionMappings#insertExclusion" should {
     "insert the given exclusion." in {
 
-      val result = for {
+      for {
         result1 <- dtbase.run(insertExclusion(ExclusionRow(exclusionUUID4, taskUUID1, None, Some(10))))
         result2 <- dtbase.run(getExclusionByExclusionId(exclusionUUID4).result)
         _ <- dtbase.run(deleteExclusionByExclusionId(exclusionUUID4))
-      } yield List(
-        result1 mustBe 1,
-        result2.head mustBe ExclusionRow(exclusionUUID4, taskUUID1, None, Some(10), None, None, None, None, None))
-
-      result.map(assertions => assert(assertions.forall(_ == Succeeded)))
+      } yield {
+        result1 mustBe 1
+        result2.head mustBe ExclusionRow(exclusionUUID4, taskUUID1, None, Some(10), None, None, None, None, None)
+      }
     }
   }
 
   "ExclusionMappings#updateExclusionByTaskId" should {
     "update a ExclusionRow by giving the corresponding taskId." in {
 
-      val result = for {
+      for {
         result1 <- dtbase.run(updateExclusionByTaskId(exclusionUUID1, taskUUID2))
         result2 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
         result3 <- dtbase.run(updateExclusionByTaskId(exclusionUUID1, taskUUID1))
         result4 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
-      } yield List(
-        result1 mustBe 1,
-        result2.head mustBe ExclusionRow(exclusionUUID1, taskUUID2, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, None, None),
-        result3 mustBe 1,
-        result4.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, None, None))
-
-      result.map(assertions => assert(assertions.forall(_ == Succeeded)))
+      } yield {
+        result1 mustBe 1
+        result2.head mustBe ExclusionRow(exclusionUUID1, taskUUID2, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, None, None)
+        result3 mustBe 1
+        result4.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, None, None)
+      }
     }
   }
 
   "ExclusionMappings#updateExclusionByExclusionDate" should {
     "update a ExclusionRow by giving the corresponding schedulingDate." in {
 
-      val result = for {
+      for {
         result1 <- dtbase.run(updateExclusionByExclusionDate(exclusionUUID1, stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
         result2 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
         result3 <- dtbase.run(updateExclusionByExclusionDate(exclusionUUID1, stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
         result4 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
-      } yield List(
-        result1 mustBe 1,
-        result2.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, None, None),
-        result3 mustBe 1,
-        result4.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, None, None))
-
-      result.map(assertions => assert(assertions.forall(_ == Succeeded)))
+      } yield {
+        result1 mustBe 1
+        result2.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, None, None)
+        result3 mustBe 1
+        result4.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, None, None)
+      }
     }
   }
 
   "ExclusionMappings#updateExclusionByDay" should {
     "update a ExclusionRow by giving the corresponding day." in {
 
-      val result = for {
+      for {
         result1 <- dtbase.run(updateExclusionByDay(exclusionUUID2, 10))
         result2 <- dtbase.run(getExclusionByExclusionId(exclusionUUID2).result)
         result3 <- dtbase.run(updateExclusionByDay(exclusionUUID2, 15))
         result4 <- dtbase.run(getExclusionByExclusionId(exclusionUUID2).result)
-      } yield List(
-        result1 mustBe 1,
-        result2.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(10), Some(3), None, Some(5), None, None),
-        result3 mustBe 1,
-        result4.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None))
-
-      result.map(assertions => assert(assertions.forall(_ == Succeeded)))
+      } yield {
+        result1 mustBe 1
+        result2.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(10), Some(3), None, Some(5), None, None)
+        result3 mustBe 1
+        result4.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None)
+      }
     }
   }
 
   "ExclusionMappings#updateExclusionByDayOfWeek" should {
     "update a ExclusionRow by giving the corresponding dayOfWeek." in {
 
-      val result = for {
+      for {
         result1 <- dtbase.run(updateExclusionByDayOfWeek(exclusionUUID2, 5))
         result2 <- dtbase.run(getExclusionByExclusionId(exclusionUUID2).result)
         result3 <- dtbase.run(updateExclusionByDayOfWeek(exclusionUUID2, 3))
         result4 <- dtbase.run(getExclusionByExclusionId(exclusionUUID2).result)
-      } yield List(
-        result1 mustBe 1,
-        result2.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(5), None, Some(5), None, None),
-        result3 mustBe 1,
-        result4.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None))
-
-      result.map(assertions => assert(assertions.forall(_ == Succeeded)))
+      } yield {
+        result1 mustBe 1
+        result2.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(5), None, Some(5), None, None)
+        result3 mustBe 1
+        result4.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None)
+      }
     }
   }
 
   "ExclusionMappings#updateExclusionByDayType" should {
     "update a ExclusionRow by giving the corresponding dayType." in {
 
-      val result = for {
+      for {
         result1 <- dtbase.run(updateExclusionByDayType(exclusionUUID3, DayType.Weekend))
         result2 <- dtbase.run(getExclusionByExclusionId(exclusionUUID3).result)
         result3 <- dtbase.run(updateExclusionByDayType(exclusionUUID3, DayType.Weekday))
         result4 <- dtbase.run(getExclusionByExclusionId(exclusionUUID3).result)
-      } yield List(
-        result1 mustBe 1,
-        result2.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekend), None, Some(2030), Some(First)),
-        result3 mustBe 1,
-        result4.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(First)))
-
-      result.map(assertions => assert(assertions.forall(_ == Succeeded)))
+      } yield {
+        result1 mustBe 1
+        result2.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekend), None, Some(2030), Some(First))
+        result3 mustBe 1
+        result4.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(First))
+      }
     }
   }
 
   "ExclusionMappings#updateExclusionByMonth" should {
     "update a ExclusionRow by giving the corresponding month." in {
 
-      val result = for {
+      for {
         result1 <- dtbase.run(updateExclusionByMonth(exclusionUUID2, 2))
         result2 <- dtbase.run(getExclusionByExclusionId(exclusionUUID2).result)
         result3 <- dtbase.run(updateExclusionByMonth(exclusionUUID2, 5))
         result4 <- dtbase.run(getExclusionByExclusionId(exclusionUUID2).result)
-      } yield List(
-        result1 mustBe 1,
-        result2.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(2), None, None),
-        result3 mustBe 1,
-        result4.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None))
-
-      result.map(assertions => assert(assertions.forall(_ == Succeeded)))
+      } yield {
+        result1 mustBe 1
+        result2.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(2), None, None)
+        result3 mustBe 1
+        result4.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None)
+      }
     }
   }
 
   "ExclusionMappings#updateExclusionByYear" should {
     "update a ExclusionRow by giving the corresponding year." in {
 
-      val result = for {
+      for {
         result1 <- dtbase.run(updateExclusionByYear(exclusionUUID3, 2035))
         result2 <- dtbase.run(getExclusionByExclusionId(exclusionUUID3).result)
         result3 <- dtbase.run(updateExclusionByYear(exclusionUUID3, 2030))
         result4 <- dtbase.run(getExclusionByExclusionId(exclusionUUID3).result)
-      } yield List(
-        result1 mustBe 1,
-        result2.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2035), Some(First)),
-        result3 mustBe 1,
-        result4.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(First)))
-
-      result.map(assertions => assert(assertions.forall(_ == Succeeded)))
+      } yield {
+        result1 mustBe 1
+        result2.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2035), Some(First))
+        result3 mustBe 1
+        result4.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(First))
+      }
     }
   }
 
   "ExclusionMappings#updateExclusionByCriteria" should {
     "update a ExclusionRow by giving the corresponding criteria." in {
 
-      val result = for {
+      for {
         result1 <- dtbase.run(updateExclusionByCriteria(exclusionUUID3, Criteria.Second))
         result2 <- dtbase.run(getExclusionByExclusionId(exclusionUUID3).result)
         result3 <- dtbase.run(updateExclusionByCriteria(exclusionUUID3, Criteria.First))
         result4 <- dtbase.run(getExclusionByExclusionId(exclusionUUID3).result)
-      } yield List(
-        result1 mustBe 1,
-        result2.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(Second)),
-        result3 mustBe 1,
-        result4.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(First)))
-
-      result.map(assertions => assert(assertions.forall(_ == Succeeded)))
+      } yield {
+        result1 mustBe 1
+        result2.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(Second))
+        result3 mustBe 1
+        result4.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(First))
+      }
     }
   }
 
   "ExclusionMappings#deleteExclusionByExclusionId" should {
     "delete a ExclusionRow by giving the corresponding schedulingId." in {
 
-      val result = for {
+      for {
         result1 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
         result2 <- dtbase.run(deleteExclusionByExclusionId(exclusionUUID1))
         result3 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
         _ <- dtbase.run(insertExclusion(ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))))
-      } yield List(
-        result1.nonEmpty mustBe true,
-        result2 mustBe 1,
-        result3.isEmpty mustBe true)
-
-      result.map(assertions => assert(assertions.forall(_ == Succeeded)))
+      } yield {
+        result1.nonEmpty mustBe true
+        result2 mustBe 1
+        result3.isEmpty mustBe true
+      }
     }
   }
-  /*
   "ExclusionMappings#deleteExclusionByTaskId" should {
     "delete a ExclusionRow by giving the corresponding taskId." in {
-      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID1).result), Duration.Inf)
-      selectResult1.nonEmpty mustBe true
-      val deleteResult = Await.result(dtbase.run(deleteExclusionByTaskId(taskUUID1)), Duration.Inf)
-      deleteResult mustBe 1
-      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID1).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
+
+      for {
+        result1 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
+        result2 <- dtbase.run(deleteExclusionByTaskId(taskUUID1))
+        result3 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
+        result4 <- dtbase.run(insertExclusion(ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))))
+      } yield {
+        result1.nonEmpty mustBe true
+        result2 mustBe 1
+        result3.isEmpty mustBe true
+        result4 mustBe 1
+      }
     }
   }
 
   "ExclusionMappings#deleteExclusionByExclusionDate" should {
     "delete a ExclusionRow by giving the corresponding schedulingDate." in {
-      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID1).result), Duration.Inf)
-      selectResult1.nonEmpty mustBe true
-      val deleteResult = Await.result(dtbase.run(deleteExclusionByExclusionDate(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))), Duration.Inf)
-      deleteResult mustBe 1
-      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID1).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
+
+      for {
+        result1 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
+        result2 <- dtbase.run(deleteExclusionByExclusionDate(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
+        result3 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
+        result4 <- dtbase.run(insertExclusion(ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))))
+      } yield {
+        result1.nonEmpty mustBe true
+        result2 mustBe 1
+        result3.isEmpty mustBe true
+        result4 mustBe 1
+      }
     }
   }
 
   "ExclusionMappings#deleteExclusionByDay" should {
     "delete a ExclusionRow by giving the corresponding day." in {
-      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID1).result), Duration.Inf)
-      selectResult1.nonEmpty mustBe true
-      val deleteResult = Await.result(dtbase.run(deleteExclusionByExclusionDate(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))), Duration.Inf)
-      deleteResult mustBe 1
-      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID1).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Duration.Inf)
+
+      val exclusionId = UUID.randomUUID().toString
+
+      for {
+        result1 <- dtbase.run(insertExclusion(ExclusionRow(exclusionId, UUID.randomUUID().toString, None, Some(1))))
+        result2 <- dtbase.run(getExclusionByExclusionId(exclusionId).result)
+        result3 <- dtbase.run(deleteExclusionByDay(1))
+        result4 <- dtbase.run(getExclusionByExclusionId(exclusionId).result)
+      } yield {
+        result1 mustBe 1
+        result2.nonEmpty mustBe true
+        result3 mustBe 1
+        result4.isEmpty mustBe true
+      }
     }
   }
 
   "ExclusionMappings#deleteExclusionByDayOfWeek" should {
     "delete a ExclusionRow by giving the corresponding dayOfWeek." in {
-      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID2).result), Duration.Inf)
-      selectResult1.nonEmpty mustBe true
-      val deleteResult = Await.result(dtbase.run(deleteExclusionByDayOfWeek(3)), Duration.Inf)
-      deleteResult mustBe 1
-      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID2).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5)))), Duration.Inf)
+
+      for {
+        result1 <- dtbase.run(getExclusionByExclusionId(exclusionUUID2).result)
+        result2 <- dtbase.run(deleteExclusionByDayOfWeek(3))
+        result3 <- dtbase.run(getExclusionByExclusionId(exclusionUUID2).result)
+        result4 <- dtbase.run(insertExclusion(ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5))))
+      } yield {
+        result1.nonEmpty mustBe true
+        result2 mustBe 1
+        result3.isEmpty mustBe true
+        result4 mustBe 1
+      }
     }
   }
 
   "ExclusionMappings#deleteExclusionByDayType" should {
     "delete a ExclusionRow by giving the corresponding dayType." in {
-      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID3).result), Duration.Inf)
-      selectResult1.nonEmpty mustBe true
-      val deleteResult = Await.result(dtbase.run(deleteExclusionByDayType(DayType.Weekday)), Duration.Inf)
-      deleteResult mustBe 1
-      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID3).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
+
+      for {
+        result1 <- dtbase.run(getExclusionByExclusionId(exclusionUUID3).result)
+        result2 <- dtbase.run(deleteExclusionByDayType(DayType.Weekday))
+        result3 <- dtbase.run(getExclusionByExclusionId(exclusionUUID3).result)
+        result4 <- dtbase.run(insertExclusion(ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First))))
+      } yield {
+        result1.nonEmpty mustBe true
+        result2 mustBe 1
+        result3.isEmpty mustBe true
+        result4 mustBe 1
+      }
     }
   }
 
   "ExclusionMappings#deleteExclusionByMonth" should {
     "delete a ExclusionRow by giving the corresponding month." in {
-      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID2).result), Duration.Inf)
-      selectResult1.nonEmpty mustBe true
-      val deleteResult = Await.result(dtbase.run(deleteExclusionByMonth(5)), Duration.Inf)
-      deleteResult mustBe 1
-      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID2).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5)))), Duration.Inf)
+
+      for {
+        result1 <- dtbase.run(getExclusionByExclusionId(exclusionUUID2).result)
+        result2 <- dtbase.run(deleteExclusionByMonth(5))
+        result3 <- dtbase.run(getExclusionByExclusionId(exclusionUUID2).result)
+        result4 <- dtbase.run(insertExclusion(ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5))))
+      } yield {
+        result1.nonEmpty mustBe true
+        result2 mustBe 1
+        result3.isEmpty mustBe true
+        result4 mustBe 1
+      }
     }
   }
 
   "ExclusionMappings#deleteExclusionByYear" should {
     "delete a ExclusionRow by giving the corresponding year." in {
-      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID3).result), Duration.Inf)
-      selectResult1.nonEmpty mustBe true
-      val deleteResult = Await.result(dtbase.run(deleteExclusionByYear(2030)), Duration.Inf)
-      deleteResult mustBe 1
-      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID3).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
+
+      for {
+        result1 <- dtbase.run(getExclusionByExclusionId(exclusionUUID3).result)
+        result2 <- dtbase.run(deleteExclusionByYear(2030))
+        result3 <- dtbase.run(getExclusionByExclusionId(exclusionUUID3).result)
+        result4 <- dtbase.run(insertExclusion(ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First))))
+      } yield {
+        result1.nonEmpty mustBe true
+        result2 mustBe 1
+        result3.isEmpty mustBe true
+        result4 mustBe 1
+      }
     }
   }
 
   "ExclusionMappings#deleteExclusionByCriteria" should {
     "delete a ExclusionRow by giving the corresponding criteria." in {
-      val selectResult1 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID3).result), Duration.Inf)
-      selectResult1.nonEmpty mustBe true
-      val deleteResult = Await.result(dtbase.run(deleteExclusionByCriteria(Criteria.First)), Duration.Inf)
-      deleteResult mustBe 1
-      val selectResult2 = Await.result(dtbase.run(getExclusionByExclusionId(exclusionUUID3).result), Duration.Inf)
-      selectResult2.isEmpty mustBe true
-      Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
+
+      for {
+        result1 <- dtbase.run(getExclusionByExclusionId(exclusionUUID3).result)
+        result2 <- dtbase.run(deleteExclusionByCriteria(Criteria.First))
+        result3 <- dtbase.run(getExclusionByExclusionId(exclusionUUID3).result)
+        result4 <- dtbase.run(insertExclusion(ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First))))
+      } yield {
+        result1.nonEmpty mustBe true
+        result2 mustBe 1
+        result3.isEmpty mustBe true
+        result4 mustBe 1
+      }
     }
-  }*/
+  }
+
 }
