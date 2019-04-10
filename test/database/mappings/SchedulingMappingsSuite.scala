@@ -5,15 +5,14 @@ import java.util.UUID
 import api.services.{ Criteria, DayType }
 import api.utils.DateUtils._
 import database.mappings.SchedulingMappings._
-import org.scalatest.{ AsyncWordSpec, BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec }
-import org.scalatestplus.play.PlaySpec
+import org.scalatest.{ AsyncWordSpec, BeforeAndAfterAll, BeforeAndAfterEach, MustMatchers }
 import play.api.inject.guice.GuiceApplicationBuilder
 import slick.jdbc.MySQLProfile.api._
 
-import scala.concurrent.{ Await, ExecutionContext }
 import scala.concurrent.duration.Duration
+import scala.concurrent.{ Await, ExecutionContext }
 
-class SchedulingMappingsSuite extends PlaySpec with BeforeAndAfterAll with BeforeAndAfterEach {
+class SchedulingMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with BeforeAndAfterEach with MustMatchers {
 
   private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
   private val dtbase: Database = appBuilder.injector.instanceOf[Database]
@@ -51,7 +50,7 @@ class SchedulingMappingsSuite extends PlaySpec with BeforeAndAfterAll with Befor
         result1.size mustBe 1
         result1.head mustBe SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", timeFormat)), None, None, None, None, None, None)
         result2.size mustBe 1
-        result2.head.toString mustBe SchedulingRow(schedulingUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None)
+        result2.head mustBe SchedulingRow(schedulingUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None)
       }
     }
   }
@@ -66,7 +65,7 @@ class SchedulingMappingsSuite extends PlaySpec with BeforeAndAfterAll with Befor
         result1.size mustBe 1
         result1.head mustBe SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", timeFormat)), None, None, None, None, None, None)
         result2.size mustBe 1
-        result2.head.toString mustBe SchedulingRow(schedulingUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None)
+        result2.head mustBe SchedulingRow(schedulingUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None)
       }
     }
   }
@@ -210,7 +209,7 @@ class SchedulingMappingsSuite extends PlaySpec with BeforeAndAfterAll with Befor
         result1 <- dtbase.run(updateSchedulingByDay(schedulingUUID2, 10))
         result2 <- dtbase.run(getSchedulingBySchedulingId(schedulingUUID2).result)
         result3 <- dtbase.run(updateSchedulingByDay(schedulingUUID2, 15))
-        result4 <- dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result)
+        result4 <- dtbase.run(getSchedulingBySchedulingId(schedulingUUID2).result)
       } yield {
         result1 mustBe 1
         result2.head mustBe SchedulingRow(schedulingUUID2, taskUUID2, None, Some(10), Some(3), None, Some(5), None, None)
@@ -227,7 +226,7 @@ class SchedulingMappingsSuite extends PlaySpec with BeforeAndAfterAll with Befor
         result1 <- dtbase.run(updateSchedulingByDayOfWeek(schedulingUUID2, 5))
         result2 <- dtbase.run(getSchedulingBySchedulingId(schedulingUUID2).result)
         result3 <- dtbase.run(updateSchedulingByDayOfWeek(schedulingUUID2, 3))
-        result4 <- dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result)
+        result4 <- dtbase.run(getSchedulingBySchedulingId(schedulingUUID2).result)
       } yield {
         result1 mustBe 1
         result2.head mustBe SchedulingRow(schedulingUUID2, taskUUID2, None, Some(15), Some(5), None, Some(5), None, None)
@@ -244,7 +243,7 @@ class SchedulingMappingsSuite extends PlaySpec with BeforeAndAfterAll with Befor
         result1 <- dtbase.run(updateSchedulingByDayType(schedulingUUID3, DayType.Weekend))
         result2 <- dtbase.run(getSchedulingBySchedulingId(schedulingUUID3).result)
         result3 <- dtbase.run(updateSchedulingByDayType(schedulingUUID3, DayType.Weekday))
-        result4 <- dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result)
+        result4 <- dtbase.run(getSchedulingBySchedulingId(schedulingUUID3).result)
       } yield {
         result1 mustBe 1
         result2.head mustBe SchedulingRow(schedulingUUID3, taskUUID3, None, None, None, Some(DayType.Weekend), None, Some(2030), Some(Criteria.First))
