@@ -116,7 +116,7 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
         result <- dtbase.run(getExclusionByDayType(DayType.Weekday).result)
       } yield {
         result.size mustBe 1
-        result.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(First))
+        result.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(Criteria.First))
       }
     }
   }
@@ -140,7 +140,7 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
         result <- dtbase.run(getExclusionByYear(2030).result)
       } yield {
         result.size mustBe 1
-        result.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(First))
+        result.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(Criteria.First))
       }
     }
   }
@@ -152,7 +152,7 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
         result <- dtbase.run(getExclusionByCriteria(Criteria.First).result)
       } yield {
         result.size mustBe 1
-        result.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(First))
+        result.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(Criteria.First))
       }
     }
   }
@@ -249,9 +249,9 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
         result4 <- dtbase.run(getExclusionByExclusionId(exclusionUUID3).result)
       } yield {
         result1 mustBe 1
-        result2.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekend), None, Some(2030), Some(First))
+        result2.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekend), None, Some(2030), Some(Criteria.First))
         result3 mustBe 1
-        result4.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(First))
+        result4.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(Criteria.First))
       }
     }
   }
@@ -283,9 +283,9 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
         result4 <- dtbase.run(getExclusionByExclusionId(exclusionUUID3).result)
       } yield {
         result1 mustBe 1
-        result2.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2035), Some(First))
+        result2.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2035), Some(Criteria.First))
         result3 mustBe 1
-        result4.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(First))
+        result4.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(Criteria.First))
       }
     }
   }
@@ -300,9 +300,9 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
         result4 <- dtbase.run(getExclusionByExclusionId(exclusionUUID3).result)
       } yield {
         result1 mustBe 1
-        result2.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(Second))
+        result2.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(Criteria.Second))
         result3 mustBe 1
-        result4.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(First))
+        result4.head mustBe ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(Weekday), None, Some(2030), Some(Criteria.First))
       }
     }
   }
