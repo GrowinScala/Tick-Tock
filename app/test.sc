@@ -1,14 +1,8 @@
-import java.util.{Calendar, Date}
+import java.util.Date
 
-val calendar1 = Calendar.getInstance()
-val calendar2 = Calendar.getInstance()
+val list: Array[Date] = Array()
+val date = new Date()
 
-calendar1.set(2030, 0, 1, 0, 0, 0)
-calendar2.set(2030, 0, 32, 0, 0, 0)
+date +: list
 
-val date1 = calendar1.getTime
-val date2 = calendar2.getTime
-
-calendar1.add(Calendar.DAY_OF_MONTH, 1)
-
-calendar1.getTime
+println(list.isEmpty)

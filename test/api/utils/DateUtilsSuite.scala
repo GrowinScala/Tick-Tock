@@ -85,43 +85,43 @@ class DateUtilsSuite extends PlaySpec {
   "DateUtils#dateToDayTypeString" should {
 
     "convert a date to its corresponding day type. (Monday => Weekday)" in {
-      calendar.set(2019, 3 - 1, 3, 0, 0, 0)
-      val date = calendar.getTime
-      dateToDayTypeString(date) mustBe DayType.Weekday
-    }
-
-    "convert a date to its corresponding day type. (Tuesday => Weekday)" in {
       calendar.set(2019, 3 - 1, 4, 0, 0, 0)
       val date = calendar.getTime
       dateToDayTypeString(date) mustBe DayType.Weekday
     }
 
-    "convert a date to its corresponding day type. (Wednesday => Weekday)" in {
+    "convert a date to its corresponding day type. (Tuesday => Weekday)" in {
       calendar.set(2019, 3 - 1, 5, 0, 0, 0)
       val date = calendar.getTime
       dateToDayTypeString(date) mustBe DayType.Weekday
     }
 
-    "convert a date to its corresponding day type. (Thursday => Weekday)" in {
+    "convert a date to its corresponding day type. (Wednesday => Weekday)" in {
       calendar.set(2019, 3 - 1, 6, 0, 0, 0)
       val date = calendar.getTime
       dateToDayTypeString(date) mustBe DayType.Weekday
     }
 
-    "convert a date to its corresponding day type. (Friday => Weekday)" in {
+    "convert a date to its corresponding day type. (Thursday => Weekday)" in {
       calendar.set(2019, 3 - 1, 7, 0, 0, 0)
       val date = calendar.getTime
       dateToDayTypeString(date) mustBe DayType.Weekday
     }
 
-    "convert a date to its corresponding day type. (Saturday => Weekend)" in {
+    "convert a date to its corresponding day type. (Friday => Weekday)" in {
       calendar.set(2019, 3 - 1, 8, 0, 0, 0)
+      val date = calendar.getTime
+      dateToDayTypeString(date) mustBe DayType.Weekday
+    }
+
+    "convert a date to its corresponding day type. (Saturday => Weekend)" in {
+      calendar.set(2019, 3 - 1, 9, 0, 0, 0)
       val date = calendar.getTime
       dateToDayTypeString(date) mustBe DayType.Weekend
     }
 
     "convert a date to its corresponding day type. (Sunday => Weekend)" in {
-      calendar.set(2019, 3 - 1, 9, 0, 0, 0)
+      calendar.set(2019, 3 - 1, 10, 0, 0, 0)
       val date = calendar.getTime
       println(date)
       dateToDayTypeString(date) mustBe DayType.Weekend
