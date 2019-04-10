@@ -905,7 +905,7 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
           case _ => println("Exclusion borked.")
         }
       }
-      if (returnQueue.isEmpty) None else Some(returnQueue.sortBy(_.getTime))
+      Some(returnQueue.sortBy(_.getTime))
     } else None
 
   }
