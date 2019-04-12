@@ -1,11 +1,14 @@
-package database.repositories
+package database.repositories.task
 
 import java.util.Date
 
 import api.dtos.TaskDTO
 import api.services.{ PeriodType, SchedulingType }
+import database.mappings.ExclusionMappings.ExclusionRow
 import database.mappings.FileMappings._
+import database.mappings.SchedulingMappings.SchedulingRow
 import database.mappings.TaskMappings._
+import javax.inject.Inject
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -16,7 +19,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  *
  * @param dtbase Database class that contains the database information.
  */
-class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
+class TaskRepositoryImpl @Inject() (dtbase: Database) extends TaskRepository {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
@@ -37,15 +40,12 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
   }
 
   private def taskDTOToTaskRow(task: TaskDTO): Future[TaskRow] = {
-
     dtbase.run(getFileByFileName(task.fileName).result.headOption)
       .map(maybeRow => maybeRow.getOrElse(FileRow("", "", new Date())).fileId)
       .map { fileId =>
         task.taskType match {
-
           case SchedulingType.RunOnce =>
             TaskRow(task.taskId, fileId, 0, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
-
           case SchedulingType.Periodic =>
             task.periodType.get match {
               case PeriodType.Minutely =>
@@ -61,7 +61,6 @@ class TaskRepositoryImpl(dtbase: Database) extends TaskRepository {
               case PeriodType.Yearly =>
                 TaskRow(task.taskId, fileId, 6, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
             }
-
           case SchedulingType.Personalized =>
             TaskRow(task.taskId, fileId, 7, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
         }

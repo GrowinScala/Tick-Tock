@@ -1,4 +1,4 @@
-package database.repositories
+package database.repositories.task
 
 import api.dtos.TaskDTO
 import api.services.{ PeriodType, SchedulingType }
