@@ -38,6 +38,10 @@ class ExclusionRepositoryImpl @Inject() (dtbase: Database) extends ExclusionRepo
     dtbase.run(deleteAllFromExclusionsTable)
   }
 
+  def deleteExclusionById(id: String): Future[Int] = {
+    dtbase.run(deleteExclusionByExclusionId(id))
+  }
+
   def insertInExclusionsTable(exclusion: ExclusionDTO): Future[Boolean] = {
     dtbase.run(insertExclusion(exclusionDTOToExclusionRow(exclusion))).map(i => i == 1)
   }

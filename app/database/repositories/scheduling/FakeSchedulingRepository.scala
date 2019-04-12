@@ -37,6 +37,15 @@ class FakeSchedulingRepository extends SchedulingRepository {
   }
 
   /**
+   * Deletes a scheduling from the database given an id.
+   * @param id - identifier of the scheduling to be deleted.
+   * @return An Int representing the number of rows deleted.
+   */
+  def deleteSchedulingById(id: String): Future[Int] = {
+    Future.successful(1)
+  }
+
+  /**
    * Method that inserts an exclusion (row) on the exclusions table on the database.
    *
    * @param file ExclusionDTO to be inserted on the database.

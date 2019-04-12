@@ -7,7 +7,8 @@ import akka.actor.{ ActorRef, ActorSystem, Props }
 import api.dtos.{ ExclusionDTO, SchedulingDTO, TaskDTO }
 import api.services.Criteria.Criteria
 import api.utils.DateUtils.{ dateToDayTypeString, _ }
-import database.repositories.{ FileRepository, TaskRepository }
+import database.repositories.task.TaskRepository
+import database.repositories.FileRepository
 import executionengine.ExecutionJob
 import executionengine.ExecutionJob.{ Cancel, Execute }
 import javax.inject.{ Inject, Singleton }

@@ -36,6 +36,10 @@ class SchedulingRepositoryImpl @Inject() (dtbase: Database) extends SchedulingRe
     dtbase.run(deleteAllFromSchedulingsTable)
   }
 
+  def deleteSchedulingById(id: String): Future[Int] = {
+    dtbase.run(deleteSchedulingBySchedulingId(id))
+  }
+
   def insertInSchedulingsTable(scheduling: SchedulingDTO): Future[Boolean] = {
     dtbase.run(insertScheduling(schedulingDTOToSchedulingRow(scheduling))).map(i => i == 1)
   }

@@ -11,7 +11,8 @@ import api.utils.UUIDGenerator
 import api.validators.Error._
 import database.mappings.FileMappings._
 import database.mappings.TaskMappings._
-import database.repositories.{ FileRepository, TaskRepository }
+import database.repositories.FileRepository
+import database.repositories.task.TaskRepository
 import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite

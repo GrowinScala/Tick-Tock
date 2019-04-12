@@ -7,7 +7,8 @@ import api.utils.DateUtils._
 import api.utils.UUIDGenerator
 import api.validators.Error._
 import com.typesafe.config.ConfigFactory
-import database.repositories.{ FileRepository, TaskRepository }
+import database.repositories.FileRepository
+import database.repositories.task.TaskRepository
 import javax.inject.{ Inject, Singleton }
 import org.apache.commons.io.FilenameUtils
 import play.api.libs.json._

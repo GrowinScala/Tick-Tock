@@ -5,7 +5,8 @@ import api.services.TaskService
 import api.utils.UUIDGenerator
 import api.validators.Error._
 import api.validators.TaskValidator
-import database.repositories.{ FileRepository, TaskRepository }
+import database.repositories.FileRepository
+import database.repositories.task.TaskRepository
 import javax.inject.{ Inject, Singleton }
 import play.api.libs.json._
 import play.api.mvc._

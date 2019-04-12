@@ -9,7 +9,8 @@ import api.services.{ DayType, SchedulingType }
 import api.utils.DateUtils._
 import api.utils.UUIDGenerator
 import api.validators.Error._
-import database.repositories.{ FileRepository, TaskRepository }
+import database.repositories.FileRepository
+import database.repositories.task.TaskRepository
 import javax.inject.{ Inject, Singleton }
 
 import scala.concurrent.{ ExecutionContext, Future }

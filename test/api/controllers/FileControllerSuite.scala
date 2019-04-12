@@ -3,7 +3,9 @@ package api.controllers
 import akka.actor.ActorSystem
 import akka.stream.{ ActorMaterializer, Materializer }
 import api.utils.{ FakeUUIDGenerator, UUIDGenerator }
-import database.repositories.{ FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository }
+import database.repositories.FileRepository
+import database.repositories.file.FakeFileRepository
+import database.repositories.task.{ FakeTaskRepository, TaskRepository }
 import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite

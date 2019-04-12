@@ -9,7 +9,7 @@ import akka.actor.{ Actor, Timers }
 import api.services.SchedulingType
 import api.services.SchedulingType._
 import api.utils.DateUtils._
-import database.repositories.file.FileRepository
+import database.repositories.FileRepository
 import database.repositories.task.TaskRepository
 import executionengine.ExecutionJob.{ Cancel, Delay, Execute, Start }
 import javax.inject.Inject

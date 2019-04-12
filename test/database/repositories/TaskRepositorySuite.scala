@@ -9,6 +9,7 @@ import api.services.{ PeriodType, SchedulingType }
 import api.utils.DateUtils._
 import database.mappings.FileMappings._
 import database.mappings.TaskMappings._
+import database.repositories.task.TaskRepository
 import org.scalatest._
 import play.api.Mode
 import play.api.inject.Injector

@@ -9,7 +9,9 @@ import api.services.{ Criteria, DayType, PeriodType, SchedulingType }
 import api.utils.{ FakeUUIDGenerator, UUIDGenerator }
 import api.validators.Error._
 import com.google.inject.Guice
-import database.repositories.{ FakeFileRepository, FakeTaskRepository, FileRepository, TaskRepository }
+import database.repositories.FileRepository
+import database.repositories.file.FakeFileRepository
+import database.repositories.task.{ FakeTaskRepository, TaskRepository }
 import org.scalatestplus.play.PlaySpec
 import play.api.inject.guice.GuiceApplicationBuilder
 

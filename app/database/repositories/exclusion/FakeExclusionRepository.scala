@@ -37,6 +37,15 @@ class FakeExclusionRepository extends ExclusionRepository {
   }
 
   /**
+   * Deletes an exclusion from the database given an id
+   * @param id - identifier of the exclusion to be deleted.
+   * @return An Int representing the number of rows deleted.
+   */
+  def deleteExclusionById(id: String): Future[Int] = {
+    Future.successful(1)
+  }
+
+  /**
    * Method that inserts an exclusion (row) on the exclusions table on the database.
    *
    * @param file ExclusionDTO to be inserted on the database.

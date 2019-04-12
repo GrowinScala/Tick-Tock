@@ -5,6 +5,7 @@ import java.util.Date
 import api.dtos.FileDTO
 import api.utils.DateUtils
 import database.mappings.FileMappings._
+import database.repositories.FileRepository
 import javax.inject.Inject
 import slick.jdbc.MySQLProfile.api._
 

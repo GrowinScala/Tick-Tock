@@ -9,7 +9,8 @@ import api.utils.DateUtils.stringToDateFormat
 import api.validators.Error._
 import com.google.inject.Guice
 import database.mappings.FileMappings._
-import database.repositories.{ FileRepository, TaskRepository }
+import database.repositories.FileRepository
+import database.repositories.task.TaskRepository
 import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
