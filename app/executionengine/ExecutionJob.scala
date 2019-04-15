@@ -31,7 +31,7 @@ object ExecutionJob {
  * @param taskId Id of the task registered on the database.
  * @param schedulingType Type of scheduling. (One time, Periodic, etc.)
  */
-class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: SchedulingType, startDate: Option[Date] = None, interval: Option[Duration] = Some(ZERO), endDate: Option[Date] = None, timezone: Option[String] = None, schedulings: Option[mutable.Queue[Date]] = None, exclusions: Option[mutable.Queue[Date]] = None)(implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository) extends Actor with Timers {
+class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: SchedulingType, startDate: Option[Date] = None, interval: Option[Duration] = Some(ZERO), endDate: Option[Date] = None, timezone: Option[String] = None, schedulings: Option[mutable.Queue[Date]] = None, exclusions: Option[mutable.Queue[Date]] = None)(implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository, implicit val executionManager: ExecutionManager) extends Actor with Timers {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
   val calendar: Calendar = Calendar.getInstance
@@ -78,12 +78,12 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
     val currentDate = getTimeFromDate(new Date())
     if (!isExcluded(currentDate)) {
       if (schedulingType == SchedulingType.RunOnce) {
-        ExecutionManager.runFile(fileId)
+        executionManager.runFile(fileId)
         printExecutionMessage()
       } else { //if it's not a RunOnce task, its a periodic one, so it has to have either endDate or occurrences
         if (endDate.isDefined) {
           if (getCurrentDate.after(endDate.get)) {
-            ExecutionManager.runFile(fileId)
+            executionManager.runFile(fileId)
             printExecutionMessage()
             if (schedulings.isDefined && schedulings.get.nonEmpty) {
               val nextDateDelay = calculateDelay(Some(schedulings.get.dequeue))
@@ -94,7 +94,7 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
           taskRepo.selectCurrentOccurrencesByTaskId(taskId).map { occurrences =>
             if (occurrences.get != 0) {
               taskRepo.decrementCurrentOccurrencesByTaskId(taskId)
-              ExecutionManager.runFile(fileId); printExecutionMessage()
+              executionManager.runFile(fileId); printExecutionMessage()
               if (schedulings.isDefined && schedulings.get.nonEmpty) {
                 val nextDateDelay = calculateDelay(Some(schedulings.get.dequeue))
                 timers.startSingleTimer("executionKey", Execute, nextDateDelay)
@@ -111,7 +111,7 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
     else println("Ran file " + fileId + " scheduled to run immediately.")
   }
 
-  def delay(): Unit = ExecutionManager.delayFile(ExecutionJob.this)
+  def delay(): Unit = executionManager.delayFile(ExecutionJob.this)
 
   def printDelayMessage(): Unit = println(getSpecificCurrentTime + " Received delayed task with storageName: " + fileId)
 

@@ -6,7 +6,7 @@ import api.utils.DateUtils._
 import database.repositories.FileRepository
 import database.repositories.file.FakeFileRepository
 import database.repositories.task.{ FakeTaskRepository, TaskRepository }
-import executionengine.ExecutionJob
+import executionengine.{ ExecutionJob, ExecutionManager, FakeExecutionManager }
 import org.scalatestplus.play.PlaySpec
 import play.api.Mode
 import play.api.inject.Injector
@@ -21,6 +21,7 @@ class TaskServiceSuite extends PlaySpec {
   private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
   private implicit val fileRepo: FileRepository = new FakeFileRepository
   private implicit val taskRepo: TaskRepository = new FakeTaskRepository
+  private implicit val executionManager: ExecutionManager = new FakeExecutionManager
 
   private val taskService = new TaskService()
   private val system = ActorSystem("ExecutionSystem")
@@ -104,7 +105,7 @@ class TaskServiceSuite extends PlaySpec {
   "TaskService#replaceTask" should {
     "replace an existing task in the cancellableMap with a new one." in {
       taskService.actorMap.isEmpty mustBe true
-      taskService.actorMap += ("asd" -> system.actorOf(Props(classOf[ExecutionJob], "asd", "asd", SchedulingType.RunOnce, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, None, fileRepo, taskRepo)))
+      taskService.actorMap += ("asd" -> system.actorOf(Props(classOf[ExecutionJob], "asd", "asd", SchedulingType.RunOnce, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, None, fileRepo, taskRepo, executionManager)))
       taskService.actorMap.size mustBe 1
       taskService.replaceTask("asd", TaskDTO("dsa", "dsa", SchedulingType.RunOnce, Some(stringToDateFormat("2040-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))
       taskService.actorMap.size mustBe 1

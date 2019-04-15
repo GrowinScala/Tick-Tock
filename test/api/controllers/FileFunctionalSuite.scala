@@ -11,6 +11,7 @@ import com.google.inject.Guice
 import database.mappings.FileMappings._
 import database.repositories.FileRepository
 import database.repositories.task.TaskRepository
+import executionengine.ExecutionManager
 import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -31,6 +32,7 @@ class FileFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
   Guice.createInjector(appBuilder.applicationModule).injectMembers(this)
   private implicit val fileRepo: FileRepository = appBuilder.injector.instanceOf[FileRepository]
   private implicit val taskRepo: TaskRepository = appBuilder.injector.instanceOf[TaskRepository]
+  private implicit val executionManager: ExecutionManager = appBuilder.injector.instanceOf[ExecutionManager]
   private val dtbase: Database = appBuilder.injector.instanceOf[Database]
   private implicit val actorSystem: ActorSystem = ActorSystem()
   private implicit val mat: Materializer = ActorMaterializer()

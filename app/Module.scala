@@ -6,6 +6,7 @@ import database.repositories.file.FileRepositoryImpl
 import database.repositories.scheduling.{ SchedulingRepository, SchedulingRepositoryImpl }
 import database.repositories.task.{ TaskRepository, TaskRepositoryImpl }
 import database.utils.DatabaseUtils._
+import executionengine.{ ExecutionManager, ExecutionManagerImpl }
 import slick.jdbc.MySQLProfile.api._
 
 class Module extends AbstractModule {
@@ -17,5 +18,6 @@ class Module extends AbstractModule {
     bind(classOf[ExclusionRepository]).toInstance(new ExclusionRepositoryImpl(DEFAULT_DB))
     bind(classOf[SchedulingRepository]).toInstance(new SchedulingRepositoryImpl(DEFAULT_DB))
     bind(classOf[UUIDGenerator]).toInstance(new DefaultUUIDGenerator)
+    bind(classOf[ExecutionManager]).toInstance(new ExecutionManagerImpl)
   }
 }

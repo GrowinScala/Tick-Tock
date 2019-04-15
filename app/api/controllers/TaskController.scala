@@ -7,6 +7,7 @@ import api.validators.Error._
 import api.validators.TaskValidator
 import database.repositories.FileRepository
 import database.repositories.task.TaskRepository
+import executionengine.ExecutionManager
 import javax.inject.{ Inject, Singleton }
 import play.api.libs.json._
 import play.api.mvc._
@@ -19,7 +20,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  * @param cc standard controller components
  */
 @Singleton
-class TaskController @Inject() (cc: ControllerComponents)(implicit exec: ExecutionContext, implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository, implicit val UUIDGen: UUIDGenerator) extends AbstractController(cc) {
+class TaskController @Inject() (cc: ControllerComponents)(implicit exec: ExecutionContext, implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository, implicit val UUIDGen: UUIDGenerator, implicit val executionManager: ExecutionManager) extends AbstractController(cc) {
 
   val taskValidator = new TaskValidator()
 

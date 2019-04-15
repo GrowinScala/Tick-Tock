@@ -9,7 +9,7 @@ import api.services.Criteria.Criteria
 import api.utils.DateUtils.{ dateToDayTypeString, _ }
 import database.repositories.task.TaskRepository
 import database.repositories.FileRepository
-import executionengine.ExecutionJob
+import executionengine.{ ExecutionJob, ExecutionManager }
 import executionengine.ExecutionJob.{ Cancel, Execute }
 import javax.inject.{ Inject, Singleton }
 
@@ -21,7 +21,7 @@ import scala.concurrent.{ Await, ExecutionContext, ExecutionContextExecutor }
  * Object that contains all methods for the task scheduling related to the service layer.
  */
 @Singleton
-class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository) {
+class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository, implicit val executionManager: ExecutionManager) {
 
   val system = ActorSystem("ExecutionSystem")
   implicit val sd: ExecutionContextExecutor = system.dispatcher
@@ -40,12 +40,12 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
     task.taskType match {
 
       case SchedulingType.RunOnce =>
-        val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.RunOnce, task.startDateAndTime, None, None, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo))
+        val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.RunOnce, task.startDateAndTime, None, None, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo, executionManager))
         actorMap += (task.taskId -> actorRef)
         actorRef ! Execute
 
       case SchedulingType.Personalized =>
-        val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Personalized, task.startDateAndTime, None, task.endDateAndTime, task.timezone, calculateExclusions(task), calculateSchedulings(task), fileRepo, taskRepo))
+        val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Personalized, task.startDateAndTime, None, task.endDateAndTime, task.timezone, calculateExclusions(task), calculateSchedulings(task), fileRepo, taskRepo, executionManager))
         actorMap += (task.taskId -> actorRef)
         actorRef ! Execute
 
@@ -54,32 +54,32 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
         task.periodType.get match {
 
           case PeriodType.Minutely =>
-            val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofMinutes(task.period.get)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo))
+            val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofMinutes(task.period.get)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo, executionManager))
             actorMap += (task.taskId -> actorRef)
             actorRef ! Execute
 
           case PeriodType.Hourly =>
-            val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofHours(task.period.get)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo))
+            val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofHours(task.period.get)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo, executionManager))
             actorMap += (task.taskId -> actorRef)
             actorRef ! Execute
 
           case PeriodType.Daily =>
-            val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo))
+            val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo, executionManager))
             actorMap += (task.taskId -> actorRef)
             actorRef ! Execute
 
           case PeriodType.Weekly =>
-            val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get * 7)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo))
+            val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get * 7)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo, executionManager))
             actorMap += (task.taskId -> actorRef)
             actorRef ! Execute
 
           case PeriodType.Monthly =>
-            val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get * 30)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo))
+            val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get * 30)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo, executionManager))
             actorMap += (task.taskId -> actorRef)
             actorRef ! Execute
 
           case PeriodType.Yearly =>
-            val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get * 365)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo))
+            val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get * 365)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo, executionManager))
             actorMap += (task.taskId -> actorRef)
             actorRef ! Execute
         }

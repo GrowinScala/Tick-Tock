@@ -13,6 +13,7 @@ import database.mappings.FileMappings._
 import database.mappings.TaskMappings._
 import database.repositories.FileRepository
 import database.repositories.task.TaskRepository
+import executionengine.ExecutionManager
 import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -35,6 +36,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
   private implicit val fileRepo: FileRepository = appBuilder.injector.instanceOf[FileRepository]
   private implicit val taskRepo: TaskRepository = appBuilder.injector.instanceOf[TaskRepository]
   private implicit val uuidGen: UUIDGenerator = appBuilder.injector.instanceOf[UUIDGenerator]
+  private implicit val executionManager: ExecutionManager = appBuilder.injector.instanceOf[ExecutionManager]
   private implicit val actorSystem: ActorSystem = ActorSystem()
   private implicit val mat: Materializer = ActorMaterializer()
 
