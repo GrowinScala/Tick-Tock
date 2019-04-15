@@ -4,12 +4,12 @@ import java.util.UUID
 
 import api.utils.DateUtils._
 import database.mappings.TaskMappings._
-import org.scalatest.{AsyncWordSpec, BeforeAndAfterAll, BeforeAndAfterEach, MustMatchers}
+import org.scalatest.{ AsyncWordSpec, BeforeAndAfterAll, BeforeAndAfterEach, MustMatchers }
 import play.api.inject.guice.GuiceApplicationBuilder
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{ Await, ExecutionContext }
 
 class TaskMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with BeforeAndAfterEach with MustMatchers {
 

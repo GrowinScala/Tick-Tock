@@ -45,7 +45,6 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
 
   "ExclusionMappings#selectExclusionByExclusionId" should {
     "return the correct ExclusionRow when given an existing exclusionId." in {
-
       for {
         result1 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
         result2 <- dtbase.run(getExclusionByExclusionId(exclusionUUID2).result)
@@ -60,7 +59,6 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
 
   "ExclusionMappings#selectExclusionByTaskId" should {
     "return the correct ExclusionRow when given an existing taskId." in {
-
       for {
         result1 <- dtbase.run(getExclusionByTaskId(taskUUID1).result)
         result2 <- dtbase.run(getExclusionByTaskId(taskUUID2).result)
@@ -75,7 +73,6 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
 
   "ExclusionMappings#selectExclusionBySchedulingDate" should {
     "return the correct ExclusionRow when given an existing schedulingDate." in {
-
       for {
         result <- dtbase.run(getExclusionByExclusionDate(stringToDateFormat("2030-01-01 00:00:00", timeFormat)).result)
       } yield {
@@ -87,7 +84,6 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
 
   "ExclusionMappings#selectExclusionByDay" should {
     "return the correct ExclusionRow when given an existing day." in {
-
       for {
         result <- dtbase.run(getExclusionByDay(15).result)
       } yield {
@@ -99,7 +95,6 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
 
   "ExclusionMappings#selectExclusionByDayOfWeek" should {
     "return the correct ExclusionRow when given an existing dayOfWeek." in {
-
       for {
         result <- dtbase.run(getExclusionByDayOfWeek(3).result)
       } yield {
@@ -111,7 +106,6 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
 
   "ExclusionMappings#selectExclusionByDayType" should {
     "return the correct ExclusionRow when given an existing dayType." in {
-
       for {
         result <- dtbase.run(getExclusionByDayType(DayType.Weekday).result)
       } yield {
@@ -123,7 +117,6 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
 
   "ExclusionMappings#selectExclusionByMonth" should {
     "return the correct ExclusionRow when given an existing month." in {
-
       for {
         result <- dtbase.run(getExclusionByMonth(5).result)
       } yield {
@@ -135,7 +128,6 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
 
   "ExclusionMappings#selectExclusionByYear" should {
     "return the correct ExclusionRow when given an existing year." in {
-
       for {
         result <- dtbase.run(getExclusionByYear(2030).result)
       } yield {
@@ -147,7 +139,6 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
 
   "ExclusionMappings#selectExclusionByCriteria" should {
     "return the correct ExclusionRow when given an existing taskId." in {
-
       for {
         result <- dtbase.run(getExclusionByCriteria(Criteria.First).result)
       } yield {
@@ -159,7 +150,6 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
 
   "ExclusionMappings#insertExclusion" should {
     "insert the given exclusion." in {
-
       for {
         result1 <- dtbase.run(insertExclusion(ExclusionRow(exclusionUUID4, taskUUID1, None, Some(10))))
         result2 <- dtbase.run(getExclusionByExclusionId(exclusionUUID4).result)
@@ -173,7 +163,6 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
 
   "ExclusionMappings#updateExclusionByTaskId" should {
     "update a ExclusionRow by giving the corresponding taskId." in {
-
       for {
         result1 <- dtbase.run(updateExclusionByTaskId(exclusionUUID1, taskUUID2))
         result2 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
@@ -190,7 +179,6 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
 
   "ExclusionMappings#updateExclusionByExclusionDate" should {
     "update a ExclusionRow by giving the corresponding schedulingDate." in {
-
       for {
         result1 <- dtbase.run(updateExclusionByExclusionDate(exclusionUUID1, stringToDateFormat("2035-01-01 00:00:00", timeFormat)))
         result2 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
@@ -207,7 +195,6 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
 
   "ExclusionMappings#updateExclusionByDay" should {
     "update a ExclusionRow by giving the corresponding day." in {
-
       for {
         result1 <- dtbase.run(updateExclusionByDay(exclusionUUID2, 10))
         result2 <- dtbase.run(getExclusionByExclusionId(exclusionUUID2).result)
@@ -241,7 +228,6 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
 
   "ExclusionMappings#updateExclusionByDayType" should {
     "update a ExclusionRow by giving the corresponding dayType." in {
-
       for {
         result1 <- dtbase.run(updateExclusionByDayType(exclusionUUID3, DayType.Weekend))
         result2 <- dtbase.run(getExclusionByExclusionId(exclusionUUID3).result)
@@ -258,7 +244,6 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
 
   "ExclusionMappings#updateExclusionByMonth" should {
     "update a ExclusionRow by giving the corresponding month." in {
-
       for {
         result1 <- dtbase.run(updateExclusionByMonth(exclusionUUID2, 2))
         result2 <- dtbase.run(getExclusionByExclusionId(exclusionUUID2).result)
