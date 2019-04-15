@@ -6,6 +6,8 @@ import api.utils.UUIDGenerator
 import api.validators.Error._
 import api.validators.TaskValidator
 import database.repositories.FileRepository
+import database.repositories.exclusion.ExclusionRepository
+import database.repositories.scheduling.SchedulingRepository
 import database.repositories.task.TaskRepository
 import executionengine.ExecutionManager
 import javax.inject.{ Inject, Singleton }
@@ -20,7 +22,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  * @param cc standard controller components
  */
 @Singleton
-class TaskController @Inject() (cc: ControllerComponents)(implicit exec: ExecutionContext, implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository, implicit val UUIDGen: UUIDGenerator, implicit val executionManager: ExecutionManager) extends AbstractController(cc) {
+class TaskController @Inject() (cc: ControllerComponents)(implicit exec: ExecutionContext, implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository, implicit val exclusionRepo: ExclusionRepository, implicit val schedulingRepo: SchedulingRepository, implicit val UUIDGen: UUIDGenerator, implicit val executionManager: ExecutionManager) extends AbstractController(cc) {
 
   val taskValidator = new TaskValidator()
 
@@ -52,6 +54,8 @@ class TaskController @Inject() (cc: ControllerComponents)(implicit exec: Executi
               Future.successful(BadRequest(JsArray(errorList.map(error => Json.toJsObject(error)).toIndexedSeq)))
             case Right(taskDto) =>
               taskRepo.insertInTasksTable(taskDto)
+              if (taskDto.exclusions.isDefined) taskDto.exclusions.get.foreach(elem => exclusionRepo.insertInExclusionsTable(elem))
+              if (taskDto.schedulings.isDefined) taskDto.schedulings.get.foreach(elem => schedulingRepo.insertInSchedulingsTable(elem))
               val taskService = new TaskService
               taskService.scheduleTask(taskDto)
               val url = routes.TaskController.getScheduleById(taskDto.taskId).absoluteURL(request.secure)(request).stripSuffix("/").trim

@@ -123,7 +123,6 @@ class DateUtilsSuite extends PlaySpec {
     "convert a date to its corresponding day type. (Sunday => Weekend)" in {
       calendar.set(2019, 3 - 1, 10, 0, 0, 0)
       val date = calendar.getTime
-      println(date)
       dateToDayTypeString(date) mustBe DayType.Weekend
     }
 

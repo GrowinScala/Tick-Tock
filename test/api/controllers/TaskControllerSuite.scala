@@ -4,7 +4,9 @@ import akka.actor.ActorSystem
 import akka.stream.{ ActorMaterializer, Materializer }
 import api.utils.{ FakeUUIDGenerator, UUIDGenerator }
 import database.repositories.FileRepository
+import database.repositories.exclusion.{ ExclusionRepository, FakeExclusionRepository }
 import database.repositories.file.FakeFileRepository
+import database.repositories.scheduling.{ FakeSchedulingRepository, SchedulingRepository }
 import database.repositories.task.{ FakeTaskRepository, TaskRepository }
 import executionengine.{ ExecutionManager, FakeExecutionManager }
 import org.scalatestplus.play._
@@ -25,6 +27,8 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
   private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
   private implicit val fileRepo: FileRepository = new FakeFileRepository
   private implicit val taskRepo: TaskRepository = new FakeTaskRepository
+  private implicit val exclusionRepo: ExclusionRepository = new FakeExclusionRepository
+  private implicit val schedulingRepo: SchedulingRepository = new FakeSchedulingRepository
   private implicit val UUIDGen: UUIDGenerator = new FakeUUIDGenerator
   private implicit val executionManager: ExecutionManager = new FakeExecutionManager
   private val cc: ControllerComponents = injector.instanceOf[ControllerComponents]

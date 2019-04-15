@@ -4,9 +4,7 @@ import java.util.Date
 
 import api.dtos.TaskDTO
 import api.services.{ PeriodType, SchedulingType }
-import database.mappings.ExclusionMappings.ExclusionRow
 import database.mappings.FileMappings._
-import database.mappings.SchedulingMappings.SchedulingRow
 import database.mappings.TaskMappings._
 import javax.inject.Inject
 import slick.jdbc.MySQLProfile.api._
