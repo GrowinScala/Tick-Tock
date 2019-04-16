@@ -7,15 +7,19 @@ import akka.stream.{ ActorMaterializer, Materializer }
 import api.dtos.{ FileDTO, TaskDTO }
 import api.services.{ PeriodType, SchedulingType }
 import api.utils.DateUtils._
-import api.utils.UUIDGenerator
+import api.utils.{ DefaultUUIDGenerator, UUIDGenerator }
 import api.validators.Error._
 import database.mappings.FileMappings._
 import database.mappings.TaskMappings._
 import database.mappings.ExclusionMappings._
+import database.mappings.SchedulingMappings._
+import database.utils.DatabaseUtils._
 import database.repositories.FileRepository
-import database.repositories.exclusion.ExclusionRepository
-import database.repositories.task.TaskRepository
-import executionengine.ExecutionManager
+import database.repositories.exclusion.{ ExclusionRepository, ExclusionRepositoryImpl }
+import database.repositories.file.FileRepositoryImpl
+import database.repositories.scheduling.{ SchedulingRepository, SchedulingRepositoryImpl }
+import database.repositories.task.{ TaskRepository, TaskRepositoryImpl }
+import executionengine.{ ExecutionManager, FakeExecutionManager }
 import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -35,9 +39,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
 
   private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
   private val dtbase: Database = appBuilder.injector.instanceOf[Database]
-  private implicit val fileRepo: FileRepository = appBuilder.injector.instanceOf[FileRepository]
-  private implicit val taskRepo: TaskRepository = appBuilder.injector.instanceOf[TaskRepository]
-  private implicit val exclusionRepo: ExclusionRepository = appBuilder.injector.instanceOf[ExclusionRepository]
+  private implicit val fileRepo: FileRepository = new FileRepositoryImpl(TEST_DB)
+  private implicit val taskRepo: TaskRepository = new TaskRepositoryImpl(TEST_DB)
+  private implicit val exclusionRepo: ExclusionRepository = new ExclusionRepositoryImpl(TEST_DB)
+  private implicit val schedulingRepo: SchedulingRepository = new SchedulingRepositoryImpl(TEST_DB)
   private implicit val uuidGen: UUIDGenerator = appBuilder.injector.instanceOf[UUIDGenerator]
   private implicit val executionManager: ExecutionManager = appBuilder.injector.instanceOf[ExecutionManager]
   private implicit val actorSystem: ActorSystem = ActorSystem()
@@ -65,20 +70,24 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID3, "test3", getCurrentDateTimestamp))
       _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID4, "test4", getCurrentDateTimestamp))
       _ <- dtbase.run(createTasksTableAction)
-      res <- dtbase.run(createExclusionsTableAction)
+      _ <- dtbase.run(createExclusionsTableAction)
+      res <- dtbase.run(createSchedulingsTableAction)
     } yield res
     Await.result(result, Duration.Inf)
   }
 
   override def afterAll: Unit = {
+    Await.result(dtbase.run(dropSchedulingsTableAction), Duration.Inf)
     Await.result(dtbase.run(dropExclusionsTableAction), Duration.Inf)
     Await.result(dtbase.run(dropTasksTableAction), Duration.Inf)
     Await.result(dtbase.run(dropFilesTableAction), Duration.Inf)
   }
 
   override def afterEach: Unit = {
-    Await.result(taskRepo.deleteAllTasks, Duration.Inf)
+    Await.result(schedulingRepo.deleteAllSchedulings, Duration.Inf)
     Await.result(exclusionRepo.deleteAllExclusions, Duration.Inf)
+    Await.result(taskRepo.deleteAllTasks, Duration.Inf)
+
   }
 
   "GET /" should {
@@ -876,7 +885,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.exclusionDate.get.toString mustBe "Mon Jan 01 00:00:00 GMT 2035"
     }
@@ -908,7 +917,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.day.get.toString mustBe "15"
     }
@@ -940,7 +949,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.dayOfWeek.get.toString mustBe "3"
     }
@@ -972,7 +981,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.dayType.get.toString mustBe "Weekday"
     }
@@ -1004,7 +1013,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.month.get.toString mustBe "9"
     }
@@ -1036,7 +1045,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.year.get.toString mustBe "2031"
     }
@@ -1069,7 +1078,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.day.get.toString mustBe "25"
       exclusion.get.dayOfWeek.get.toString mustBe "2"
@@ -1103,7 +1112,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.day.get.toString mustBe "12"
       exclusion.get.dayType.get.toString mustBe "Weekend"
@@ -1137,7 +1146,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.day.get.toString mustBe "2"
       exclusion.get.month.get.toString mustBe "5"
@@ -1171,7 +1180,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.day.get.toString mustBe "31"
       exclusion.get.year.get.toString mustBe "2033"
@@ -1190,7 +1199,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "endDateAndTime": "2040-01-01 00:00:00",
             "exclusions": [
               {
-                "dayOfWeek": 1,
+                "dayOfWeek": 6,
                 "dayType": "Weekday"
               }
             ]
@@ -1205,9 +1214,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
-      exclusion.get.dayOfWeek.get.toString mustBe "1"
+      exclusion.get.dayOfWeek.get.toString mustBe "6"
       exclusion.get.dayType.get.toString mustBe "Weekday"
     }
 
@@ -1225,7 +1234,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "exclusions": [
               {
                 "dayOfWeek": 7,
-                "month": "7"
+                "month": 7
               }
             ]
           }
@@ -1239,7 +1248,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.dayOfWeek.get.toString mustBe "7"
       exclusion.get.month.get.toString mustBe "7"
@@ -1273,7 +1282,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.dayOfWeek.get.toString mustBe "2"
       exclusion.get.year.get.toString mustBe "2034"
@@ -1307,7 +1316,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.dayType.get.toString mustBe "Weekday"
       exclusion.get.month.get.toString mustBe "10"
@@ -1341,7 +1350,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.dayType.get.toString mustBe "Weekend"
       exclusion.get.year.get.toString mustBe "2037"
@@ -1360,7 +1369,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "endDateAndTime": "2040-01-01 00:00:00",
             "exclusions": [
               {
-                "month": 18,
+                "month": 8,
                 "year": 2039
               }
             ]
@@ -1375,9 +1384,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
-      exclusion.get.month.get.toString mustBe "18"
+      exclusion.get.month.get.toString mustBe "8"
       exclusion.get.year.get.toString mustBe "2039"
     }
 
@@ -1395,7 +1404,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "exclusions": [
               {
                 "day": 28,
-                "dayOfWeek": 2,
+                "dayOfWeek": 1,
                 "dayType": "Weekend"
               }
             ]
@@ -1410,10 +1419,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.day.get.toString mustBe "28"
-      exclusion.get.dayOfWeek.get.toString mustBe "2"
+      exclusion.get.dayOfWeek.get.toString mustBe "1"
       exclusion.get.dayType.get.toString mustBe "Weekend"
     }
 
@@ -1446,7 +1455,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.day.get.toString mustBe "28"
       exclusion.get.dayOfWeek.get.toString mustBe "4"
@@ -1468,7 +1477,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
               {
                 "day": 28,
                 "dayOfWeek": 2,
-                "year": "2038"
+                "year": 2038
               }
             ]
           }
@@ -1482,7 +1491,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.day.get.toString mustBe "28"
       exclusion.get.dayOfWeek.get.toString mustBe "2"
@@ -1518,7 +1527,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.dayOfWeek.get.toString mustBe "3"
       exclusion.get.dayType.get.toString mustBe "Weekday"
@@ -1538,9 +1547,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "endDateAndTime": "2040-01-01 00:00:00",
             "exclusions": [
               {
-                "dayOfWeek": 7,
-                "dayType": 2,
-                "year": "2031"
+                "dayOfWeek": 4,
+                "dayType": "Weekday",
+                "year": 2031
               }
             ]
           }
@@ -1554,10 +1563,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
-      exclusion.get.dayOfWeek.get.toString mustBe "7"
-      exclusion.get.dayType.get.toString mustBe "2"
+      exclusion.get.dayOfWeek.get.toString mustBe "4"
+      exclusion.get.dayType.get.toString mustBe "Weekday"
       exclusion.get.year.get.toString mustBe "2031"
     }
 
@@ -1576,7 +1585,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
               {
                 "dayType": "Weekend",
                 "month": 2,
-                "year": "2040"
+                "year": 2040
               }
             ]
           }
@@ -1590,7 +1599,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.dayType.get.toString mustBe "Weekend"
       exclusion.get.month.get.toString mustBe "2"
@@ -1627,11 +1636,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.day.get.toString mustBe "23"
       exclusion.get.dayOfWeek.get.toString mustBe "5"
-      exclusion.get.dayType.get.toString mustBe "Weekend"
+      exclusion.get.dayType.get.toString mustBe "Weekday"
       exclusion.get.month.get.toString mustBe "8"
     }
 
@@ -1650,7 +1659,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
               {
                 "day": 16,
                 "dayOfWeek": 6,
-                "dayType": "Weekend",
+                "dayType": "Weekday",
                 "year": 2032
               }
             ]
@@ -1665,11 +1674,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.day.get.toString mustBe "16"
-      exclusion.get.dayOfWeek.get.toString mustBe "5"
-      exclusion.get.dayType.get.toString mustBe "Weekend"
+      exclusion.get.dayOfWeek.get.toString mustBe "6"
+      exclusion.get.dayType.get.toString mustBe "Weekday"
       exclusion.get.year.get.toString mustBe "2032"
     }
 
@@ -1703,7 +1712,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.day.get.toString mustBe "4"
       exclusion.get.dayOfWeek.get.toString mustBe "3"
@@ -1725,8 +1734,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "exclusions": [
               {
                 "day": 23,
-                "dayType": 5,
-                "month": "Weekday",
+                "dayType": "Weekday",
+                "month": 11,
                 "year": 2030
               }
             ]
@@ -1741,11 +1750,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.day.get.toString mustBe "23"
-      exclusion.get.dayType.get.toString mustBe "5"
-      exclusion.get.month.get.toString mustBe "Weekday"
+      exclusion.get.dayType.get.toString mustBe "Weekday"
+      exclusion.get.month.get.toString mustBe "11"
       exclusion.get.year.get.toString mustBe "2030"
     }
 
@@ -1762,7 +1771,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "endDateAndTime": "2040-01-01 00:00:00",
             "exclusions": [
               {
-                "dayOfWeek": 1,
+                "dayOfWeek": 5,
                 "dayType": "Weekday",
                 "month": 3,
                 "year": 2032
@@ -1779,9 +1788,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
-      exclusion.get.dayOfWeek.get.toString mustBe "1"
+      exclusion.get.dayOfWeek.get.toString mustBe "5"
       exclusion.get.dayType.get.toString mustBe "Weekday"
       exclusion.get.month.get.toString mustBe "3"
       exclusion.get.year.get.toString mustBe "2032"
@@ -1802,7 +1811,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
               {
                 "day": 7,
                 "dayOfWeek": 4,
-                "dayType": "Weekend",
+                "dayType": "Weekday",
                 "month": 8,
                 "year": 2037
               }
@@ -1818,129 +1827,1013 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusionById(id), Duration.Inf)
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
       exclusion.isDefined mustBe true
       exclusion.get.day.get.toString mustBe "7"
       exclusion.get.dayOfWeek.get.toString mustBe "4"
-      exclusion.get.dayType.get.toString mustBe "Weekend"
+      exclusion.get.dayType.get.toString mustBe "Weekday"
       exclusion.get.month.get.toString mustBe "8"
       exclusion.get.year.get.toString mustBe "2037"
     }
 
-    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with exclusionDate and criteria)" in {
-
-    }
-
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "day": 15,
+                "criteria": "First"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.day.get.toString mustBe "15"
+      exclusion.get.criteria.get.toString mustBe "First"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "dayOfWeek": 3,
+                "criteria": "Second"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.dayOfWeek.get.toString mustBe "3"
+      exclusion.get.criteria.get.toString mustBe "Second"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayType and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "dayType": "Weekday",
+                "criteria": "Third"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.dayType.get.toString mustBe "Weekday"
+      exclusion.get.criteria.get.toString mustBe "Third"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with month and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "month": 2,
+                "criteria": "Fourth"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.month.get.toString mustBe "2"
+      exclusion.get.criteria.get.toString mustBe "Fourth"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "year": 2031,
+                "criteria": "Last"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.year.get.toString mustBe "2031"
+      exclusion.get.criteria.get.toString mustBe "Last"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "day": 22,
+                "dayOfWeek": 7,
+                "criteria": "First"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.day.get.toString mustBe "22"
+      exclusion.get.dayOfWeek.get.toString mustBe "7"
+      exclusion.get.criteria.get.toString mustBe "First"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayType and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "day": 9,
+                "dayType": "Weekend",
+                "criteria": "Second"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.day.get.toString mustBe "9"
+      exclusion.get.dayType.get.toString mustBe "Weekend"
+      exclusion.get.criteria.get.toString mustBe "Second"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, month and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "day": 11,
+                "month": 9,
+                "criteria": "Third"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.day.get.toString mustBe "11"
+      exclusion.get.month.get.toString mustBe "9"
+      exclusion.get.criteria.get.toString mustBe "Third"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "day": 29,
+                "year": 2035,
+                "criteria": "Fourth"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.day.get.toString mustBe "29"
+      exclusion.get.year.get.toString mustBe "2035"
+      exclusion.get.criteria.get.toString mustBe "Fourth"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, dayType and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "dayOfWeek": 5,
+                "dayType": "Weekday",
+                "criteria": "Last"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.dayOfWeek.get.toString mustBe "5"
+      exclusion.get.dayType.get.toString mustBe "Weekday"
+      exclusion.get.criteria.get.toString mustBe "Last"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, month and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "dayOfWeek": 4,
+                "month": 5,
+                "criteria": "First"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.dayOfWeek.get.toString mustBe "4"
+      exclusion.get.month.get.toString mustBe "5"
+      exclusion.get.criteria.get.toString mustBe "First"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "dayOfWeek": 6,
+                "year": 2033,
+                "criteria": "First"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.dayOfWeek.get.toString mustBe "6"
+      exclusion.get.year.get.toString mustBe "2033"
+      exclusion.get.criteria.get.toString mustBe "First"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayType, month and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "dayType": "Weekend",
+                "month": 12,
+                "criteria": "Second"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.dayType.get.toString mustBe "Weekend"
+      exclusion.get.month.get.toString mustBe "12"
+      exclusion.get.criteria.get.toString mustBe "Second"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayType, year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "dayType": "Weekday",
+                "year": 2039,
+                "criteria": "Third"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.dayType.get.toString mustBe "Weekday"
+      exclusion.get.year.get.toString mustBe "2039"
+      exclusion.get.criteria.get.toString mustBe "Third"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with month, year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "month": 7,
+                "year": 2036,
+                "criteria": "Fourth"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.month.get.toString mustBe "7"
+      exclusion.get.year.get.toString mustBe "2036"
+      exclusion.get.criteria.get.toString mustBe "Fourth"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, dayType and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "day": 14,
+                "dayOfWeek": 1,
+                "dayType": "Weekend",
+                "criteria": "Last"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.day.get.toString mustBe "14"
+      exclusion.get.dayOfWeek.get.toString mustBe "1"
+      exclusion.get.dayType.get.toString mustBe "Weekend"
+      exclusion.get.criteria.get.toString mustBe "Last"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, month and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "day": 27,
+                "dayOfWeek": 2,
+                "month": 1,
+                "criteria": "First"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.day.get.toString mustBe "27"
+      exclusion.get.dayOfWeek.get.toString mustBe "2"
+      exclusion.get.month.get.toString mustBe "1"
+      exclusion.get.criteria.get.toString mustBe "First"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "day": 19,
+                "dayOfWeek": 6,
+                "year": 2037,
+                "criteria": "Second"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.day.get.toString mustBe "19"
+      exclusion.get.dayOfWeek.get.toString mustBe "6"
+      exclusion.get.year.get.toString mustBe "2037"
+      exclusion.get.criteria.get.toString mustBe "Second"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, dayType, month and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "dayOfWeek": 2,
+                "dayType": "Weekday",
+                "month": 10,
+                "criteria": "Third"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.dayOfWeek.get.toString mustBe "2"
+      exclusion.get.dayType.get.toString mustBe "Weekday"
+      exclusion.get.month.get.toString mustBe "10"
+      exclusion.get.criteria.get.toString mustBe "Third"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, dayType, year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "dayOfWeek": 7,
+                "dayType": "Weekend",
+                "year": 2034,
+                "criteria": "Fourth"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.dayOfWeek.get.toString mustBe "7"
+      exclusion.get.dayType.get.toString mustBe "Weekend"
+      exclusion.get.year.get.toString mustBe "2034"
+      exclusion.get.criteria.get.toString mustBe "Fourth"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayType, month, year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "dayType": "Weekday",
+                "month": 6,
+                "year": 2038,
+                "criteria": "Last"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.dayType.get.toString mustBe "Weekday"
+      exclusion.get.month.get.toString mustBe "6"
+      exclusion.get.year.get.toString mustBe "2038"
+      exclusion.get.criteria.get.toString mustBe "Last"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, dayType, month and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "day": 17,
+                "dayOfWeek": 1,
+                "dayType": "Weekend",
+                "month": 6,
+                "criteria": "First"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.day.get.toString mustBe "17"
+      exclusion.get.dayOfWeek.get.toString mustBe "1"
+      exclusion.get.dayType.get.toString mustBe "Weekend"
+      exclusion.get.month.get.toString mustBe "6"
+      exclusion.get.criteria.get.toString mustBe "First"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, dayType, year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "day": 26,
+                "dayOfWeek": 3,
+                "dayType": "Weekday",
+                "year": 2036,
+                "criteria": "Second"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.day.get.toString mustBe "26"
+      exclusion.get.dayOfWeek.get.toString mustBe "3"
+      exclusion.get.dayType.get.toString mustBe "Weekday"
+      exclusion.get.year.get.toString mustBe "2036"
+      exclusion.get.criteria.get.toString mustBe "Second"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, month, year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "day": 3,
+                "dayOfWeek": 4,
+                "month": 4,
+                "year": 2040,
+                "criteria": "Third"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.day.get.toString mustBe "3"
+      exclusion.get.dayOfWeek.get.toString mustBe "4"
+      exclusion.get.month.get.toString mustBe "4"
+      exclusion.get.year.get.toString mustBe "2040"
+      exclusion.get.criteria.get.toString mustBe "Third"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayType, month, year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "day": 20,
+                "dayType": "Weekend",
+                "month": 5,
+                "year": 2033,
+                "criteria": "Fourth"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.day.get.toString mustBe "20"
+      exclusion.get.dayType.get.toString mustBe "Weekend"
+      exclusion.get.month.get.toString mustBe "5"
+      exclusion.get.year.get.toString mustBe "2033"
+      exclusion.get.criteria.get.toString mustBe "Fourth"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, dayType, month, year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "dayOfWeek": 3,
+                "dayType": "Weekday",
+                "month": 11,
+                "year": 2038,
+                "criteria": "Last"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.dayOfWeek.get.toString mustBe "3"
+      exclusion.get.dayType.get.toString mustBe "Weekday"
+      exclusion.get.month.get.toString mustBe "11"
+      exclusion.get.year.get.toString mustBe "2038"
+      exclusion.get.criteria.get.toString mustBe "Last"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, dayType, month, year and criteria)" in {
-
-    }
-
-    "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with multiple exclusions)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "day": 27,
+                "dayOfWeek": 7,
+                "dayType": "Weekend",
+                "month": 2,
+                "year": 2030,
+                "criteria": "First"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
+      exclusion.isDefined mustBe true
+      exclusion.get.day.get.toString mustBe "27"
+      exclusion.get.dayOfWeek.get.toString mustBe "7"
+      exclusion.get.dayType.get.toString mustBe "Weekend"
+      exclusion.get.month.get.toString mustBe "2"
+      exclusion.get.year.get.toString mustBe "2030"
+      exclusion.get.criteria.get.toString mustBe "First"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with no arguments)" in {

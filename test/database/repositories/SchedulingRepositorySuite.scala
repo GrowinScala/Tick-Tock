@@ -101,8 +101,8 @@ class SchedulingRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll wit
       val result = for {
         _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID1, taskUUID3, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))
         _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID2, taskUUID1, None, Some(10), None, Some(DayType.Weekday), None, Some(2030)))
-        _ <- schedulingRepo.selectSchedulingById(schedulingUUID2).map(dto => assert(dto.get.day.contains(10)))
-        task <- schedulingRepo.selectSchedulingById(schedulingUUID1)
+        _ <- schedulingRepo.selectScheduling(schedulingUUID2).map(dto => assert(dto.get.day.contains(10)))
+        task <- schedulingRepo.selectScheduling(schedulingUUID1)
       } yield task
       result.map(dto => assert(dto.get.taskId == taskUUID3))
     }

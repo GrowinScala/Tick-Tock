@@ -19,7 +19,9 @@ trait ExclusionRepository {
    * @param id - the identifier of the exclusions.
    * @return a ExclusionDTO of the selected exclusion.
    */
-  def selectExclusionById(id: String): Future[Option[ExclusionDTO]]
+  def selectExclusion(id: String): Future[Option[ExclusionDTO]]
+
+  def selectExclusionsByTaskId(id: String): Future[Option[Seq[ExclusionDTO]]]
 
   /**
    * Deletes all exclusion from the exclusions table on the database.

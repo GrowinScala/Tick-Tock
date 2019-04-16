@@ -25,10 +25,17 @@ class SchedulingRepositoryImpl @Inject() (dtbase: Database) extends SchedulingRe
     }
   }
 
-  def selectSchedulingById(id: String): Future[Option[SchedulingDTO]] = {
+  def selectScheduling(id: String): Future[Option[SchedulingDTO]] = {
     dtbase.run(getSchedulingBySchedulingId(id).result).map { seq =>
       if (seq.isEmpty) None
       else Some(schedulingRowToSchedulingDTO(seq.head))
+    }
+  }
+
+  def selectSchedulingsByTaskId(id: String): Future[Option[Seq[SchedulingDTO]]] = {
+    dtbase.run(getSchedulingByTaskId(id).result).map { seq =>
+      if (seq.isEmpty) None
+      else Some(seq.map(elem => schedulingRowToSchedulingDTO(elem)))
     }
   }
 

@@ -25,8 +25,12 @@ class FakeSchedulingRepository extends SchedulingRepository {
    *
    * @return An exclusionDTO containing the selected exclusion
    */
-  def selectSchedulingById(id: String): Future[Option[SchedulingDTO]] = {
+  def selectScheduling(id: String): Future[Option[SchedulingDTO]] = {
     Future.successful(Some(SchedulingDTO("dsa1", "asd1", Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")))))
+  }
+
+  def selectSchedulingsByTaskId(id: String): Future[Option[Seq[SchedulingDTO]]] = {
+    Future.successful(Some(Seq(SchedulingDTO("dsa1", "asd1", Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))))
   }
 
   /**

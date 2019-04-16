@@ -19,7 +19,9 @@ trait SchedulingRepository {
    * @param id - the identifier of the scheduling.
    * @return a SchedulingDTO of the selected scheduling.
    */
-  def selectSchedulingById(id: String): Future[Option[SchedulingDTO]]
+  def selectScheduling(id: String): Future[Option[SchedulingDTO]]
+
+  def selectSchedulingsByTaskId(id: String): Future[Option[Seq[SchedulingDTO]]]
 
   /**
    * Deletes all schedulings from the scheduling table on the database.

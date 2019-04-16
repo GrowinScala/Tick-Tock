@@ -409,11 +409,12 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
             if (exclusion.month.isDefined) {
               exclusion.day.get match {
                 case 29 => exclusion.month.get != 2 || (exclusion.year match {
-                  case Some(year) => isLeapYear(year)
+                  case Some(year) => if (isLeapYear(year)) iter(list.tail) else false
                   case None => false
                 })
-                case 30 => exclusion.month.get != 2
-                case 31 => exclusion.month.get != 2 && exclusion.month.get != 4 && exclusion.month.get != 6 && exclusion.month.get != 9 && exclusion.month.get != 11
+                case 30 => if (exclusion.month.get != 2) iter(list.tail) else false
+                case 31 => if (exclusion.month.get != 2 && exclusion.month.get != 4 && exclusion.month.get != 6 && exclusion.month.get != 9 && exclusion.month.get != 11) iter(list.tail) else false
+                case _ => iter(list.tail)
               }
               if (exclusion.year.isDefined) {
                 if (exclusion.month.get == calendar.get(Calendar.MONTH) && exclusion.year.get == calendar.get(Calendar.YEAR)) if (exclusion.day.get >= calendar.get(Calendar.DAY_OF_MONTH)) iter(list.tail) else false
@@ -441,7 +442,9 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
             if (exclusion.dayType.isDefined) {
               if (exclusion.dayOfWeek.get >= 2 && exclusion.dayOfWeek.get <= 6)
                 if (exclusion.dayType.get == DayType.Weekday) iter(list.tail) else false
-              else if (exclusion.dayType.get == DayType.Weekend) iter(list.tail) else false
+              else if (exclusion.dayOfWeek.get == 1 || exclusion.dayOfWeek.get == 7)
+                if (exclusion.dayType.get == DayType.Weekend) iter(list.tail) else false
+              else false
             } else iter(list.tail)
           } else false
         } else iter(list.tail)
@@ -461,14 +464,14 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
           case Some(DayType.Weekday) =>
             exclusion.dayOfWeek match {
               case Some(value) =>
-                if ((1 to 5).contains(value)) iter(list.tail)
+                if ((2 to 6).contains(value)) iter(list.tail)
                 else false
               case None => iter(list.tail)
             }
           case Some(DayType.Weekend) =>
             exclusion.dayOfWeek match {
               case Some(value) =>
-                if ((6 to 7).contains(value)) iter(list.tail)
+                if (value == 1 || value == 7) iter(list.tail)
                 else false
               case None => iter(list.tail)
             }

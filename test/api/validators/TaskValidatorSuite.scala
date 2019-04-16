@@ -12,6 +12,7 @@ import com.google.inject.Guice
 import database.repositories.FileRepository
 import database.repositories.file.FakeFileRepository
 import database.repositories.task.{ FakeTaskRepository, TaskRepository }
+import executionengine.{ ExecutionManager, FakeExecutionManager }
 import org.scalatestplus.play.PlaySpec
 import play.api.inject.guice.GuiceApplicationBuilder
 
@@ -26,6 +27,7 @@ class TaskValidatorSuite extends PlaySpec {
   private implicit val fileRepo: FileRepository = new FakeFileRepository
   private implicit val taskRepo: TaskRepository = new FakeTaskRepository
   private implicit val UUIDGen: UUIDGenerator = new FakeUUIDGenerator
+  private implicit val executionManager: ExecutionManager = new FakeExecutionManager
   private implicit val actorSystem: ActorSystem = ActorSystem()
   private implicit val mat: Materializer = ActorMaterializer()
 

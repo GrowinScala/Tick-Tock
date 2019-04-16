@@ -25,8 +25,12 @@ class FakeExclusionRepository extends ExclusionRepository {
    *
    * @return An exclusionDTO containing the selected exclusion
    */
-  def selectExclusionById(id: String): Future[Option[ExclusionDTO]] = {
+  def selectExclusion(id: String): Future[Option[ExclusionDTO]] = {
     Future.successful(Some(ExclusionDTO("dsa1", "asd1", Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")))))
+  }
+
+  def selectExclusionsByTaskId(id: String): Future[Option[Seq[ExclusionDTO]]] = {
+    Future.successful(Some(Seq(ExclusionDTO("dsa1", "asd1", Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))))
   }
 
   /**

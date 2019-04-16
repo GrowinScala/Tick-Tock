@@ -27,10 +27,17 @@ class ExclusionRepositoryImpl @Inject() (dtbase: Database) extends ExclusionRepo
     }
   }
 
-  def selectExclusionById(id: String): Future[Option[ExclusionDTO]] = {
+  def selectExclusion(id: String): Future[Option[ExclusionDTO]] = {
     dtbase.run(getExclusionByExclusionId(id).result).map { seq =>
       if (seq.isEmpty) None
       else Some(exclusionRowToExclusionDTO(seq.head))
+    }
+  }
+
+  def selectExclusionsByTaskId(id: String): Future[Option[Seq[ExclusionDTO]]] = {
+    dtbase.run(getExclusionByTaskId(id).result).map { seq =>
+      if (seq.isEmpty) None
+      else Some(seq.map(elem => exclusionRowToExclusionDTO(elem)))
     }
   }
 
