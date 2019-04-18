@@ -11,6 +11,7 @@ import database.mappings.FileMappings._
 import database.mappings.TaskMappings._
 import database.mappings.SchedulingMappings._
 import database.repositories.exclusion.ExclusionRepository
+import database.repositories.file.FileRepository
 import database.repositories.scheduling.SchedulingRepository
 import database.repositories.task.TaskRepository
 import org.scalatest._

@@ -5,7 +5,7 @@ import api.services.TaskService
 import api.utils.UUIDGenerator
 import api.validators.Error._
 import api.validators.TaskValidator
-import database.repositories.FileRepository
+import database.repositories.file.FileRepository
 import database.repositories.exclusion.ExclusionRepository
 import database.repositories.scheduling.SchedulingRepository
 import database.repositories.task.TaskRepository

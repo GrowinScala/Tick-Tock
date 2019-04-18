@@ -3,8 +3,8 @@ package api.services
 import akka.actor.{ ActorSystem, Props }
 import api.dtos.{ ExclusionDTO, SchedulingDTO, TaskDTO }
 import api.utils.DateUtils._
-import database.repositories.FileRepository
-import database.repositories.file.FakeFileRepository
+
+import database.repositories.file.{ FakeFileRepository, FileRepository }
 import database.repositories.task.{ FakeTaskRepository, TaskRepository }
 import executionengine.{ ExecutionJob, ExecutionManager, FakeExecutionManager }
 import org.scalatestplus.play.PlaySpec

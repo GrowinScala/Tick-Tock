@@ -14,9 +14,8 @@ import database.mappings.TaskMappings._
 import database.mappings.ExclusionMappings._
 import database.mappings.SchedulingMappings._
 import database.utils.DatabaseUtils._
-import database.repositories.FileRepository
+import database.repositories.file.{ FileRepository, FileRepositoryImpl }
 import database.repositories.exclusion.{ ExclusionRepository, ExclusionRepositoryImpl }
-import database.repositories.file.FileRepositoryImpl
 import database.repositories.scheduling.{ SchedulingRepository, SchedulingRepositoryImpl }
 import database.repositories.task.{ TaskRepository, TaskRepositoryImpl }
 import executionengine.{ ExecutionManager, FakeExecutionManager }
@@ -2837,43 +2836,886 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with no arguments)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with an unknown parameter)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "something": "bork"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with exclusionId)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "exclusionId": "asd4"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with taskId)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "taskId": "dsa4"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with exclusionDate and day)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "exclusionDate": "2035-01-01 00:00:00",
+                "day": 15
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with exclusionDate and dayOfWeek)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "exclusionDate": "2035-01-01 00:00:00",
+                "dayOfWeek": 4
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with exclusionDate and dayType)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "exclusionDate": "2035-01-01 00:00:00",
+                "dayType": "Weekday"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with exclusionDate and month)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "exclusionDate": "2035-01-01 00:00:00",
+                "month": 5
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with exclusionDate and year)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "exclusionDate": "2035-01-01 00:00:00",
+                "year": 2035
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with only criteria)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "criteria": "First"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
+    }
 
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid exclusionDate format)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "exclusionDate": "2030:01:01 12-00-00"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionDateFormat) + "]"
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid exclusionDate values - before startDate)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "exclusionDate": "2029-12-25 00:00:00"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionDateValue) + "]"
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid exclusionDate values - after endDate)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "exclusionDate": "2040-01-24 12:00:00"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionDateValue) + "]"
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid day - before range)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "day": 0
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayValue) + "]"
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid day - after range)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "day": 32
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayValue) + "]"
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid day - 31st in a month without it)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "day": 31,
+                "month": 3
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayValue) + "]"
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid day - 30th of February)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "day": 30,
+                "month": 1
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayValue) + "]"
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid day - non leap year 29th of February)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "day": 29,
+                "month": 1,
+                "year": 2031
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayValue) + "]"
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid dayOfWeek - before range)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "dayOfWeek": 0
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayOfWeekValue) + "]"
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid dayOfWeek - after range)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "dayOfWeek": 8
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayOfWeekValue) + "]"
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid dayOfWeek - with incompatible dayType - Weekday)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "dayOfWeek": 7,
+                "dayType": "Weekday"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayOfWeekValue) + "," + Json.toJsObject(invalidExclusionDayTypeValue) + "]"
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid dayOfWeek - with incompatible dayType - Weekend)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "dayOfWeek": 3,
+                "dayType": "Weekend"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayOfWeekValue) + "," + Json.toJsObject(invalidExclusionDayTypeValue) + "]"
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid dayType - unrecognized string)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "dayType": "qwergfn"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayTypeValue) + "]"
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid dayType - with incompatible dayOfWeek - 2 to 6)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "dayOfWeek": 5,
+                "dayType": "Weekend"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayOfWeekValue) + "," + Json.toJsObject(invalidExclusionDayTypeValue) + "]"
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid dayType - with incompatible dayOfWeek - 1 and 7)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "dayOfWeek": 1,
+                "dayType": "Weekday"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayOfWeekValue) + "," + Json.toJsObject(invalidExclusionDayTypeValue) + "]"
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid month - before range)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "month": 0
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionMonthValue) + "]"
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid month - after range)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "month": 13
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionMonthValue) + "]"
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid year - before startDate)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "year": 2029
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionYearValue) + "]"
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid year - after endDate)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "year": 2041
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionYearValue) + "]"
+    }
+
+    "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid criteria)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Periodic",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "exclusions": [
+              {
+                "day": 20,
+                "criteria": "Fifth"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- exclusionRepo.selectAllExclusions
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 1)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidExclusionCriteriaValue) + "]"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with schedulingDate)" in {
@@ -2883,10 +3725,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test1",
             "taskType": "Personalized",
-            "startDateAndTime": "2019-07-01 00:00:00",
-            "schedulings": {
-              "schedulingDate": ""
-            }
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "schedulingDate": "2035-01-01 12:00:00"
+              }
+            ]
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -2896,270 +3741,2167 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.schedulingDate.get.toString mustBe "Mon Jan 01 12:00:00 GMT 2035"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 10
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "10"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "dayOfWeek": 2
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.dayOfWeek.get.toString mustBe "2"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "dayType": "Weekday"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.dayType.get.toString mustBe "Weekday"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with month)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "month": 5
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.month.get.toString mustBe "5"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with year)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "year": 2035
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.year.get.toString mustBe "2035"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day and dayOfWeek)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 5,
+                "dayOfWeek": 2
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "5"
+      scheduling.get.dayOfWeek.get.toString mustBe "2"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day and dayType)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 28,
+                "dayType": "Weekend"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "28"
+      scheduling.get.dayType.get.toString mustBe "Weekend"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day and month)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 16,
+                "month": 8
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "16"
+      scheduling.get.month.get.toString mustBe "8"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day and year)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 2,
+                "year": 2037
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "2"
+      scheduling.get.year.get.toString mustBe "2037"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek and dayType)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "dayOfWeek": 1,
+                "dayType": "Weekend"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.dayOfWeek.get.toString mustBe "1"
+      scheduling.get.dayType.get.toString mustBe "Weekend"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek and month)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "dayOfWeek": 4,
+                "month": 11
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.dayOfWeek.get.toString mustBe "4"
+      scheduling.get.month.get.toString mustBe "11"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek and year)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "dayOfWeek": 1,
+                "year": 2032
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.dayOfWeek.get.toString mustBe "1"
+      scheduling.get.year.get.toString mustBe "2032"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType and month)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "dayType": "Weekday",
+                "month": 7
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.dayType.get.toString mustBe "Weekday"
+      scheduling.get.month.get.toString mustBe "7"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType and year)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "dayType": "Weekday",
+                "year": 2035
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.dayType.get.toString mustBe "Weekday"
+      scheduling.get.year.get.toString mustBe "2035"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with month and year)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "month": 9,
+                "year": 2039
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.month.get.toString mustBe "9"
+      scheduling.get.year.get.toString mustBe "2039"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 13,
+                "dayOfWeek": 3,
+                "dayType": "Weekday"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "13"
+      scheduling.get.dayOfWeek.get.toString mustBe "3"
+      scheduling.get.dayType.get.toString mustBe "Weekday"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, month)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 19,
+                "dayOfWeek": 6,
+                "month": 10
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "19"
+      scheduling.get.dayOfWeek.get.toString mustBe "6"
+      scheduling.get.month.get.toString mustBe "10"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, year)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 19,
+                "dayOfWeek": 6,
+                "year": 2034
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "19"
+      scheduling.get.dayOfWeek.get.toString mustBe "6"
+      scheduling.get.year.get.toString mustBe "2034"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, dayType, month)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "dayOfWeek": 5,
+                "dayType": "Weekday",
+                "month": 2
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.dayOfWeek.get.toString mustBe "5"
+      scheduling.get.dayType.get.toString mustBe "Weekday"
+      scheduling.get.month.get.toString mustBe "2"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, dayType, year)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "dayOfWeek": 1,
+                "dayType": "Weekend",
+                "year": 2038
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.dayOfWeek.get.toString mustBe "1"
+      scheduling.get.dayType.get.toString mustBe "Weekend"
+      scheduling.get.year.get.toString mustBe "2038"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType, month, year)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "dayType": "Weekday",
+                "month": 3,
+                "year": 2035
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.dayType.get.toString mustBe "Weekday"
+      scheduling.get.month.get.toString mustBe "3"
+      scheduling.get.year.get.toString mustBe "2035"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType and month)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 8,
+                "dayOfWeek": 4,
+                "dayType": "Weekday",
+                "month": 12
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "8"
+      scheduling.get.dayOfWeek.get.toString mustBe "4"
+      scheduling.get.dayType.get.toString mustBe "Weekday"
+      scheduling.get.month.get.toString mustBe "12"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType and year)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 21,
+                "dayOfWeek": 2,
+                "dayType": "Weekday",
+                "year": 2030
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "21"
+      scheduling.get.dayOfWeek.get.toString mustBe "2"
+      scheduling.get.dayType.get.toString mustBe "Weekday"
+      scheduling.get.year.get.toString mustBe "2030"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, month and year)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 4,
+                "dayOfWeek": 7,
+                "month": 1,
+                "year": 2037
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "4"
+      scheduling.get.dayOfWeek.get.toString mustBe "7"
+      scheduling.get.month.get.toString mustBe "1"
+      scheduling.get.year.get.toString mustBe "2037"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayType, month and year)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 17,
+                "dayType": "Weekend",
+                "month": 9,
+                "year": 2033
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "17"
+      scheduling.get.dayType.get.toString mustBe "Weekend"
+      scheduling.get.month.get.toString mustBe "9"
+      scheduling.get.year.get.toString mustBe "2033"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, dayType, month and year)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "dayOfWeek": 2,
+                "dayType": "Weekday",
+                "month": 10,
+                "year": 2036
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.dayOfWeek.get.toString mustBe "2"
+      scheduling.get.dayType.get.toString mustBe "Weekday"
+      scheduling.get.month.get.toString mustBe "10"
+      scheduling.get.year.get.toString mustBe "2036"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType, month and year)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 30,
+                "dayOfWeek": 3,
+                "dayType": "Weekday",
+                "month": 7,
+                "year": 2039
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "30"
+      scheduling.get.dayOfWeek.get.toString mustBe "3"
+      scheduling.get.dayType.get.toString mustBe "Weekday"
+      scheduling.get.month.get.toString mustBe "7"
+      scheduling.get.year.get.toString mustBe "2039"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 14,
+                "criteria": "First"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "14"
+      scheduling.get.criteria.get.toString mustBe "First"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "dayOfWeek": 2,
+                "criteria": "Second"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.dayOfWeek.get.toString mustBe "2"
+      scheduling.get.criteria.get.toString mustBe "Second"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "dayType": "Weekday",
+                "criteria": "Third"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.dayType.get.toString mustBe "Weekday"
+      scheduling.get.criteria.get.toString mustBe "Third"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with month and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "month": 3,
+                "criteria": "Fourth"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.month.get.toString mustBe "3"
+      scheduling.get.criteria.get.toString mustBe "Fourth"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "year": 2032,
+                "criteria": "Last"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.year.get.toString mustBe "2032"
+      scheduling.get.criteria.get.toString mustBe "Last"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 9,
+                "dayOfWeek": 1,
+                "criteria": "First"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "9"
+      scheduling.get.dayOfWeek.get.toString mustBe "1"
+      scheduling.get.criteria.get.toString mustBe "First"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayType and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 12,
+                "dayType": "Weekday",
+                "criteria": "Second"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "12"
+      scheduling.get.dayType.get.toString mustBe "Weekday"
+      scheduling.get.criteria.get.toString mustBe "Second"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, month and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 23,
+                "month": 11,
+                "criteria": "Third"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "23"
+      scheduling.get.month.get.toString mustBe "11"
+      scheduling.get.criteria.get.toString mustBe "Third"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 27,
+                "year": 2036,
+                "criteria": "Fourth"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "27"
+      scheduling.get.year.get.toString mustBe "2036"
+      scheduling.get.criteria.get.toString mustBe "Fourth"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, dayType and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "dayOfWeek": 3,
+                "dayType": "Weekday",
+                "criteria": "Last"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.dayOfWeek.get.toString mustBe "3"
+      scheduling.get.dayType.get.toString mustBe "Weekday"
+      scheduling.get.criteria.get.toString mustBe "Last"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, month and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "dayOfWeek": 6,
+                "month": 5,
+                "criteria": "First"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.dayOfWeek.get.toString mustBe "6"
+      scheduling.get.month.get.toString mustBe "5"
+      scheduling.get.criteria.get.toString mustBe "First"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "dayOfWeek": 2,
+                "year": 2039,
+                "criteria": "Second"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.dayOfWeek.get.toString mustBe "2"
+      scheduling.get.year.get.toString mustBe "2039"
+      scheduling.get.criteria.get.toString mustBe "Second"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType, month and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "dayType": "Weekday",
+                "month": 4,
+                "criteria": "Third"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.dayType.get.toString mustBe "Weekday"
+      scheduling.get.month.get.toString mustBe "4"
+      scheduling.get.criteria.get.toString mustBe "Third"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType, year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "dayType": "Weekend",
+                "year": 2031,
+                "criteria": "Fourth"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.dayType.get.toString mustBe "Weekend"
+      scheduling.get.year.get.toString mustBe "2031"
+      scheduling.get.criteria.get.toString mustBe "Fourth"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with month, year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "month": 2,
+                "year": 2035,
+                "criteria": "Last"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.month.get.toString mustBe "2"
+      scheduling.get.year.get.toString mustBe "2035"
+      scheduling.get.criteria.get.toString mustBe "Last"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 10,
+                "dayOfWeek": 5,
+                "dayType": "Weekday",
+                "criteria": "First"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "10"
+      scheduling.get.dayOfWeek.get.toString mustBe "5"
+      scheduling.get.dayType.get.toString mustBe "Weekday"
+      scheduling.get.criteria.get.toString mustBe "First"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, month and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 17,
+                "dayOfWeek": 1,
+                "month": 7,
+                "criteria": "Second"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "17"
+      scheduling.get.dayOfWeek.get.toString mustBe "1"
+      scheduling.get.month.get.toString mustBe "7"
+      scheduling.get.criteria.get.toString mustBe "Second"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 25,
+                "dayOfWeek": 4,
+                "year": 2034,
+                "criteria": "Third"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "25"
+      scheduling.get.dayOfWeek.get.toString mustBe "4"
+      scheduling.get.year.get.toString mustBe "2034"
+      scheduling.get.criteria.get.toString mustBe "Third"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, dayType, month and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "dayOfWeek": 3,
+                "dayType": "Weekday",
+                "month": 10,
+                "criteria": "Fourth"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.dayOfWeek.get.toString mustBe "3"
+      scheduling.get.dayType.get.toString mustBe "Weekday"
+      scheduling.get.month.get.toString mustBe "10"
+      scheduling.get.criteria.get.toString mustBe "Fourth"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, dayType, year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "dayOfWeek": 7,
+                "dayType": "Weekend",
+                "year": 2030,
+                "criteria": "Last"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.dayOfWeek.get.toString mustBe "7"
+      scheduling.get.dayType.get.toString mustBe "Weekend"
+      scheduling.get.year.get.toString mustBe "2030"
+      scheduling.get.criteria.get.toString mustBe "Last"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType, month, year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "dayType": "Weekend",
+                "month": 1,
+                "year": 2037,
+                "criteria": "First"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.dayType.get.toString mustBe "Weekend"
+      scheduling.get.month.get.toString mustBe "1"
+      scheduling.get.year.get.toString mustBe "2037"
+      scheduling.get.criteria.get.toString mustBe "First"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType, month and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 13,
+                "dayOfWeek": 1,
+                "dayType": "Weekend",
+                "month": 8,
+                "criteria": "Second"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "13"
+      scheduling.get.dayOfWeek.get.toString mustBe "1"
+      scheduling.get.dayType.get.toString mustBe "Weekend"
+      scheduling.get.month.get.toString mustBe "8"
+      scheduling.get.criteria.get.toString mustBe "Second"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType, year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 26,
+                "dayOfWeek": 2,
+                "dayType": "Weekday",
+                "year": 2032,
+                "criteria": "Third"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "26"
+      scheduling.get.dayOfWeek.get.toString mustBe "2"
+      scheduling.get.dayType.get.toString mustBe "Weekday"
+      scheduling.get.year.get.toString mustBe "2032"
+      scheduling.get.criteria.get.toString mustBe "Third"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, month, year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 6,
+                "dayOfWeek": 4,
+                "month": 8,
+                "year": 2036,
+                "criteria": "Fourth"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "6"
+      scheduling.get.dayOfWeek.get.toString mustBe "4"
+      scheduling.get.month.get.toString mustBe "8"
+      scheduling.get.year.get.toString mustBe "2036"
+      scheduling.get.criteria.get.toString mustBe "Fourth"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayType, month, year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 3,
+                "dayType": "Weekday",
+                "month": 7,
+                "year": 2033,
+                "criteria": "Last"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "3"
+      scheduling.get.dayType.get.toString mustBe "Weekday"
+      scheduling.get.month.get.toString mustBe "7"
+      scheduling.get.year.get.toString mustBe "2033"
+      scheduling.get.criteria.get.toString mustBe "Last"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, dayType, month, year and criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "dayOfWeek": 6,
+                "dayType": "Weekday",
+                "month": 10,
+                "year": 2035,
+                "criteria": "First"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.dayOfWeek.get.toString mustBe "6"
+      scheduling.get.dayType.get.toString mustBe "Weekday"
+      scheduling.get.month.get.toString mustBe "10"
+      scheduling.get.year.get.toString mustBe "2035"
+      scheduling.get.criteria.get.toString mustBe "First"
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType, month, year and criteria)" in {
-
-    }
-
-    "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with multiple schedulings)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "day": 11,
+                "dayOfWeek": 1,
+                "dayType": "Weekend",
+                "month": 4,
+                "year": 2038,
+                "criteria": "Second"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe OK
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe true
+      scheduling.get.day.get.toString mustBe "11"
+      scheduling.get.dayOfWeek.get.toString mustBe "1"
+      scheduling.get.dayType.get.toString mustBe "Weekend"
+      scheduling.get.month.get.toString mustBe "4"
+      scheduling.get.year.get.toString mustBe "2038"
+      scheduling.get.criteria.get.toString mustBe "Second"
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (with no scheduling)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00"
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidCreateTaskFormat) + "]"
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (with a scheduling with no parameters)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidSchedulingFormat) + "]"
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (with a scheduling with an unknown parameter)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+              "unknown": "something"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidSchedulingFormat) + "]"
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (with schedulingId)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+              "schedulingId": "asd4"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidSchedulingFormat) + "]"
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (with taskId)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+              "taskId": "dsa4"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidSchedulingFormat) + "]"
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe false
     }
 
-    "receive a POST request with a JSON body with incorrect personalized task data. (with exclusionDate and day)" in {
-
+    "receive a POST request with a JSON body with incorrect personalized task data. (with schedulingDate and day)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "schedulingDate": "2035-01-01 12:00:00",
+                "day": 15
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidSchedulingFormat) + "]"
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe false
     }
 
-    "receive a POST request with a JSON body with incorrect personalized task data. (with exclusionDate and dayOfWeek)" in {
-
+    "receive a POST request with a JSON body with incorrect personalized task data. (with schedulingDate and dayOfWeek)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "schedulingDate": "2035-01-01 12:00:00",
+                "dayOfWeek": 3
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidSchedulingFormat) + "]"
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe false
     }
 
-    "receive a POST request with a JSON body with incorrect personalized task data. (with exclusionDate and dayType)" in {
-
+    "receive a POST request with a JSON body with incorrect personalized task data. (with schedulingDate and dayType)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "schedulingDate": "2035-01-01 12:00:00",
+                "dayType": "Weekday"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidSchedulingFormat) + "]"
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe false
     }
 
-    "receive a POST request with a JSON body with incorrect personalized task data. (with exclusionDate and month)" in {
-
+    "receive a POST request with a JSON body with incorrect personalized task data. (with schedulingDate and month)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "schedulingDate": "2035-01-01 12:00:00",
+                "month": 3
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidSchedulingFormat) + "]"
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe false
     }
 
-    "receive a POST request with a JSON body with incorrect personalized task data. (with exclusionDate and year)" in {
-
+    "receive a POST request with a JSON body with incorrect personalized task data. (with schedulingDate and year)" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "schedulingDate": "2035-01-01 12:00:00",
+                "year": 2030
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidSchedulingFormat) + "]"
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (with only criteria)" in {
-
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST)
+        .withJsonBody(Json.parse("""
+          {
+            "fileName": "test1",
+            "taskType": "Personalized",
+            "startDateAndTime": "2030-01-01 00:00:00",
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "schedulings": [
+              {
+                "criteria": "Third"
+              }
+            ]
+          }
+        """))
+      val routeOption = route(app, fakeRequest)
+      val result = for {
+        routeResult <- routeOption.get
+        selectResult <- taskRepo.selectAllTasks
+      } yield (routeResult, selectResult)
+      val bodyText = contentAsString(routeOption.get)
+      result.map(tuple => tuple._2.size mustBe 0)
+      status(routeOption.get) mustBe BAD_REQUEST
+      bodyText mustBe "[" + Json.toJsObject(invalidSchedulingFormat) + "]"
+      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
+      scheduling.isDefined mustBe false
     }
 
   }

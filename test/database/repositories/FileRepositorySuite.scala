@@ -12,6 +12,7 @@ import slick.jdbc.meta.MTable
 import slick.jdbc.MySQLProfile.api._
 import database.mappings.FileMappings._
 import database.mappings.TaskMappings._
+import database.repositories.file.FileRepository
 
 import scala.concurrent._
 import scala.concurrent.duration._

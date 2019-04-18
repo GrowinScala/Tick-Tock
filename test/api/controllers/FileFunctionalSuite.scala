@@ -9,7 +9,7 @@ import api.utils.DateUtils.stringToDateFormat
 import api.validators.Error._
 import com.google.inject.Guice
 import database.mappings.FileMappings._
-import database.repositories.FileRepository
+import database.repositories.file.FileRepository
 import database.repositories.task.TaskRepository
 import executionengine.ExecutionManager
 import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }

@@ -9,7 +9,7 @@ import api.services.{ DayType, SchedulingType }
 import api.utils.DateUtils._
 import api.utils.UUIDGenerator
 import api.validators.Error._
-import database.repositories.FileRepository
+import database.repositories.file.FileRepository
 import database.repositories.task.TaskRepository
 import javax.inject.{ Inject, Singleton }
 
@@ -23,7 +23,8 @@ import scala.util.Try
 class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository, implicit val UUIDGen: UUIDGenerator) {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
-  val calendar: Calendar = Calendar.getInstance
+  val startCalendar: Calendar = Calendar.getInstance
+  val endCalendar: Calendar = Calendar.getInstance
 
   //---------------------------------------------------------
   //# TASK VALIDATORS
@@ -310,15 +311,15 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
 
   private def areValidExclusions(exclusions: Option[List[ExclusionDTO]], startDate: Option[Date], endDate: Option[Date]): List[(Boolean, Error)] = {
     if (exclusions.isDefined) {
-      if (startDate.isDefined) calendar.setTime(startDate.get)
-      else calendar.setTime(new Date())
+      if (startDate.isDefined) startCalendar.setTime(startDate.get)
+      else startCalendar.setTime(new Date())
       List(
         (areValidExclusionDateValues(exclusions, endDate), invalidExclusionDateValue),
         (areValidExclusionDayValues(exclusions), invalidExclusionDayValue),
         (areValidExclusionDayOfWeekValues(exclusions), invalidExclusionDayOfWeekValue),
         (areValidExclusionDayTypeValues(exclusions), invalidExclusionDayTypeValue),
         (areValidExclusionMonthValues(exclusions), invalidExclusionMonthValue),
-        (areValidExclusionYearValues(exclusions), invalidExclusionYearValue),
+        (areValidExclusionYearValues(exclusions, endDate), invalidExclusionYearValue),
         (areValidExclusionCriteriaValues(exclusions), invalidExclusionCriteriaValue))
     } else Nil
 
@@ -384,7 +385,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
       if (list.nonEmpty) {
         val exclusion = list.head
         if (exclusion.exclusionDate.isDefined) {
-          if (exclusion.exclusionDate.get.after(calendar.getTime)) {
+          if (exclusion.exclusionDate.get.after(startCalendar.getTime)) {
             if (endDate.isDefined)
               if (endDate.get.after(exclusion.exclusionDate.get)) iter(list.tail)
               else false
@@ -400,7 +401,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
 
   }
 
-  private def areValidExclusionDayValues(exclusions: Option[List[ExclusionDTO]]): Boolean = {
+  def areValidExclusionDayValues(exclusions: Option[List[ExclusionDTO]]): Boolean = {
     def iter(list: List[ExclusionDTO]): Boolean = {
       if (list.nonEmpty) {
         val exclusion = list.head
@@ -408,17 +409,20 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
           if (exclusion.day.get >= 1 && exclusion.day.get <= 31) {
             if (exclusion.month.isDefined) {
               exclusion.day.get match {
-                case 29 => exclusion.month.get != 2 || (exclusion.year match {
-                  case Some(year) => if (isLeapYear(year)) iter(list.tail) else false
-                  case None => false
+                case 29 => exclusion.month.get != 1 || (exclusion.year match {
+                  case Some(year) =>
+                    println("entered 29 with year"); if (isLeapYear(year)) iter(list.tail) else false
+                  case None => println("entered 29 with no year"); false
                 })
-                case 30 => if (exclusion.month.get != 2) iter(list.tail) else false
-                case 31 => if (exclusion.month.get != 2 && exclusion.month.get != 4 && exclusion.month.get != 6 && exclusion.month.get != 9 && exclusion.month.get != 11) iter(list.tail) else false
+                case 30 =>
+                  println("entered 30"); if (exclusion.month.get != 1) iter(list.tail) else false
+                case 31 =>
+                  println("entered 31"); if (exclusion.month.get != 1 && exclusion.month.get != 3 && exclusion.month.get != 5 && exclusion.month.get != 8 && exclusion.month.get != 10) iter(list.tail) else false
                 case _ => iter(list.tail)
               }
               if (exclusion.year.isDefined) {
-                if (exclusion.month.get == calendar.get(Calendar.MONTH) && exclusion.year.get == calendar.get(Calendar.YEAR)) if (exclusion.day.get >= calendar.get(Calendar.DAY_OF_MONTH)) iter(list.tail) else false
-                else if (exclusion.year.get >= calendar.get(Calendar.YEAR) && exclusion.month.get >= calendar.get(Calendar.MONTH)) iter(list.tail) else false
+                if (exclusion.month.get == startCalendar.get(Calendar.MONTH) && exclusion.year.get == startCalendar.get(Calendar.YEAR)) if (exclusion.day.get >= startCalendar.get(Calendar.DAY_OF_MONTH)) iter(list.tail) else false
+                else if (exclusion.year.get >= startCalendar.get(Calendar.YEAR) && exclusion.month.get >= startCalendar.get(Calendar.MONTH)) iter(list.tail) else false
               } else iter(list.tail)
             } else iter(list.tail)
           } else false
@@ -493,9 +497,9 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
         if (exclusion.month.isDefined) {
           if (exclusion.month.get >= 1 && exclusion.month.get <= 12) {
             if (exclusion.year.isDefined) {
-              if (exclusion.year.get == calendar.get(Calendar.YEAR))
-                if (exclusion.month.get >= calendar.get(Calendar.MONTH)) iter(list.tail) else false
-              else if (exclusion.year.get >= calendar.get(Calendar.YEAR)) iter(list.tail) else false
+              if (exclusion.year.get == startCalendar.get(Calendar.YEAR))
+                if (exclusion.month.get >= startCalendar.get(Calendar.MONTH)) iter(list.tail) else false
+              else if (exclusion.year.get >= startCalendar.get(Calendar.YEAR)) iter(list.tail) else false
             } else iter(list.tail)
           } else false
         } else iter(list.tail)
@@ -507,12 +511,19 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
     }
   }
 
-  private def areValidExclusionYearValues(exclusions: Option[List[ExclusionDTO]]): Boolean = {
+  private def areValidExclusionYearValues(exclusions: Option[List[ExclusionDTO]], endDate: Option[Date]): Boolean = {
     def iter(list: List[ExclusionDTO]): Boolean = {
       if (list.nonEmpty) {
         val exclusion = list.head
-        if (exclusion.year.isDefined) if (exclusion.year.get >= calendar.get(Calendar.YEAR)) iter(list.tail) else false
-        else iter(list.tail)
+        if (exclusion.year.isDefined) {
+          if (exclusion.year.get >= startCalendar.get(Calendar.YEAR)) {
+            if (endDate.isDefined) {
+              val endCalendar: Calendar = Calendar.getInstance
+              endCalendar.setTime(endDate.get)
+              if (exclusion.year.get <= endCalendar.get(Calendar.YEAR)) iter(list.tail) else false
+            } else iter(list.tail)
+          } else false
+        } else iter(list.tail)
       } else true
     }
     exclusions match {
@@ -619,7 +630,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
 
   private def areValidSchedulings(schedulings: Option[List[SchedulingDTO]], startDate: Option[Date], endDate: Option[Date]): List[(Boolean, Error)] = {
     if (schedulings.isDefined) {
-      if (startDate.isDefined) calendar.setTime(startDate.get) else calendar.setTime(new Date())
+      if (startDate.isDefined) startCalendar.setTime(startDate.get) else startCalendar.setTime(new Date())
       List(
         (areValidSchedulingDateValues(schedulings, endDate), invalidSchedulingDateValue),
         (areValidSchedulingDayValues(schedulings), invalidSchedulingDayValue),
@@ -691,7 +702,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
       if (list.nonEmpty) {
         val scheduling = list.head
         if (scheduling.schedulingDate.isDefined) {
-          if (scheduling.schedulingDate.get.after(calendar.getTime)) {
+          if (scheduling.schedulingDate.get.after(startCalendar.getTime)) {
             if (endDate.isDefined)
               if (endDate.get.after(scheduling.schedulingDate.get)) iter(list.tail) else false
             else iter(list.tail)
@@ -713,17 +724,14 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
           if (scheduling.day.get >= 1 && scheduling.day.get <= 31) {
             if (scheduling.month.isDefined) {
               scheduling.day.get match {
-                case 29 => scheduling.month.get != 2 || scheduling.year.isEmpty || isLeapYear(scheduling.year.get)
-
-                case 30 => scheduling.month.get != 2
-
-                case 31 => scheduling.month.get != 2 && scheduling.month.get != 4 && scheduling.month.get != 6 &&
-                  scheduling.month.get != 9 && scheduling.month.get != 11
-
+                case 29 => if (scheduling.month.get != 1 || scheduling.year.isEmpty || isLeapYear(scheduling.year.get)) iter(list.tail) else false
+                case 30 => if (scheduling.month.get != 1) iter(list.tail) else false
+                case 31 => if (scheduling.month.get != 1 && scheduling.month.get != 3 && scheduling.month.get != 5 && scheduling.month.get != 8 && scheduling.month.get != 10) iter(list.tail) else false
+                case _ => iter(list.tail)
               }
               if (scheduling.year.isDefined) {
-                if (scheduling.month.get == calendar.get(Calendar.MONTH) && scheduling.year.get == calendar.get(Calendar.YEAR)) if (scheduling.day.get >= calendar.get(Calendar.DAY_OF_MONTH)) iter(list.tail) else false
-                else if (scheduling.year.get >= calendar.get(Calendar.YEAR) && scheduling.month.get >= calendar.get(Calendar.MONTH)) iter(list.tail) else false
+                if (scheduling.month.get == startCalendar.get(Calendar.MONTH) && scheduling.year.get == startCalendar.get(Calendar.YEAR)) if (scheduling.day.get >= startCalendar.get(Calendar.DAY_OF_MONTH)) iter(list.tail) else false
+                else if (scheduling.year.get >= startCalendar.get(Calendar.YEAR) && scheduling.month.get >= startCalendar.get(Calendar.MONTH)) iter(list.tail) else false
               } else iter(list.tail)
             } else iter(list.tail)
           } else false
@@ -791,8 +799,8 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
         if (scheduling.month.isDefined) {
           if (scheduling.month.get >= 1 && scheduling.month.get <= 12) {
             if (scheduling.year.isDefined) {
-              if (scheduling.year.get == calendar.get(Calendar.YEAR)) if (scheduling.month.get >= calendar.get(Calendar.MONTH)) iter(list.tail) else false
-              else if (scheduling.year.get >= calendar.get(Calendar.YEAR)) iter(list.tail) else false
+              if (scheduling.year.get == startCalendar.get(Calendar.YEAR)) if (scheduling.month.get >= startCalendar.get(Calendar.MONTH)) iter(list.tail) else false
+              else if (scheduling.year.get >= startCalendar.get(Calendar.YEAR)) iter(list.tail) else false
             } else iter(list.tail)
           } else false
         } else iter(list.tail)
@@ -808,7 +816,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
     def iter(list: List[SchedulingDTO]): Boolean = {
       if (list.nonEmpty) {
         val scheduling = list.head
-        if (scheduling.year.isDefined) if (scheduling.year.get >= calendar.get(Calendar.YEAR)) iter(list.tail) else false
+        if (scheduling.year.isDefined) if (scheduling.year.get >= startCalendar.get(Calendar.YEAR)) iter(list.tail) else false
         else iter(list.tail)
       } else true
     }

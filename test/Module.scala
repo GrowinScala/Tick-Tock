@@ -1,6 +1,6 @@
 import api.utils.{ FakeUUIDGenerator, UUIDGenerator }
 import com.google.inject.AbstractModule
-import database.repositories.FileRepository
+import database.repositories.file.FileRepository
 import database.repositories.exclusion.{ ExclusionRepository, ExclusionRepositoryImpl }
 import database.repositories.file.FileRepositoryImpl
 import database.repositories.scheduling.{ SchedulingRepository, SchedulingRepositoryImpl }

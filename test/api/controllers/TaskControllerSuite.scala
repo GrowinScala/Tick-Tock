@@ -3,7 +3,7 @@ package api.controllers
 import akka.actor.ActorSystem
 import akka.stream.{ ActorMaterializer, Materializer }
 import api.utils.{ FakeUUIDGenerator, UUIDGenerator }
-import database.repositories.FileRepository
+import database.repositories.file.FileRepository
 import database.repositories.exclusion.{ ExclusionRepository, FakeExclusionRepository }
 import database.repositories.file.FakeFileRepository
 import database.repositories.scheduling.{ FakeSchedulingRepository, SchedulingRepository }

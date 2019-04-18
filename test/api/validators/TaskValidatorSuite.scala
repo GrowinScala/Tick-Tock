@@ -9,8 +9,7 @@ import api.services.{ Criteria, DayType, PeriodType, SchedulingType }
 import api.utils.{ FakeUUIDGenerator, UUIDGenerator }
 import api.validators.Error._
 import com.google.inject.Guice
-import database.repositories.FileRepository
-import database.repositories.file.FakeFileRepository
+import database.repositories.file.{ FakeFileRepository, FileRepository }
 import database.repositories.task.{ FakeTaskRepository, TaskRepository }
 import executionengine.{ ExecutionManager, FakeExecutionManager }
 import org.scalatestplus.play.PlaySpec

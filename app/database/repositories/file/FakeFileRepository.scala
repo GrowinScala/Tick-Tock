@@ -2,7 +2,6 @@ package database.repositories.file
 
 import api.dtos.FileDTO
 import api.utils.DateUtils._
-import database.repositories.FileRepository
 
 import scala.concurrent.Future
 

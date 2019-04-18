@@ -1,4 +1,4 @@
-package database.repositories
+package database.repositories.file
 
 import api.dtos.FileDTO
 
