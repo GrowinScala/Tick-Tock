@@ -637,7 +637,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
         (areValidSchedulingDayOfWeekValues(schedulings), invalidSchedulingDayOfWeekValue),
         (areValidSchedulingDayTypeValues(schedulings), invalidSchedulingDayTypeValue),
         (areValidSchedulingMonthValues(schedulings), invalidSchedulingMonthValue),
-        (areValidSchedulingYearValues(schedulings), invalidSchedulingYearValue),
+        (areValidSchedulingYearValues(schedulings, endDate), invalidSchedulingYearValue),
         (areValidSchedulingCriteriaValues(schedulings), invalidSchedulingCriteriaValue))
     } else Nil
   }
@@ -812,12 +812,19 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
     }
   }
 
-  private def areValidSchedulingYearValues(schedulings: Option[List[SchedulingDTO]]): Boolean = {
+  private def areValidSchedulingYearValues(schedulings: Option[List[SchedulingDTO]], endDate: Option[Date]): Boolean = {
     def iter(list: List[SchedulingDTO]): Boolean = {
       if (list.nonEmpty) {
         val scheduling = list.head
-        if (scheduling.year.isDefined) if (scheduling.year.get >= startCalendar.get(Calendar.YEAR)) iter(list.tail) else false
-        else iter(list.tail)
+        if (scheduling.year.isDefined) {
+          if (scheduling.year.get >= startCalendar.get(Calendar.YEAR)) {
+            if (endDate.isDefined) {
+              val endCalendar: Calendar = Calendar.getInstance
+              endCalendar.setTime(endDate.get)
+              if (scheduling.year.get <= endCalendar.get(Calendar.YEAR)) iter(list.tail) else false
+            } else iter(list.tail)
+          } else false
+        } else iter(list.tail)
       } else true
     }
     schedulings match {
