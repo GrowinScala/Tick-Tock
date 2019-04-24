@@ -140,8 +140,9 @@ class DateUtilsSuite extends PlaySpec {
   }
 
   "DateUtils#isLeapYear" should {
-    "return false when given a non leap year." in (isLeapYear(2019) mustBe false)
-    "return true when given a leap year" in (isLeapYear(2020) mustBe true)
+    "return false when given None" in (isLeapYear(None) mustBe false)
+    "return false when given a non leap year." in (isLeapYear(Some(2019)) mustBe false)
+    "return true when given a leap year" in (isLeapYear(Some(2020)) mustBe true)
   }
 
   "DateUtils#dateToStringFormat" should {

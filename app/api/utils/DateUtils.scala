@@ -81,7 +81,10 @@ object DateUtils {
     sdf.parse(string)
   }
 
-  def isLeapYear(year: Int): Boolean = year % 4 == 0
+  def isLeapYear(year: Option[Int]): Boolean = {
+    if (year.isDefined) year.get % 4 == 0
+    else false
+  }
 
   /**
    * Converts a Date to a String by providing the Date and a String specifying the date format.
@@ -125,6 +128,40 @@ object DateUtils {
       format.setTimeZone(parseTimezone(timezone).get)
       Try(Some(format.parse(date))).getOrElse(None)
     }.headOption
+  }
+
+  def isPossibleDate(day: Int, month: Int, year: Int): Boolean = {
+    val dateCalendar = Calendar.getInstance
+    dateCalendar.setLenient(false)
+    val result = Try(Some(dateCalendar.set(day, month, year))).getOrElse(None)
+    result.isDefined
+  }
+
+  def isPossibleDateWithoutYear(day: Int, month: Int): Boolean = {
+    if (day >= 1 && day <= 31 && month >= 1 && month <= 12) {
+      val dateCalendar = Calendar.getInstance
+      dateCalendar.setLenient(false)
+      day match {
+        case 29 => month != 2
+        case 30 => month != 2
+        case 31 => month != 2 || month != 4 || month != 6 || month != 9 || month != 11
+        case _ => true
+      }
+    } else false
+  }
+
+  def isPossibleDateWithoutMonth(day: Int, year: Int): Boolean = {
+    val dateCalendar = Calendar.getInstance
+    dateCalendar.setLenient(false)
+    def iter(month: Int): Boolean = {
+      if (month >= 13) false
+      else {
+        val result = Try(Some(dateCalendar.set(day, month, year))).getOrElse(None)
+        if (result.isDefined) true
+        else iter(month + 1)
+      }
+    }
+    iter(1)
   }
 
   /**

@@ -3288,7 +3288,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "exclusions": [
               {
                 "day": 31,
-                "month": 3
+                "month": 2
               }
             ]
           }
@@ -3318,7 +3318,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "exclusions": [
               {
                 "day": 30,
-                "month": 1
+                "month": 2
               }
             ]
           }
@@ -3348,7 +3348,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "exclusions": [
               {
                 "day": 29,
-                "month": 1,
+                "month": 2,
                 "year": 2031
               }
             ]
@@ -3727,6 +3727,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "schedulingDate": "2035-01-01 12:00:00"
@@ -3757,6 +3759,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 10
@@ -3787,6 +3791,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayOfWeek": 2
@@ -3817,6 +3823,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayType": "Weekday"
@@ -3847,6 +3855,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "month": 5
@@ -3877,6 +3887,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "year": 2035
@@ -3907,6 +3919,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 5,
@@ -3939,6 +3953,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 28,
@@ -3971,6 +3987,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 16,
@@ -4003,6 +4021,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 2,
@@ -4035,6 +4055,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayOfWeek": 1,
@@ -4067,6 +4089,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayOfWeek": 4,
@@ -4099,6 +4123,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayOfWeek": 1,
@@ -4131,6 +4157,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayType": "Weekday",
@@ -4163,6 +4191,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayType": "Weekday",
@@ -4195,6 +4225,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "month": 9,
@@ -4227,6 +4259,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 13,
@@ -4261,6 +4295,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 19,
@@ -4295,6 +4331,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 19,
@@ -4329,6 +4367,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayOfWeek": 5,
@@ -4363,6 +4403,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayOfWeek": 1,
@@ -4397,6 +4439,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayType": "Weekday",
@@ -4431,6 +4475,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 8,
@@ -4467,6 +4513,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 21,
@@ -4503,6 +4551,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 4,
@@ -4539,6 +4589,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 17,
@@ -4575,6 +4627,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayOfWeek": 2,
@@ -4611,6 +4665,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 30,
@@ -4649,6 +4705,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 14,
@@ -4681,6 +4739,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayOfWeek": 2,
@@ -4713,6 +4773,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayType": "Weekday",
@@ -4745,6 +4807,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "month": 3,
@@ -4777,6 +4841,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "year": 2032,
@@ -4809,6 +4875,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 9,
@@ -4843,6 +4911,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 12,
@@ -4877,6 +4947,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 23,
@@ -4911,6 +4983,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 27,
@@ -4945,6 +5019,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayOfWeek": 3,
@@ -4979,6 +5055,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayOfWeek": 6,
@@ -5013,6 +5091,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayOfWeek": 2,
@@ -5047,6 +5127,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayType": "Weekday",
@@ -5081,6 +5163,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayType": "Weekend",
@@ -5115,6 +5199,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "month": 2,
@@ -5149,6 +5235,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 10,
@@ -5185,6 +5273,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 17,
@@ -5221,6 +5311,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 25,
@@ -5257,6 +5349,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayOfWeek": 3,
@@ -5293,6 +5387,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayOfWeek": 7,
@@ -5329,6 +5425,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayType": "Weekend",
@@ -5365,6 +5463,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 13,
@@ -5403,6 +5503,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 26,
@@ -5441,6 +5543,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 6,
@@ -5479,6 +5583,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 3,
@@ -5517,6 +5623,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayOfWeek": 6,
@@ -5555,6 +5663,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 11,
@@ -5594,7 +5704,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "fileName": "test1",
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
-            "endDateAndTime": "2040-01-01 00:00:00"
+            "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -5619,6 +5731,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
               }
@@ -5647,6 +5761,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
               "unknown": "something"
@@ -5676,6 +5792,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
               "schedulingId": "asd4"
@@ -5705,6 +5823,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
               "taskId": "dsa4"
@@ -5734,6 +5854,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "schedulingDate": "2035-01-01 12:00:00",
@@ -5764,6 +5886,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "schedulingDate": "2035-01-01 12:00:00",
@@ -5794,6 +5918,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "schedulingDate": "2035-01-01 12:00:00",
@@ -5824,6 +5950,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "schedulingDate": "2035-01-01 12:00:00",
@@ -5854,6 +5982,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "schedulingDate": "2035-01-01 12:00:00",
@@ -5884,6 +6014,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "criteria": "Third"
@@ -5913,6 +6045,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "schedulingDate": "2030:01:01 12-00-00"
@@ -5940,6 +6074,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "schedulingDate": "2029-12-25 00:00:00"
@@ -5967,6 +6103,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "schedulingDate": "2040-01-24 12:00:00"
@@ -5994,6 +6132,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 0
@@ -6021,6 +6161,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 32
@@ -6048,6 +6190,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 31,
@@ -6076,6 +6220,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 30,
@@ -6104,6 +6250,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 29,
@@ -6133,6 +6281,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayOfWeek": 0
@@ -6160,6 +6310,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayOfWeek": 8
@@ -6187,6 +6339,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayOfWeek": 7,
@@ -6215,6 +6369,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayOfWeek": 3,
@@ -6243,6 +6399,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayType": "qwergfn"
@@ -6270,6 +6428,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayOfWeek": 5,
@@ -6298,6 +6458,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "dayOfWeek": 1,
@@ -6326,6 +6488,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "month": 0
@@ -6353,6 +6517,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "month": 13
@@ -6380,6 +6546,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "year": 2029
@@ -6407,6 +6575,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "year": 2041
@@ -6434,6 +6604,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskType": "Personalized",
             "startDateAndTime": "2030-01-01 00:00:00",
             "endDateAndTime": "2040-01-01 00:00:00",
+            "periodType": "Minutely",
+            "period": 5,
             "schedulings": [
               {
                 "day": 20,
