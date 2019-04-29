@@ -21,7 +21,7 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.duration._
 import scala.concurrent.{ Await, ExecutionContext }
 
-class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with BeforeAndAfterEach {
+class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with BeforeAndAfterEach with MustMatchers{
 
   private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder().in(Mode.Test)
   private lazy val injector: Injector = appBuilder.injector()
@@ -43,92 +43,92 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
   private val fileUUID4: String = UUID.randomUUID().toString
 
   override def beforeAll: Unit = {
-    val result = for {
+    for {
       _ <- dtbase.run(createFilesTableAction)
       _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", getCurrentDateTimestamp))
       _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID2, "test2", getCurrentDateTimestamp))
       _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID3, "test3", getCurrentDateTimestamp))
-      res <- fileRepo.insertInFilesTable(FileDTO(fileUUID4, "test4", getCurrentDateTimestamp))
-    } yield res
-    Await.result(result, Duration.Inf)
-    Await.result(dtbase.run(createTasksTableAction), Duration.Inf)
+      _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID4, "test4", getCurrentDateTimestamp))
+      result <- dtbase.run(createTasksTableAction)
+    } yield result
   }
 
   override def afterAll: Unit = {
-    Await.result(dtbase.run(dropTasksTableAction), Duration.Inf)
-    Await.result(dtbase.run(dropFilesTableAction), Duration.Inf)
+    for {
+      _ <- dtbase.run(dropTasksTableAction)
+      result <- dtbase.run(dropFilesTableAction)
+    } yield result
   }
 
   override def afterEach: Unit = {
-    Await.result(taskRepo.deleteAllTasks, Duration.Inf)
+    for(result <- taskRepo.deleteAllTasks) yield result
   }
 
   "DBTasksTable#drop/createTasksTable" should {
     "create and then drop the Tasks table on the database." in {
-      val result = for {
+      for {
         _ <- dtbase.run(MTable.getTables).map(item => assert(item.head.name.name.equals("files") && item.tail.head.name.name.equals("tasks")))
         _ <- dtbase.run(dropTasksTableAction)
         _ <- dtbase.run(MTable.getTables).map(item => assert(item.head.name.name.equals("files")))
         _ <- dtbase.run(createTasksTableAction)
-        elem <- dtbase.run(MTable.getTables)
-      } yield elem
-      result.map(item => assert(item.head.name.name.equals("files") && item.tail.head.name.name.equals("tasks")))
+        result <- dtbase.run(MTable.getTables)
+      } yield {
+        result.head.name.name mustBe "files"
+        result.tail.head.name.name mustBe "tasks"
+      }
+
     }
   }
 
   "DBTasksTable#insertInTasksTable,selectAllTasks" should {
     "insert rows into the Tasks table on the database and select all rows" in {
-      val result = for {
+      for {
         _ <- taskRepo.selectAllTasks.map(seq => assert(seq.isEmpty))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         resultSeq <- taskRepo.selectAllTasks
-      } yield resultSeq
-      result.map(seq => assert(seq.size == 2))
+      } yield resultSeq.size mustBe 2
     }
   }
 
   "DBTasksTable#deleteAllTasks" should {
     "insert several rows and then delete them all from the Tasks table on the database." in {
-      val result = for {
+      for {
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.selectAllTasks.map(seq => assert(seq.size == 2))
         _ <- taskRepo.deleteAllTasks
         resultSeq <- taskRepo.selectAllTasks
-      } yield resultSeq
-      result.map(seq => assert(seq.isEmpty))
+      } yield resultSeq.isEmpty mustBe true
     }
   }
 
   "DBTasksTable#selectTaskByTaskId" should {
     "insert several rows and select a specific task by giving its taskId" in {
-      val result = for {
+      for {
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.selectTask(taskUUID1).map(dto => assert(dto.get.fileName == "test1"))
         task <- taskRepo.selectTask(taskUUID2)
-      } yield task
-      result.map(dto => assert(dto.get.fileName == "test2"))
+      } yield task.get.fileName mustBe "test2"
     }
   }
 
   "DBTasksTable#selectFileIdByTaskId" should {
     "inserts several rows and select a specific fileId from a task by giving its taskId" in {
-      val result = for {
+      for {
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.selectFileIdByTaskId(taskUUID1).map(fileId => assert(fileId.get == fileUUID1))
-        elem <- taskRepo.selectFileIdByTaskId(taskUUID2)
-      } yield elem
-      result.map(fileId => assert(fileId.get == fileUUID2))
+        fileId <- taskRepo.selectFileIdByTaskId(taskUUID2)
+      } yield fileId.get mustBe fileUUID2
     }
   }
 
   "DBTasksTable#selectTotalOccurrencesByTaskId" should {
     "inserts several rows and select the totalOccurrences from a task by giving its taskId" in {
       val date = stringToDateFormat("01-07-2019 00:00:00", "dd-MM-yyyy HH:mm:ss")
-      val result = for {
+      for {
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Minutely), Some(2), None, Some(5)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Hourly), Some(1), Some(date)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID3, "test3", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
@@ -136,16 +136,15 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
         _ <- taskRepo.selectTotalOccurrencesByTaskId(taskUUID1).map(totalOccurrences => assert(totalOccurrences.contains(5)))
         _ <- taskRepo.selectTotalOccurrencesByTaskId(taskUUID4).map(totalOccurrences => assert(totalOccurrences.contains(3)))
         _ <- taskRepo.selectTotalOccurrencesByTaskId(taskUUID3).map(totalOccurrences => assert(totalOccurrences.isEmpty))
-        elem <- taskRepo.selectTotalOccurrencesByTaskId(taskUUID2)
-      } yield elem
-      result.map(totalOccurrences => assert(totalOccurrences.isEmpty))
+        totalOccurrences <- taskRepo.selectTotalOccurrencesByTaskId(taskUUID2)
+      } yield totalOccurrences.isEmpty mustBe true
     }
   }
 
   "DBTasksTable#selectCurrentOccurrencesByTaskId" should {
     "insert several rows and select the currentOccurrences from a task by giving its taskId" in {
       val date = stringToDateFormat("01-07-2019 00:00:00", "dd-MM-yyyy HH:mm:ss")
-      val result = for {
+      for {
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Hourly), Some(1), Some(date)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID3, "test3", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Monthly), Some(3), None, Some(3), Some(3)))
@@ -153,15 +152,14 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
         _ <- taskRepo.selectCurrentOccurrencesByTaskId(taskUUID3).map(currentOccurrences => assert(currentOccurrences.contains(3)))
         _ <- taskRepo.selectCurrentOccurrencesByTaskId(taskUUID4).map(currentOccurrences => assert(currentOccurrences.contains(5)))
         _ <- taskRepo.selectCurrentOccurrencesByTaskId(taskUUID2).map(currentOccurrences => assert(currentOccurrences.isEmpty))
-        elem <- taskRepo.selectCurrentOccurrencesByTaskId(taskUUID1)
-      } yield elem
-      result.map(currentOccurrences => assert(currentOccurrences.isEmpty))
+        currentOccurrences <- taskRepo.selectCurrentOccurrencesByTaskId(taskUUID1)
+      } yield currentOccurrences.isEmpty mustBe true
     }
   }
 
   "DBTasksTable#decrementCurrentOccurrencesByTaskId" should {
     "insert several rows and decrement the currentOccurrences field by 1 from a task by giving its taskId" in {
-      val result = for {
+      for {
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Monthly), Some(3), None, Some(3), Some(3)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Minutely), Some(2), None, Some(5), Some(5)))
         _ <- taskRepo.selectCurrentOccurrencesByTaskId(taskUUID1).map(currentOccurrences => assert(currentOccurrences.contains(3)))
@@ -169,9 +167,8 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
         _ <- taskRepo.selectCurrentOccurrencesByTaskId(taskUUID1).map(currentOccurrences => assert(currentOccurrences.contains(2)))
         _ <- taskRepo.selectCurrentOccurrencesByTaskId(taskUUID2).map(currentOccurrences => assert(currentOccurrences.contains(5)))
         _ <- taskRepo.decrementCurrentOccurrencesByTaskId(taskUUID2)
-        elem <- taskRepo.selectCurrentOccurrencesByTaskId(taskUUID2)
-      } yield elem
-      result.map(currentOccurrences => assert(currentOccurrences.contains(4)))
+        currentOccurrences <- taskRepo.selectCurrentOccurrencesByTaskId(taskUUID2)
+      } yield currentOccurrences.contains(4) mustBe true
     }
   }
 }

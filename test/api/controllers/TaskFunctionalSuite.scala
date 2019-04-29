@@ -19,7 +19,7 @@ import database.repositories.exclusion.{ ExclusionRepository, ExclusionRepositor
 import database.repositories.scheduling.{ SchedulingRepository, SchedulingRepositoryImpl }
 import database.repositories.task.{ TaskRepository, TaskRepositoryImpl }
 import executionengine.{ ExecutionManager, FakeExecutionManager }
-import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
+import org.scalatest.{ AsyncWordSpec, BeforeAndAfterAll, BeforeAndAfterEach, MustMatchers }
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder

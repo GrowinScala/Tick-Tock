@@ -4,7 +4,7 @@ import java.util.UUID
 
 import api.dtos.FileDTO
 import api.utils.DateUtils._
-import org.scalatest.{ AsyncWordSpec, BeforeAndAfterAll, BeforeAndAfterEach }
+import org.scalatest.{ AsyncWordSpec, BeforeAndAfterAll, BeforeAndAfterEach, MustMatchers }
 import play.api.Mode
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -17,7 +17,7 @@ import database.repositories.file.FileRepository
 import scala.concurrent._
 import scala.concurrent.duration._
 
-class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with BeforeAndAfterEach {
+class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with BeforeAndAfterEach with MustMatchers {
 
   private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder().in(Mode.Test)
   private lazy val injector: Injector = appBuilder.injector()
@@ -31,71 +31,77 @@ class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
   private val uuid4 = UUID.randomUUID().toString
 
   override def beforeAll(): Unit = {
-    Await.result(dtbase.run(createFilesTableAction), Duration.Inf)
-    Await.result(dtbase.run(createTasksTableAction), Duration.Inf)
+    for {
+      _ <- dtbase.run(createFilesTableAction)
+      result <- dtbase.run(createTasksTableAction)
+    } yield result
   }
 
   override def afterAll(): Unit = {
-    Await.result(dtbase.run(dropTasksTableAction), Duration.Inf)
-    Await.result(dtbase.run(dropFilesTableAction), Duration.Inf)
+    for {
+      _ <- dtbase.run(dropTasksTableAction)
+      result <- dtbase.run(dropFilesTableAction)
+    } yield result
   }
 
   override def afterEach(): Unit = {
-    Await.result(fileRepo.deleteAllFiles, Duration.Inf)
+    for(result <- fileRepo.deleteAllFiles) yield result
   }
 
   "DBFilesTable#create/dropFilesTable" should {
     "create and then drop the Files table on the database." in {
-      dtbase.run(MTable.getTables).map(item => assert(item.head.name.name.equals("files")))
-      Await.result(dtbase.run(dropFilesTableAction), Duration.Inf)
-      dtbase.run(MTable.getTables).map(item => assert(item.isEmpty))
-      Await.result(dtbase.run(createFilesTableAction), Duration.Inf)
-      dtbase.run(MTable.getTables).map(item => assert(item.head.name.name.equals("files")))
+      for{
+        _ <- dtbase.run(MTable.getTables).map(item => assert(item.head.name.name.equals("files")))
+        _ <- dtbase.run(dropFilesTableAction)
+        _ <- dtbase.run(MTable.getTables).map(item => assert(item.isEmpty))
+        _ <- dtbase.run(createFilesTableAction)
+        result <- dtbase.run(MTable.getTables)
+      } yield result.head.name.name mustBe "files"
     }
   }
 
   "DBFilesTable#SelectAllFiles,insertInFilesTable" should {
     "insert rows into the Files table and make select queries on those rows" in {
-      val result = for {
+      for {
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
         resultSeq <- fileRepo.selectAllFiles
-      } yield resultSeq
-      result.map(seq => assert(seq.size == 3 && seq.last.fileName.equals("test3")))
+      } yield {
+        resultSeq.size mustBe 3
+        resultSeq.last.fileName mustBe "test3"
+      }
     }
   }
 
   "DBFilesTable#SelectFileById" should {
     "insert rows into the Files table and select a specific row by giving its fileId" in {
-      val result = for {
+      for {
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
         _ <- fileRepo.selectFileById(uuid1).map(file => assert(file.get.fileName.equals("test1")))
         _ <- fileRepo.selectFileById(uuid3).map(file => assert(file.get.fileName.equals("test3")))
-        elem <- fileRepo.selectFileById(uuid2)
-      } yield elem
-      result.map(file => assert(file.get.fileName.equals("test2")))
+        file <- fileRepo.selectFileById(uuid2)
+      } yield file.get.fileName mustBe "test2"
     }
   }
 
   "DBFilesTable#DeleteAllFiles" should {
     "insert rows into the Files table and then delete them all from the Files table on the database." in {
-      val result = for {
+      for {
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
         _ <- fileRepo.deleteAllFiles
-        elem <- fileRepo.selectAllFiles
-      } yield elem
-      result.map(seq => assert(seq.isEmpty))
+        result <- fileRepo.selectAllFiles
+      } yield result.isEmpty mustBe true
     }
   }
 
   "DBFilesTable#DeleteFileById" should {
     "insert rows into the Files table and then delete a specific row by giving its fileId" in {
-      val result = for {
+      for {
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
@@ -103,30 +109,36 @@ class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
         _ <- fileRepo.deleteFileById(uuid2)
         _ <- fileRepo.selectAllFiles.map(seq => assert(seq.size == 2 && seq.tail.head.fileName.equals("test3")))
         _ <- fileRepo.deleteFileById(uuid1)
-        elem <- fileRepo.selectAllFiles
-      } yield elem
-      result.map(seq => assert(seq.size == 1 && seq.head.fileName.equals("test3")))
+        result <- fileRepo.selectAllFiles
+      } yield {
+        result.size mustBe 1
+        result.head.fileName mustBe "test3"
+      }
     }
   }
 
   "DBFilesTable#existsCorrespondingFileId" should {
     "insert some rows into the Files table on the database and check if certain fileId's exist." in {
-      val result = for {
+      for {
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
-        elem <- fileRepo.selectFileIdFromFileName("test1")
-      } yield elem
-      result.map(fileId => Await.result(fileRepo.existsCorrespondingFileId(fileId).map(result => assert(result)), Duration.Inf))
-      fileRepo.selectFileIdFromFileName("test2").map(fileId =>
-        Await.result(fileRepo.existsCorrespondingFileId(fileId).map(result => assert(result)), Duration.Inf))
-      val uuidWrong = UUID.randomUUID().toString
-      Await.result(fileRepo.existsCorrespondingFileId(uuidWrong).map(result => assert(!result)), Duration.Inf)
+        fileId1 <- fileRepo.selectFileIdFromFileName("test1")
+        result1 <- fileRepo.existsCorrespondingFileId(fileId1).map(result => assert(result))
+        fileId2 <- fileRepo.selectFileIdFromFileName("test2")
+        result2 <- fileRepo.existsCorrespondingFileId(fileId2).map(result => assert(result))
+        uuidWrong = UUID.randomUUID.toString
+        result3 <- fileRepo.existsCorrespondingFileId(uuidWrong)
+      } yield {
+        result1 mustBe true
+        result2 mustBe true
+        result3 mustBe false
+      }
     }
   }
 
   "DBFilesTable#existsCorrespondingFileName" should {
     "insert some rows into the Files table on the database and check if certain fileName's exist." in {
-      val result = for {
+      for {
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
@@ -134,37 +146,34 @@ class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
         _ <- fileRepo.existsCorrespondingFileName("test1").map(result => assert(result))
         _ <- fileRepo.existsCorrespondingFileName("test2").map(result => assert(result))
         _ <- fileRepo.existsCorrespondingFileName("test3").map(result => assert(result))
-        elem <- fileRepo.existsCorrespondingFileName("test4") //fileName "test4" does not exist
-      } yield elem
-      result.map(result => assert(!result))
+        result <- fileRepo.existsCorrespondingFileName("test4") //fileName "test4" does not exist
+      } yield result mustBe false
     }
   }
 
   "DBFilesTable#selectFileIdFromFileName" should {
     "insert some rows into the Files table on the database and retrieve fileId's by giving fileName's." in {
-      val result = for {
+      for {
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
         _ <- fileRepo.selectFileIdFromFileName("test1").map(result => assert(result == uuid1))
         _ <- fileRepo.selectFileIdFromFileName("test2").map(result => assert(result == uuid2))
-        elem <- fileRepo.selectFileIdFromFileName("test3")
-      } yield elem
-      result.map(result => assert(result == uuid3))
+        result <- fileRepo.selectFileIdFromFileName("test3")
+      } yield result mustBe uuid3
     }
   }
 
   "DBFilesTable#selectFileNameFromFileId" should {
     "insert some rows into the Files table on the database and retrieve fileName's by giving FileId's." in {
-      val result = for {
+      for {
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
         _ <- fileRepo.selectFileNameFromFileId(uuid1).map(result => assert(result.equals("test1")))
         _ <- fileRepo.selectFileNameFromFileId(uuid2).map(result => assert(result.equals("test2")))
-        elem <- fileRepo.selectFileNameFromFileId(uuid3)
-      } yield elem
-      result.map(result => assert(result.equals("test3")))
+        result <- fileRepo.selectFileNameFromFileId(uuid3)
+      } yield result mustBe "test3"
     }
   }
 }

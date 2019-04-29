@@ -4,9 +4,10 @@ import java.util.Calendar
 
 import api.services.DayType
 import api.utils.DateUtils._
+import org.scalatest.{ AsyncWordSpec, MustMatchers }
 import org.scalatestplus.play.PlaySpec
 
-class DateUtilsSuite extends PlaySpec {
+class DateUtilsSuite extends AsyncWordSpec with MustMatchers {
 
   private val calendar = Calendar.getInstance()
 

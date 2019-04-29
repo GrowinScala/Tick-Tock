@@ -3,10 +3,10 @@ package api.services
 import akka.actor.{ ActorSystem, Props }
 import api.dtos.{ ExclusionDTO, SchedulingDTO, TaskDTO }
 import api.utils.DateUtils._
-
 import database.repositories.file.{ FakeFileRepository, FileRepository }
 import database.repositories.task.{ FakeTaskRepository, TaskRepository }
 import executionengine.{ ExecutionJob, ExecutionManager, FakeExecutionManager }
+import org.scalatest.{ AsyncWordSpec, MustMatchers }
 import org.scalatestplus.play.PlaySpec
 import play.api.Mode
 import play.api.inject.Injector
@@ -14,7 +14,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 
 import scala.concurrent.ExecutionContext
 
-class TaskServiceSuite extends PlaySpec {
+class TaskServiceSuite extends AsyncWordSpec with MustMatchers {
 
   private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder().in(Mode.Test)
   private lazy val injector: Injector = appBuilder.injector()
@@ -35,6 +35,7 @@ class TaskServiceSuite extends PlaySpec {
       taskService.actorMap.size mustBe 1
       taskService.actorMap.head._1 mustBe "asd"
       taskService.actorMap -= "asd"
+      taskService.actorMap.isEmpty mustBe true
     }
 
     "receive a Minutely Periodic TaskDTO and store a new entry in the cancellableMap." in {
@@ -44,6 +45,7 @@ class TaskServiceSuite extends PlaySpec {
       taskService.actorMap.size mustBe 1
       taskService.actorMap.head._1 mustBe "asd"
       taskService.actorMap -= "asd"
+      taskService.actorMap.isEmpty mustBe true
     }
 
     "receive a Hourly Periodic TaskDTO and store a new entry in the cancellableMap." in {
@@ -53,6 +55,7 @@ class TaskServiceSuite extends PlaySpec {
       taskService.actorMap.size mustBe 1
       taskService.actorMap.head._1 mustBe "asd"
       taskService.actorMap -= "asd"
+      taskService.actorMap.isEmpty mustBe true
     }
 
     "receive a Daily Periodic TaskDTO and store a new entry in the cancellableMap." in {
@@ -62,6 +65,7 @@ class TaskServiceSuite extends PlaySpec {
       taskService.actorMap.size mustBe 1
       taskService.actorMap.head._1 mustBe "asd"
       taskService.actorMap -= "asd"
+      taskService.actorMap.isEmpty mustBe true
     }
 
     "receive a Weekly Periodic TaskDTO and store a new entry in the cancellableMap." in {
@@ -71,6 +75,7 @@ class TaskServiceSuite extends PlaySpec {
       taskService.actorMap.size mustBe 1
       taskService.actorMap.head._1 mustBe "asd"
       taskService.actorMap -= "asd"
+      taskService.actorMap.isEmpty mustBe true
     }
 
     "receive a Monthly Periodic TaskDTO and store a new entry in the cancellableMap." in {
@@ -80,6 +85,7 @@ class TaskServiceSuite extends PlaySpec {
       taskService.actorMap.size mustBe 1
       taskService.actorMap.head._1 mustBe "asd"
       taskService.actorMap -= "asd"
+      taskService.actorMap.isEmpty mustBe true
     }
 
     "receive a Yearly Periodic TaskDTO and store a new entry in the cancellableMap." in {
@@ -89,6 +95,7 @@ class TaskServiceSuite extends PlaySpec {
       taskService.actorMap.size mustBe 1
       taskService.actorMap.head._1 mustBe "asd"
       taskService.actorMap -= "asd"
+      taskService.actorMap.isEmpty mustBe true
     }
 
     "receive a Personalized TaskDTO and store a new entry in the cancellableMap." in {
@@ -98,6 +105,7 @@ class TaskServiceSuite extends PlaySpec {
       taskService.actorMap.size mustBe 1
       taskService.actorMap.head._1 mustBe "asd"
       taskService.actorMap -= "asd"
+      taskService.actorMap.isEmpty mustBe true
     }
 
   }
@@ -111,6 +119,7 @@ class TaskServiceSuite extends PlaySpec {
       taskService.actorMap.size mustBe 1
       taskService.actorMap.head._1 mustBe "dsa"
       taskService.actorMap -= "dsa"
+      taskService.actorMap.isEmpty mustBe true
     }
   }
 

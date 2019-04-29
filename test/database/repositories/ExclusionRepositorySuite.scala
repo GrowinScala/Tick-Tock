@@ -23,7 +23,7 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.duration._
 import scala.concurrent.{ Await, ExecutionContext }
 
-class ExclusionRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with BeforeAndAfterEach {
+class ExclusionRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with BeforeAndAfterEach with MustMatchers {
 
   private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder().in(Mode.Test)
   private lazy val injector: Injector = appBuilder.injector()
@@ -48,7 +48,7 @@ class ExclusionRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with
   private val exclusionUUID4: String = UUID.randomUUID().toString
 
   override def beforeAll: Unit = {
-    val result = for {
+    for {
       _ <- dtbase.run(createFilesTableAction)
       _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", getCurrentDateTimestamp))
       _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID2, "test2", getCurrentDateTimestamp))
@@ -56,80 +56,81 @@ class ExclusionRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with
       _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss"))))
       _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.Periodic, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")), Some(PeriodType.Minutely), Some(2), Some(stringToDateFormat("01-01-2050 12:00:00", "dd-MM-yyyy HH:mm:ss"))))
       _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID3, "test3", SchedulingType.Periodic, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")), Some(PeriodType.Hourly), Some(1), None, Some(5), Some(5)))
-      res <- dtbase.run(createExclusionsTableAction)
-    } yield res
-    Await.result(result, Duration.Inf)
+      result <- dtbase.run(createExclusionsTableAction)
+    } yield result
   }
 
   override def afterAll: Unit = {
-    Await.result(dtbase.run(dropExclusionsTableAction), Duration.Inf)
-    Await.result(dtbase.run(dropTasksTableAction), Duration.Inf)
-    Await.result(dtbase.run(dropFilesTableAction), Duration.Inf)
+    for{
+      _ <- dtbase.run(dropExclusionsTableAction)
+      _ <- dtbase.run(dropTasksTableAction)
+      result <- dtbase.run(dropFilesTableAction)
+    } yield result
   }
 
   override def afterEach: Unit = {
-    Await.result(exclusionRepo.deleteAllExclusions, Duration.Inf)
+    for(result <- exclusionRepo.deleteAllExclusions) yield result
   }
 
   "DBExclusionsTable#drop/createExclusionsTable" should {
     "create and then drop the Exclusions table on the database." in {
-      val result = for {
+      for {
         _ <- dtbase.run(MTable.getTables).map(item => assert(item.head.name.name.equals("exclusions") && item.tail.head.name.name.equals("files") && item.tail.tail.head.name.name.equals("tasks")))
         _ <- dtbase.run(dropExclusionsTableAction)
         _ <- dtbase.run(MTable.getTables).map(item => assert(item.head.name.name.equals("files") && item.tail.head.name.name.equals("tasks")))
         _ <- dtbase.run(createExclusionsTableAction)
-        elem <- dtbase.run(MTable.getTables)
-      } yield elem
-      result.map(item => assert(item.head.name.name.equals("exclusions") && item.tail.head.name.name.equals("files") && item.tail.tail.head.name.name.equals("tasks")))
+        result <- dtbase.run(MTable.getTables)
+      } yield {
+        result.head.name.name mustBe "exclusions"
+        result.tail.head.name.name mustBe "files"
+        result.tail.tail.head.name.name mustBe "tasks"
+      }
+
     }
   }
 
   "DBExclusionsTable#insertInExclusionsTable,selectAllExclusions" should {
     "insert rows into the Exclusions table on the database and select all rows" in {
-      val result = for {
+      for {
         _ <- exclusionRepo.selectAllExclusions.map(seq => assert(seq.isEmpty))
         _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID1, taskUUID3, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))
         _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID2, taskUUID1, None, Some(10), None, Some(DayType.Weekday), None, Some(2030)))
         resultSeq <- exclusionRepo.selectAllExclusions
-      } yield resultSeq
-      result.map(seq => assert(seq.size == 2))
+      } yield resultSeq.size mustBe 2
     }
   }
 
   "DBExclusionsTable#selectExclusionByExclusionId" should {
     "insert several rows and select a specific exclusion by giving its exclusionId" in {
-      val result = for {
+      for {
         _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID1, taskUUID3, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))
         _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID2, taskUUID1, None, Some(10), None, Some(DayType.Weekday), None, Some(2030)))
         _ <- exclusionRepo.selectExclusion(exclusionUUID2).map(dto => assert(dto.get.day.contains(10)))
-        task <- exclusionRepo.selectExclusion(exclusionUUID1)
-      } yield task
-      result.map(dto => assert(dto.get.taskId == taskUUID3))
+        exclusion <- exclusionRepo.selectExclusion(exclusionUUID1)
+      } yield exclusion.get.taskId mustBe taskUUID3
     }
   }
 
   "DBExclusionsTable#deleteAllExclusions" should {
     "insert several rows and then delete them all from the Exclusions table on the database." in {
-      val result = for {
+      for {
         _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID1, taskUUID3, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))
         _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID2, taskUUID1, None, Some(10), None, Some(DayType.Weekday), None, Some(2030)))
         _ <- exclusionRepo.selectAllExclusions.map(seq => assert(seq.size == 2))
         _ <- exclusionRepo.deleteAllExclusions
         resultSeq <- exclusionRepo.selectAllExclusions
-      } yield resultSeq
-      result.map(seq => assert(seq.isEmpty))
+      } yield resultSeq.isEmpty mustBe true
     }
   }
 
   "DBExclusionsTable#deleteExclusionById" should {
     "insert several rows and delete a specific exclusion by giving its exclusionId" in {
-      val result = for {
+      for {
         _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID1, taskUUID3, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))
         _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID2, taskUUID1, None, Some(10), None, Some(DayType.Weekday), None, Some(2030)))
         _ <- exclusionRepo.deleteExclusionById(exclusionUUID2)
-        res <- exclusionRepo.selectAllExclusions
-      } yield res
-      result.map(seq => assert(seq.head.exclusionId == exclusionUUID1))
+        resultSeq <- exclusionRepo.selectAllExclusions
+      } yield resultSeq.head.exclusionId mustBe exclusionUUID1
     }
   }
 

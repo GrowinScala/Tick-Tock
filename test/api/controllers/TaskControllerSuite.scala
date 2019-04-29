@@ -9,6 +9,7 @@ import database.repositories.file.FakeFileRepository
 import database.repositories.scheduling.{ FakeSchedulingRepository, SchedulingRepository }
 import database.repositories.task.{ FakeTaskRepository, TaskRepository }
 import executionengine.{ ExecutionManager, FakeExecutionManager }
+import org.scalatest.{ AsyncWordSpec, MustMatchers }
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.Injector

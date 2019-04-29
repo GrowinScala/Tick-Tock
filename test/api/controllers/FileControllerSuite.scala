@@ -7,7 +7,7 @@ import database.repositories.file.FileRepository
 import database.repositories.file.FakeFileRepository
 import database.repositories.task.{ FakeTaskRepository, TaskRepository }
 import executionengine.{ ExecutionManager, FakeExecutionManager }
-import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
+import org.scalatest.{ AsyncWordSpec, BeforeAndAfterAll, BeforeAndAfterEach, MustMatchers }
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.Injector
@@ -18,7 +18,7 @@ import play.api.test._
 
 import scala.concurrent.ExecutionContext
 
-class FileControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite with BeforeAndAfterAll with BeforeAndAfterEach {
+class FileControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite with BeforeAndAfterAll with BeforeAndAfterEach with MustMatchers {
 
   private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
   private lazy val injector: Injector = appBuilder.injector()

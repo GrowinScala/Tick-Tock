@@ -12,12 +12,14 @@ import com.google.inject.Guice
 import database.repositories.file.{ FakeFileRepository, FileRepository }
 import database.repositories.task.{ FakeTaskRepository, TaskRepository }
 import executionengine.{ ExecutionManager, FakeExecutionManager }
+import org.scalatest.{ AsyncWordSpec, MustMatchers, WordSpec }
 import org.scalatestplus.play.PlaySpec
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ ExecutionContext, Future }
 
-class TaskValidatorSuite extends PlaySpec {
+class TaskValidatorSuite extends WordSpec with MustMatchers {
 
   private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
   private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
@@ -34,6 +36,7 @@ class TaskValidatorSuite extends PlaySpec {
   private val calendar = Calendar.getInstance()
 
   "TaskValidator#scheduleValidator" should {
+
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (RunOnce task with no startDate)" in {
       val dto = CreateTaskDTO("test1", SchedulingType.RunOnce)
 
