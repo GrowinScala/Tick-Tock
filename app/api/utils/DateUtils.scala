@@ -133,18 +133,24 @@ object DateUtils {
   def isPossibleDate(day: Int, month: Int, year: Int): Boolean = {
     val dateCalendar = Calendar.getInstance
     dateCalendar.setLenient(false)
-    val result = Try(Some(dateCalendar.set(day, month, year))).getOrElse(None)
+    dateCalendar.set(year, month - 1, day)
+    val result = Try(Some(dateCalendar.getTime)).getOrElse(None)
     result.isDefined
   }
 
+  /*def isPossibleDate(day: Int, month: Int, year: Int): Boolean = {
+    val dateCalendar = Calendar.getInstance
+    dateCalendar.setLenient(false)
+    val result = Try(Some(dateCalendar.set(year, month, day))).getOrElse(None)
+    (day == 29 && month == 2 && !isLeapYear(Some(year))) || result.isDefined
+  }*/
+
   def isPossibleDateWithoutYear(day: Int, month: Int): Boolean = {
     if (day >= 1 && day <= 31 && month >= 1 && month <= 12) {
-      val dateCalendar = Calendar.getInstance
-      dateCalendar.setLenient(false)
       day match {
         case 29 => month != 2
         case 30 => month != 2
-        case 31 => month != 2 || month != 4 || month != 6 || month != 9 || month != 11
+        case 31 => month != 2 && month != 4 && month != 6 && month != 9 && month != 11
         case _ => true
       }
     } else false
@@ -154,14 +160,15 @@ object DateUtils {
     val dateCalendar = Calendar.getInstance
     dateCalendar.setLenient(false)
     def iter(month: Int): Boolean = {
-      if (month >= 13) false
+      if (month >= 12) false
       else {
-        val result = Try(Some(dateCalendar.set(day, month, year))).getOrElse(None)
+        dateCalendar.set(year, month - 1, day)
+        val result = Try(Some(dateCalendar.getTime)).getOrElse(None)
         if (result.isDefined) true
         else iter(month + 1)
       }
     }
-    iter(1)
+    iter(0)
   }
 
   /**

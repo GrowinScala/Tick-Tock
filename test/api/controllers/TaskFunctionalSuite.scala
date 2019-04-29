@@ -247,9 +247,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val task = Await.result(taskRepo.selectTask(id), Duration.Inf)
-      task.isDefined mustBe true
-      task.get.startDateAndTime.toString mustBe "Some(Tue Jan 01 05:00:00 GMT 2030)"
+      for (task <- taskRepo.selectTask(id)) yield {
+        task.isDefined mustBe true
+        task.get.startDateAndTime.toString mustBe "Some(Tue Jan 01 05:00:00 GMT 2030)"
+      }
     }
 
     "receive a POST request with a JSON body with incorrect data. (wrong file name)" in {
@@ -620,10 +621,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val task = Await.result(taskRepo.selectTask(id), Duration.Inf)
-      task.isDefined mustBe true
-      task.get.startDateAndTime.get.toString mustBe "Mon Jul 01 08:00:00 BST 2019"
-      task.get.endDateAndTime.get.toString mustBe "Wed Jan 01 08:00:00 GMT 2020"
+      for (task <- taskRepo.selectTask(id)) yield {
+        task.isDefined mustBe true
+        task.get.startDateAndTime.get.toString mustBe "Mon Jul 01 08:00:00 BST 2019"
+        task.get.endDateAndTime.get.toString mustBe "Wed Jan 01 08:00:00 GMT 2020"
+      }
     }
 
     "receive a POST request with a JSON body with incorrect periodic task data. (missing Periodic fields)" in {
@@ -884,9 +886,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.exclusionDate.get.toString mustBe "Mon Jan 01 00:00:00 GMT 2035"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.exclusionDate.get.toString mustBe "Mon Jan 01 00:00:00 GMT 2035"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day)" in {
@@ -916,9 +919,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "15"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "15"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek)" in {
@@ -948,9 +952,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.dayOfWeek.get.toString mustBe "3"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.dayOfWeek.get.toString mustBe "3"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayType)" in {
@@ -980,9 +985,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.dayType.get.toString mustBe "Weekday"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.dayType.get.toString mustBe "Weekday"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with month)" in {
@@ -1012,9 +1018,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.month.get.toString mustBe "9"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.month.get.toString mustBe "9"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with year)" in {
@@ -1044,9 +1051,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.year.get.toString mustBe "2031"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.year.get.toString mustBe "2031"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day and dayOfWeek)" in {
@@ -1077,10 +1085,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "25"
-      exclusion.get.dayOfWeek.get.toString mustBe "2"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "25"
+        exclusion.get.dayOfWeek.get.toString mustBe "2"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day and dayType)" in {
@@ -1111,10 +1120,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "12"
-      exclusion.get.dayType.get.toString mustBe "Weekend"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "12"
+        exclusion.get.dayType.get.toString mustBe "Weekend"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day and month)" in {
@@ -1145,10 +1155,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "2"
-      exclusion.get.month.get.toString mustBe "5"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "2"
+        exclusion.get.month.get.toString mustBe "5"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day and year)" in {
@@ -1179,10 +1190,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "31"
-      exclusion.get.year.get.toString mustBe "2033"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "31"
+        exclusion.get.year.get.toString mustBe "2033"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek and dayType)" in {
@@ -1213,10 +1225,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.dayOfWeek.get.toString mustBe "6"
-      exclusion.get.dayType.get.toString mustBe "Weekday"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.dayOfWeek.get.toString mustBe "6"
+        exclusion.get.dayType.get.toString mustBe "Weekday"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek and month)" in {
@@ -1247,10 +1260,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.dayOfWeek.get.toString mustBe "7"
-      exclusion.get.month.get.toString mustBe "7"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.dayOfWeek.get.toString mustBe "7"
+        exclusion.get.month.get.toString mustBe "7"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek and year)" in {
@@ -1281,10 +1295,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.dayOfWeek.get.toString mustBe "2"
-      exclusion.get.year.get.toString mustBe "2034"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.dayOfWeek.get.toString mustBe "2"
+        exclusion.get.year.get.toString mustBe "2034"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayType and month)" in {
@@ -1315,10 +1330,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.dayType.get.toString mustBe "Weekday"
-      exclusion.get.month.get.toString mustBe "10"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.dayType.get.toString mustBe "Weekday"
+        exclusion.get.month.get.toString mustBe "10"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayType and year)" in {
@@ -1349,10 +1365,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.dayType.get.toString mustBe "Weekend"
-      exclusion.get.year.get.toString mustBe "2037"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.dayType.get.toString mustBe "Weekend"
+        exclusion.get.year.get.toString mustBe "2037"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with month and year)" in {
@@ -1383,10 +1400,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.month.get.toString mustBe "8"
-      exclusion.get.year.get.toString mustBe "2039"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.month.get.toString mustBe "8"
+        exclusion.get.year.get.toString mustBe "2039"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek and dayType)" in {
@@ -1418,11 +1436,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "28"
-      exclusion.get.dayOfWeek.get.toString mustBe "1"
-      exclusion.get.dayType.get.toString mustBe "Weekend"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "28"
+        exclusion.get.dayOfWeek.get.toString mustBe "1"
+        exclusion.get.dayType.get.toString mustBe "Weekend"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek and month)" in {
@@ -1454,11 +1473,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "28"
-      exclusion.get.dayOfWeek.get.toString mustBe "4"
-      exclusion.get.month.get.toString mustBe "3"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "28"
+        exclusion.get.dayOfWeek.get.toString mustBe "4"
+        exclusion.get.month.get.toString mustBe "3"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek and year)" in {
@@ -1490,11 +1510,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "28"
-      exclusion.get.dayOfWeek.get.toString mustBe "2"
-      exclusion.get.year.get.toString mustBe "2038"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "28"
+        exclusion.get.dayOfWeek.get.toString mustBe "2"
+        exclusion.get.year.get.toString mustBe "2038"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, dayType and month)" in {
@@ -1526,11 +1547,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.dayOfWeek.get.toString mustBe "3"
-      exclusion.get.dayType.get.toString mustBe "Weekday"
-      exclusion.get.month.get.toString mustBe "4"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.dayOfWeek.get.toString mustBe "3"
+        exclusion.get.dayType.get.toString mustBe "Weekday"
+        exclusion.get.month.get.toString mustBe "4"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, dayType and year)" in {
@@ -1562,11 +1584,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.dayOfWeek.get.toString mustBe "4"
-      exclusion.get.dayType.get.toString mustBe "Weekday"
-      exclusion.get.year.get.toString mustBe "2031"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.dayOfWeek.get.toString mustBe "4"
+        exclusion.get.dayType.get.toString mustBe "Weekday"
+        exclusion.get.year.get.toString mustBe "2031"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayType, month and year)" in {
@@ -1598,11 +1621,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.dayType.get.toString mustBe "Weekend"
-      exclusion.get.month.get.toString mustBe "2"
-      exclusion.get.year.get.toString mustBe "2040"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.dayType.get.toString mustBe "Weekend"
+        exclusion.get.month.get.toString mustBe "2"
+        exclusion.get.year.get.toString mustBe "2040"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, dayType and month)" in {
@@ -1635,12 +1659,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "23"
-      exclusion.get.dayOfWeek.get.toString mustBe "5"
-      exclusion.get.dayType.get.toString mustBe "Weekday"
-      exclusion.get.month.get.toString mustBe "8"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "23"
+        exclusion.get.dayOfWeek.get.toString mustBe "5"
+        exclusion.get.dayType.get.toString mustBe "Weekday"
+        exclusion.get.month.get.toString mustBe "8"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, dayType and year)" in {
@@ -1673,12 +1698,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "16"
-      exclusion.get.dayOfWeek.get.toString mustBe "6"
-      exclusion.get.dayType.get.toString mustBe "Weekday"
-      exclusion.get.year.get.toString mustBe "2032"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "16"
+        exclusion.get.dayOfWeek.get.toString mustBe "6"
+        exclusion.get.dayType.get.toString mustBe "Weekday"
+        exclusion.get.year.get.toString mustBe "2032"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, month and year)" in {
@@ -1711,12 +1737,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "4"
-      exclusion.get.dayOfWeek.get.toString mustBe "3"
-      exclusion.get.month.get.toString mustBe "11"
-      exclusion.get.year.get.toString mustBe "2039"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "4"
+        exclusion.get.dayOfWeek.get.toString mustBe "3"
+        exclusion.get.month.get.toString mustBe "11"
+        exclusion.get.year.get.toString mustBe "2039"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayType, month and year)" in {
@@ -1749,12 +1776,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "23"
-      exclusion.get.dayType.get.toString mustBe "Weekday"
-      exclusion.get.month.get.toString mustBe "11"
-      exclusion.get.year.get.toString mustBe "2030"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "23"
+        exclusion.get.dayType.get.toString mustBe "Weekday"
+        exclusion.get.month.get.toString mustBe "11"
+        exclusion.get.year.get.toString mustBe "2030"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, dayType, month and year)" in {
@@ -1787,12 +1815,14 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.dayOfWeek.get.toString mustBe "5"
-      exclusion.get.dayType.get.toString mustBe "Weekday"
-      exclusion.get.month.get.toString mustBe "3"
-      exclusion.get.year.get.toString mustBe "2032"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.dayOfWeek.get.toString mustBe "5"
+        exclusion.get.dayType.get.toString mustBe "Weekday"
+        exclusion.get.month.get.toString mustBe "3"
+        exclusion.get.year.get.toString mustBe "2032"
+      }
+
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, dayType, month and year)" in {
@@ -1826,13 +1856,14 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "7"
-      exclusion.get.dayOfWeek.get.toString mustBe "4"
-      exclusion.get.dayType.get.toString mustBe "Weekday"
-      exclusion.get.month.get.toString mustBe "8"
-      exclusion.get.year.get.toString mustBe "2037"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "7"
+        exclusion.get.dayOfWeek.get.toString mustBe "4"
+        exclusion.get.dayType.get.toString mustBe "Weekday"
+        exclusion.get.month.get.toString mustBe "8"
+        exclusion.get.year.get.toString mustBe "2037"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day and criteria)" in {
@@ -1863,10 +1894,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "15"
-      exclusion.get.criteria.get.toString mustBe "First"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "15"
+        exclusion.get.criteria.get.toString mustBe "First"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek and criteria)" in {
@@ -1897,10 +1929,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.dayOfWeek.get.toString mustBe "3"
-      exclusion.get.criteria.get.toString mustBe "Second"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.dayOfWeek.get.toString mustBe "3"
+        exclusion.get.criteria.get.toString mustBe "Second"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayType and criteria)" in {
@@ -1931,10 +1964,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.dayType.get.toString mustBe "Weekday"
-      exclusion.get.criteria.get.toString mustBe "Third"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.dayType.get.toString mustBe "Weekday"
+        exclusion.get.criteria.get.toString mustBe "Third"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with month and criteria)" in {
@@ -1965,10 +1999,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.month.get.toString mustBe "2"
-      exclusion.get.criteria.get.toString mustBe "Fourth"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.month.get.toString mustBe "2"
+        exclusion.get.criteria.get.toString mustBe "Fourth"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with year and criteria)" in {
@@ -1999,10 +2034,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.year.get.toString mustBe "2031"
-      exclusion.get.criteria.get.toString mustBe "Last"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.year.get.toString mustBe "2031"
+        exclusion.get.criteria.get.toString mustBe "Last"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek and criteria)" in {
@@ -2034,11 +2070,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "22"
-      exclusion.get.dayOfWeek.get.toString mustBe "7"
-      exclusion.get.criteria.get.toString mustBe "First"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "22"
+        exclusion.get.dayOfWeek.get.toString mustBe "7"
+        exclusion.get.criteria.get.toString mustBe "First"
+      }
+
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayType and criteria)" in {
@@ -2070,11 +2108,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "9"
-      exclusion.get.dayType.get.toString mustBe "Weekend"
-      exclusion.get.criteria.get.toString mustBe "Second"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "9"
+        exclusion.get.dayType.get.toString mustBe "Weekend"
+        exclusion.get.criteria.get.toString mustBe "Second"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, month and criteria)" in {
@@ -2106,11 +2145,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "11"
-      exclusion.get.month.get.toString mustBe "9"
-      exclusion.get.criteria.get.toString mustBe "Third"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "11"
+        exclusion.get.month.get.toString mustBe "9"
+        exclusion.get.criteria.get.toString mustBe "Third"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, year and criteria)" in {
@@ -2142,11 +2182,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "29"
-      exclusion.get.year.get.toString mustBe "2035"
-      exclusion.get.criteria.get.toString mustBe "Fourth"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "29"
+        exclusion.get.year.get.toString mustBe "2035"
+        exclusion.get.criteria.get.toString mustBe "Fourth"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, dayType and criteria)" in {
@@ -2178,11 +2219,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.dayOfWeek.get.toString mustBe "5"
-      exclusion.get.dayType.get.toString mustBe "Weekday"
-      exclusion.get.criteria.get.toString mustBe "Last"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.dayOfWeek.get.toString mustBe "5"
+        exclusion.get.dayType.get.toString mustBe "Weekday"
+        exclusion.get.criteria.get.toString mustBe "Last"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, month and criteria)" in {
@@ -2214,11 +2256,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.dayOfWeek.get.toString mustBe "4"
-      exclusion.get.month.get.toString mustBe "5"
-      exclusion.get.criteria.get.toString mustBe "First"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.dayOfWeek.get.toString mustBe "4"
+        exclusion.get.month.get.toString mustBe "5"
+        exclusion.get.criteria.get.toString mustBe "First"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, year and criteria)" in {
@@ -2250,11 +2293,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.dayOfWeek.get.toString mustBe "6"
-      exclusion.get.year.get.toString mustBe "2033"
-      exclusion.get.criteria.get.toString mustBe "First"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.dayOfWeek.get.toString mustBe "6"
+        exclusion.get.year.get.toString mustBe "2033"
+        exclusion.get.criteria.get.toString mustBe "First"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayType, month and criteria)" in {
@@ -2286,11 +2330,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.dayType.get.toString mustBe "Weekend"
-      exclusion.get.month.get.toString mustBe "12"
-      exclusion.get.criteria.get.toString mustBe "Second"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.dayType.get.toString mustBe "Weekend"
+        exclusion.get.month.get.toString mustBe "12"
+        exclusion.get.criteria.get.toString mustBe "Second"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayType, year and criteria)" in {
@@ -2322,11 +2367,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.dayType.get.toString mustBe "Weekday"
-      exclusion.get.year.get.toString mustBe "2039"
-      exclusion.get.criteria.get.toString mustBe "Third"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.dayType.get.toString mustBe "Weekday"
+        exclusion.get.year.get.toString mustBe "2039"
+        exclusion.get.criteria.get.toString mustBe "Third"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with month, year and criteria)" in {
@@ -2358,11 +2404,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.month.get.toString mustBe "7"
-      exclusion.get.year.get.toString mustBe "2036"
-      exclusion.get.criteria.get.toString mustBe "Fourth"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.month.get.toString mustBe "7"
+        exclusion.get.year.get.toString mustBe "2036"
+        exclusion.get.criteria.get.toString mustBe "Fourth"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, dayType and criteria)" in {
@@ -2395,12 +2442,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "14"
-      exclusion.get.dayOfWeek.get.toString mustBe "1"
-      exclusion.get.dayType.get.toString mustBe "Weekend"
-      exclusion.get.criteria.get.toString mustBe "Last"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "14"
+        exclusion.get.dayOfWeek.get.toString mustBe "1"
+        exclusion.get.dayType.get.toString mustBe "Weekend"
+        exclusion.get.criteria.get.toString mustBe "Last"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, month and criteria)" in {
@@ -2433,12 +2481,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "27"
-      exclusion.get.dayOfWeek.get.toString mustBe "2"
-      exclusion.get.month.get.toString mustBe "1"
-      exclusion.get.criteria.get.toString mustBe "First"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "27"
+        exclusion.get.dayOfWeek.get.toString mustBe "2"
+        exclusion.get.month.get.toString mustBe "1"
+        exclusion.get.criteria.get.toString mustBe "First"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, year and criteria)" in {
@@ -2471,12 +2520,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "19"
-      exclusion.get.dayOfWeek.get.toString mustBe "6"
-      exclusion.get.year.get.toString mustBe "2037"
-      exclusion.get.criteria.get.toString mustBe "Second"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "19"
+        exclusion.get.dayOfWeek.get.toString mustBe "6"
+        exclusion.get.year.get.toString mustBe "2037"
+        exclusion.get.criteria.get.toString mustBe "Second"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, dayType, month and criteria)" in {
@@ -2509,12 +2559,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.dayOfWeek.get.toString mustBe "2"
-      exclusion.get.dayType.get.toString mustBe "Weekday"
-      exclusion.get.month.get.toString mustBe "10"
-      exclusion.get.criteria.get.toString mustBe "Third"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.dayOfWeek.get.toString mustBe "2"
+        exclusion.get.dayType.get.toString mustBe "Weekday"
+        exclusion.get.month.get.toString mustBe "10"
+        exclusion.get.criteria.get.toString mustBe "Third"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, dayType, year and criteria)" in {
@@ -2547,12 +2598,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.dayOfWeek.get.toString mustBe "7"
-      exclusion.get.dayType.get.toString mustBe "Weekend"
-      exclusion.get.year.get.toString mustBe "2034"
-      exclusion.get.criteria.get.toString mustBe "Fourth"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.dayOfWeek.get.toString mustBe "7"
+        exclusion.get.dayType.get.toString mustBe "Weekend"
+        exclusion.get.year.get.toString mustBe "2034"
+        exclusion.get.criteria.get.toString mustBe "Fourth"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayType, month, year and criteria)" in {
@@ -2585,12 +2637,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.dayType.get.toString mustBe "Weekday"
-      exclusion.get.month.get.toString mustBe "6"
-      exclusion.get.year.get.toString mustBe "2038"
-      exclusion.get.criteria.get.toString mustBe "Last"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.dayType.get.toString mustBe "Weekday"
+        exclusion.get.month.get.toString mustBe "6"
+        exclusion.get.year.get.toString mustBe "2038"
+        exclusion.get.criteria.get.toString mustBe "Last"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, dayType, month and criteria)" in {
@@ -2624,13 +2677,14 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "17"
-      exclusion.get.dayOfWeek.get.toString mustBe "1"
-      exclusion.get.dayType.get.toString mustBe "Weekend"
-      exclusion.get.month.get.toString mustBe "6"
-      exclusion.get.criteria.get.toString mustBe "First"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "17"
+        exclusion.get.dayOfWeek.get.toString mustBe "1"
+        exclusion.get.dayType.get.toString mustBe "Weekend"
+        exclusion.get.month.get.toString mustBe "6"
+        exclusion.get.criteria.get.toString mustBe "First"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, dayType, year and criteria)" in {
@@ -2664,13 +2718,14 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "26"
-      exclusion.get.dayOfWeek.get.toString mustBe "3"
-      exclusion.get.dayType.get.toString mustBe "Weekday"
-      exclusion.get.year.get.toString mustBe "2036"
-      exclusion.get.criteria.get.toString mustBe "Second"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "26"
+        exclusion.get.dayOfWeek.get.toString mustBe "3"
+        exclusion.get.dayType.get.toString mustBe "Weekday"
+        exclusion.get.year.get.toString mustBe "2036"
+        exclusion.get.criteria.get.toString mustBe "Second"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, month, year and criteria)" in {
@@ -2704,13 +2759,14 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "3"
-      exclusion.get.dayOfWeek.get.toString mustBe "4"
-      exclusion.get.month.get.toString mustBe "4"
-      exclusion.get.year.get.toString mustBe "2040"
-      exclusion.get.criteria.get.toString mustBe "Third"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "3"
+        exclusion.get.dayOfWeek.get.toString mustBe "4"
+        exclusion.get.month.get.toString mustBe "4"
+        exclusion.get.year.get.toString mustBe "2040"
+        exclusion.get.criteria.get.toString mustBe "Third"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayType, month, year and criteria)" in {
@@ -2744,13 +2800,14 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "20"
-      exclusion.get.dayType.get.toString mustBe "Weekend"
-      exclusion.get.month.get.toString mustBe "5"
-      exclusion.get.year.get.toString mustBe "2033"
-      exclusion.get.criteria.get.toString mustBe "Fourth"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "20"
+        exclusion.get.dayType.get.toString mustBe "Weekend"
+        exclusion.get.month.get.toString mustBe "5"
+        exclusion.get.year.get.toString mustBe "2033"
+        exclusion.get.criteria.get.toString mustBe "Fourth"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with dayOfWeek, dayType, month, year and criteria)" in {
@@ -2784,13 +2841,14 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.dayOfWeek.get.toString mustBe "3"
-      exclusion.get.dayType.get.toString mustBe "Weekday"
-      exclusion.get.month.get.toString mustBe "11"
-      exclusion.get.year.get.toString mustBe "2038"
-      exclusion.get.criteria.get.toString mustBe "Last"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.dayOfWeek.get.toString mustBe "3"
+        exclusion.get.dayType.get.toString mustBe "Weekday"
+        exclusion.get.month.get.toString mustBe "11"
+        exclusion.get.year.get.toString mustBe "2038"
+        exclusion.get.criteria.get.toString mustBe "Last"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with correct exclusions and insert it into the database. (with day, dayOfWeek, dayType, month, year and criteria)" in {
@@ -2825,14 +2883,15 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val exclusion = Await.result(exclusionRepo.selectExclusion(id), Duration.Inf)
-      exclusion.isDefined mustBe true
-      exclusion.get.day.get.toString mustBe "27"
-      exclusion.get.dayOfWeek.get.toString mustBe "7"
-      exclusion.get.dayType.get.toString mustBe "Weekend"
-      exclusion.get.month.get.toString mustBe "2"
-      exclusion.get.year.get.toString mustBe "2030"
-      exclusion.get.criteria.get.toString mustBe "First"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
+        exclusion.isDefined mustBe true
+        exclusion.get.day.get.toString mustBe "27"
+        exclusion.get.dayOfWeek.get.toString mustBe "7"
+        exclusion.get.dayType.get.toString mustBe "Weekend"
+        exclusion.get.month.get.toString mustBe "2"
+        exclusion.get.year.get.toString mustBe "2030"
+        exclusion.get.criteria.get.toString mustBe "First"
+      }
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with no arguments)" in {
@@ -2861,6 +2920,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
+      for (exclusion <- exclusionRepo.selectExclusion(id)) yield exclusion.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with an unknown parameter)" in {
@@ -2890,6 +2950,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with exclusionId)" in {
@@ -2919,6 +2980,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with taskId)" in {
@@ -2948,6 +3010,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with exclusionDate and day)" in {
@@ -2978,6 +3041,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with exclusionDate and dayOfWeek)" in {
@@ -3008,6 +3072,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with exclusionDate and dayType)" in {
@@ -3038,6 +3103,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with exclusionDate and month)" in {
@@ -3068,6 +3134,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with exclusionDate and year)" in {
@@ -3098,6 +3165,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (with only criteria)" in {
@@ -3127,6 +3195,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid exclusionDate format)" in {
@@ -3156,6 +3225,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDateFormat) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid exclusionDate values - before startDate)" in {
@@ -3185,6 +3255,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDateValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid exclusionDate values - after endDate)" in {
@@ -3214,6 +3285,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDateValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid day - before range)" in {
@@ -3243,6 +3315,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid day - after range)" in {
@@ -3272,6 +3345,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid day - 31st in a month without it)" in {
@@ -3302,6 +3376,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid day - 30th of February)" in {
@@ -3332,6 +3407,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid day - non leap year 29th of February)" in {
@@ -3363,6 +3439,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid dayOfWeek - before range)" in {
@@ -3392,6 +3469,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayOfWeekValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid dayOfWeek - after range)" in {
@@ -3421,6 +3499,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayOfWeekValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid dayOfWeek - with incompatible dayType - Weekday)" in {
@@ -3451,6 +3530,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayOfWeekValue) + "," + Json.toJsObject(invalidExclusionDayTypeValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid dayOfWeek - with incompatible dayType - Weekend)" in {
@@ -3481,6 +3561,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayOfWeekValue) + "," + Json.toJsObject(invalidExclusionDayTypeValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid dayType - unrecognized string)" in {
@@ -3510,6 +3591,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayTypeValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid dayType - with incompatible dayOfWeek - 2 to 6)" in {
@@ -3540,6 +3622,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayOfWeekValue) + "," + Json.toJsObject(invalidExclusionDayTypeValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid dayType - with incompatible dayOfWeek - 1 and 7)" in {
@@ -3570,6 +3653,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayOfWeekValue) + "," + Json.toJsObject(invalidExclusionDayTypeValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid month - before range)" in {
@@ -3599,6 +3683,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionMonthValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid month - after range)" in {
@@ -3628,6 +3713,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionMonthValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid year - before startDate)" in {
@@ -3657,6 +3743,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionYearValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid year - after endDate)" in {
@@ -3686,6 +3773,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionYearValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct periodic task data with incorrect exclusions. (invalid criteria)" in {
@@ -3716,6 +3804,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionCriteriaValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with schedulingDate)" in {
@@ -3745,9 +3834,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.schedulingDate.get.toString mustBe "Mon Jan 01 12:00:00 GMT 2035"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.schedulingDate.get.toString mustBe "Mon Jan 01 12:00:00 GMT 2035"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day)" in {
@@ -3777,9 +3867,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "10"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "10"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek)" in {
@@ -3809,9 +3900,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.dayOfWeek.get.toString mustBe "2"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.dayOfWeek.get.toString mustBe "2"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType)" in {
@@ -3841,9 +3933,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.dayType.get.toString mustBe "Weekday"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.dayType.get.toString mustBe "Weekday"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with month)" in {
@@ -3873,9 +3966,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.month.get.toString mustBe "5"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.month.get.toString mustBe "5"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with year)" in {
@@ -3905,9 +3999,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.year.get.toString mustBe "2035"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.year.get.toString mustBe "2035"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day and dayOfWeek)" in {
@@ -3938,10 +4033,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "5"
-      scheduling.get.dayOfWeek.get.toString mustBe "2"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "5"
+        scheduling.get.dayOfWeek.get.toString mustBe "2"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day and dayType)" in {
@@ -3972,10 +4068,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "28"
-      scheduling.get.dayType.get.toString mustBe "Weekend"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "28"
+        scheduling.get.dayType.get.toString mustBe "Weekend"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day and month)" in {
@@ -4006,10 +4103,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "16"
-      scheduling.get.month.get.toString mustBe "8"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "16"
+        scheduling.get.month.get.toString mustBe "8"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day and year)" in {
@@ -4040,10 +4138,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "2"
-      scheduling.get.year.get.toString mustBe "2037"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "2"
+        scheduling.get.year.get.toString mustBe "2037"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek and dayType)" in {
@@ -4074,10 +4173,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.dayOfWeek.get.toString mustBe "1"
-      scheduling.get.dayType.get.toString mustBe "Weekend"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.dayOfWeek.get.toString mustBe "1"
+        scheduling.get.dayType.get.toString mustBe "Weekend"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek and month)" in {
@@ -4108,10 +4208,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.dayOfWeek.get.toString mustBe "4"
-      scheduling.get.month.get.toString mustBe "11"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.dayOfWeek.get.toString mustBe "4"
+        scheduling.get.month.get.toString mustBe "11"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek and year)" in {
@@ -4142,10 +4243,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.dayOfWeek.get.toString mustBe "1"
-      scheduling.get.year.get.toString mustBe "2032"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.dayOfWeek.get.toString mustBe "1"
+        scheduling.get.year.get.toString mustBe "2032"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType and month)" in {
@@ -4176,10 +4278,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.dayType.get.toString mustBe "Weekday"
-      scheduling.get.month.get.toString mustBe "7"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.dayType.get.toString mustBe "Weekday"
+        scheduling.get.month.get.toString mustBe "7"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType and year)" in {
@@ -4210,10 +4313,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.dayType.get.toString mustBe "Weekday"
-      scheduling.get.year.get.toString mustBe "2035"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.dayType.get.toString mustBe "Weekday"
+        scheduling.get.year.get.toString mustBe "2035"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with month and year)" in {
@@ -4244,10 +4348,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.month.get.toString mustBe "9"
-      scheduling.get.year.get.toString mustBe "2039"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.month.get.toString mustBe "9"
+        scheduling.get.year.get.toString mustBe "2039"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType)" in {
@@ -4279,11 +4384,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "13"
-      scheduling.get.dayOfWeek.get.toString mustBe "3"
-      scheduling.get.dayType.get.toString mustBe "Weekday"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "13"
+        scheduling.get.dayOfWeek.get.toString mustBe "3"
+        scheduling.get.dayType.get.toString mustBe "Weekday"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, month)" in {
@@ -4315,11 +4421,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "19"
-      scheduling.get.dayOfWeek.get.toString mustBe "6"
-      scheduling.get.month.get.toString mustBe "10"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "19"
+        scheduling.get.dayOfWeek.get.toString mustBe "6"
+        scheduling.get.month.get.toString mustBe "10"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, year)" in {
@@ -4351,11 +4458,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "19"
-      scheduling.get.dayOfWeek.get.toString mustBe "6"
-      scheduling.get.year.get.toString mustBe "2034"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "19"
+        scheduling.get.dayOfWeek.get.toString mustBe "6"
+        scheduling.get.year.get.toString mustBe "2034"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, dayType, month)" in {
@@ -4387,11 +4495,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.dayOfWeek.get.toString mustBe "5"
-      scheduling.get.dayType.get.toString mustBe "Weekday"
-      scheduling.get.month.get.toString mustBe "2"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.dayOfWeek.get.toString mustBe "5"
+        scheduling.get.dayType.get.toString mustBe "Weekday"
+        scheduling.get.month.get.toString mustBe "2"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, dayType, year)" in {
@@ -4423,11 +4532,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.dayOfWeek.get.toString mustBe "1"
-      scheduling.get.dayType.get.toString mustBe "Weekend"
-      scheduling.get.year.get.toString mustBe "2038"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.dayOfWeek.get.toString mustBe "1"
+        scheduling.get.dayType.get.toString mustBe "Weekend"
+        scheduling.get.year.get.toString mustBe "2038"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType, month, year)" in {
@@ -4459,11 +4569,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.dayType.get.toString mustBe "Weekday"
-      scheduling.get.month.get.toString mustBe "3"
-      scheduling.get.year.get.toString mustBe "2035"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.dayType.get.toString mustBe "Weekday"
+        scheduling.get.month.get.toString mustBe "3"
+        scheduling.get.year.get.toString mustBe "2035"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType and month)" in {
@@ -4496,12 +4607,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "8"
-      scheduling.get.dayOfWeek.get.toString mustBe "4"
-      scheduling.get.dayType.get.toString mustBe "Weekday"
-      scheduling.get.month.get.toString mustBe "12"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "8"
+        scheduling.get.dayOfWeek.get.toString mustBe "4"
+        scheduling.get.dayType.get.toString mustBe "Weekday"
+        scheduling.get.month.get.toString mustBe "12"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType and year)" in {
@@ -4534,12 +4646,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "21"
-      scheduling.get.dayOfWeek.get.toString mustBe "2"
-      scheduling.get.dayType.get.toString mustBe "Weekday"
-      scheduling.get.year.get.toString mustBe "2030"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "21"
+        scheduling.get.dayOfWeek.get.toString mustBe "2"
+        scheduling.get.dayType.get.toString mustBe "Weekday"
+        scheduling.get.year.get.toString mustBe "2030"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, month and year)" in {
@@ -4572,12 +4685,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "4"
-      scheduling.get.dayOfWeek.get.toString mustBe "7"
-      scheduling.get.month.get.toString mustBe "1"
-      scheduling.get.year.get.toString mustBe "2037"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "4"
+        scheduling.get.dayOfWeek.get.toString mustBe "7"
+        scheduling.get.month.get.toString mustBe "1"
+        scheduling.get.year.get.toString mustBe "2037"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayType, month and year)" in {
@@ -4610,12 +4724,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "17"
-      scheduling.get.dayType.get.toString mustBe "Weekend"
-      scheduling.get.month.get.toString mustBe "9"
-      scheduling.get.year.get.toString mustBe "2033"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "17"
+        scheduling.get.dayType.get.toString mustBe "Weekend"
+        scheduling.get.month.get.toString mustBe "9"
+        scheduling.get.year.get.toString mustBe "2033"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, dayType, month and year)" in {
@@ -4648,12 +4763,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.dayOfWeek.get.toString mustBe "2"
-      scheduling.get.dayType.get.toString mustBe "Weekday"
-      scheduling.get.month.get.toString mustBe "10"
-      scheduling.get.year.get.toString mustBe "2036"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.dayOfWeek.get.toString mustBe "2"
+        scheduling.get.dayType.get.toString mustBe "Weekday"
+        scheduling.get.month.get.toString mustBe "10"
+        scheduling.get.year.get.toString mustBe "2036"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType, month and year)" in {
@@ -4687,13 +4803,14 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "30"
-      scheduling.get.dayOfWeek.get.toString mustBe "3"
-      scheduling.get.dayType.get.toString mustBe "Weekday"
-      scheduling.get.month.get.toString mustBe "7"
-      scheduling.get.year.get.toString mustBe "2039"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "30"
+        scheduling.get.dayOfWeek.get.toString mustBe "3"
+        scheduling.get.dayType.get.toString mustBe "Weekday"
+        scheduling.get.month.get.toString mustBe "7"
+        scheduling.get.year.get.toString mustBe "2039"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day and criteria)" in {
@@ -4724,10 +4841,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "14"
-      scheduling.get.criteria.get.toString mustBe "First"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "14"
+        scheduling.get.criteria.get.toString mustBe "First"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek and criteria)" in {
@@ -4758,10 +4876,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.dayOfWeek.get.toString mustBe "2"
-      scheduling.get.criteria.get.toString mustBe "Second"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.dayOfWeek.get.toString mustBe "2"
+        scheduling.get.criteria.get.toString mustBe "Second"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType and criteria)" in {
@@ -4792,10 +4911,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.dayType.get.toString mustBe "Weekday"
-      scheduling.get.criteria.get.toString mustBe "Third"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.dayType.get.toString mustBe "Weekday"
+        scheduling.get.criteria.get.toString mustBe "Third"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with month and criteria)" in {
@@ -4826,10 +4946,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.month.get.toString mustBe "3"
-      scheduling.get.criteria.get.toString mustBe "Fourth"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.month.get.toString mustBe "3"
+        scheduling.get.criteria.get.toString mustBe "Fourth"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with year and criteria)" in {
@@ -4860,10 +4981,11 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.year.get.toString mustBe "2032"
-      scheduling.get.criteria.get.toString mustBe "Last"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.year.get.toString mustBe "2032"
+        scheduling.get.criteria.get.toString mustBe "Last"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek and criteria)" in {
@@ -4895,11 +5017,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "9"
-      scheduling.get.dayOfWeek.get.toString mustBe "1"
-      scheduling.get.criteria.get.toString mustBe "First"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "9"
+        scheduling.get.dayOfWeek.get.toString mustBe "1"
+        scheduling.get.criteria.get.toString mustBe "First"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayType and criteria)" in {
@@ -4931,11 +5054,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "12"
-      scheduling.get.dayType.get.toString mustBe "Weekday"
-      scheduling.get.criteria.get.toString mustBe "Second"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "12"
+        scheduling.get.dayType.get.toString mustBe "Weekday"
+        scheduling.get.criteria.get.toString mustBe "Second"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, month and criteria)" in {
@@ -4967,11 +5091,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "23"
-      scheduling.get.month.get.toString mustBe "11"
-      scheduling.get.criteria.get.toString mustBe "Third"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "23"
+        scheduling.get.month.get.toString mustBe "11"
+        scheduling.get.criteria.get.toString mustBe "Third"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, year and criteria)" in {
@@ -5003,11 +5128,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "27"
-      scheduling.get.year.get.toString mustBe "2036"
-      scheduling.get.criteria.get.toString mustBe "Fourth"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "27"
+        scheduling.get.year.get.toString mustBe "2036"
+        scheduling.get.criteria.get.toString mustBe "Fourth"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, dayType and criteria)" in {
@@ -5039,11 +5165,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.dayOfWeek.get.toString mustBe "3"
-      scheduling.get.dayType.get.toString mustBe "Weekday"
-      scheduling.get.criteria.get.toString mustBe "Last"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.dayOfWeek.get.toString mustBe "3"
+        scheduling.get.dayType.get.toString mustBe "Weekday"
+        scheduling.get.criteria.get.toString mustBe "Last"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, month and criteria)" in {
@@ -5075,11 +5202,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.dayOfWeek.get.toString mustBe "6"
-      scheduling.get.month.get.toString mustBe "5"
-      scheduling.get.criteria.get.toString mustBe "First"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.dayOfWeek.get.toString mustBe "6"
+        scheduling.get.month.get.toString mustBe "5"
+        scheduling.get.criteria.get.toString mustBe "First"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, year and criteria)" in {
@@ -5111,11 +5239,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.dayOfWeek.get.toString mustBe "2"
-      scheduling.get.year.get.toString mustBe "2039"
-      scheduling.get.criteria.get.toString mustBe "Second"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.dayOfWeek.get.toString mustBe "2"
+        scheduling.get.year.get.toString mustBe "2039"
+        scheduling.get.criteria.get.toString mustBe "Second"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType, month and criteria)" in {
@@ -5147,11 +5276,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.dayType.get.toString mustBe "Weekday"
-      scheduling.get.month.get.toString mustBe "4"
-      scheduling.get.criteria.get.toString mustBe "Third"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.dayType.get.toString mustBe "Weekday"
+        scheduling.get.month.get.toString mustBe "4"
+        scheduling.get.criteria.get.toString mustBe "Third"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType, year and criteria)" in {
@@ -5183,11 +5313,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.dayType.get.toString mustBe "Weekend"
-      scheduling.get.year.get.toString mustBe "2031"
-      scheduling.get.criteria.get.toString mustBe "Fourth"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.dayType.get.toString mustBe "Weekend"
+        scheduling.get.year.get.toString mustBe "2031"
+        scheduling.get.criteria.get.toString mustBe "Fourth"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with month, year and criteria)" in {
@@ -5219,11 +5350,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.month.get.toString mustBe "2"
-      scheduling.get.year.get.toString mustBe "2035"
-      scheduling.get.criteria.get.toString mustBe "Last"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.month.get.toString mustBe "2"
+        scheduling.get.year.get.toString mustBe "2035"
+        scheduling.get.criteria.get.toString mustBe "Last"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType and criteria)" in {
@@ -5256,12 +5388,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "10"
-      scheduling.get.dayOfWeek.get.toString mustBe "5"
-      scheduling.get.dayType.get.toString mustBe "Weekday"
-      scheduling.get.criteria.get.toString mustBe "First"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "10"
+        scheduling.get.dayOfWeek.get.toString mustBe "5"
+        scheduling.get.dayType.get.toString mustBe "Weekday"
+        scheduling.get.criteria.get.toString mustBe "First"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, month and criteria)" in {
@@ -5294,12 +5427,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "17"
-      scheduling.get.dayOfWeek.get.toString mustBe "1"
-      scheduling.get.month.get.toString mustBe "7"
-      scheduling.get.criteria.get.toString mustBe "Second"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "17"
+        scheduling.get.dayOfWeek.get.toString mustBe "1"
+        scheduling.get.month.get.toString mustBe "7"
+        scheduling.get.criteria.get.toString mustBe "Second"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, year and criteria)" in {
@@ -5332,12 +5466,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "25"
-      scheduling.get.dayOfWeek.get.toString mustBe "4"
-      scheduling.get.year.get.toString mustBe "2034"
-      scheduling.get.criteria.get.toString mustBe "Third"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "25"
+        scheduling.get.dayOfWeek.get.toString mustBe "4"
+        scheduling.get.year.get.toString mustBe "2034"
+        scheduling.get.criteria.get.toString mustBe "Third"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, dayType, month and criteria)" in {
@@ -5370,12 +5505,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.dayOfWeek.get.toString mustBe "3"
-      scheduling.get.dayType.get.toString mustBe "Weekday"
-      scheduling.get.month.get.toString mustBe "10"
-      scheduling.get.criteria.get.toString mustBe "Fourth"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.dayOfWeek.get.toString mustBe "3"
+        scheduling.get.dayType.get.toString mustBe "Weekday"
+        scheduling.get.month.get.toString mustBe "10"
+        scheduling.get.criteria.get.toString mustBe "Fourth"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, dayType, year and criteria)" in {
@@ -5408,12 +5544,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.dayOfWeek.get.toString mustBe "7"
-      scheduling.get.dayType.get.toString mustBe "Weekend"
-      scheduling.get.year.get.toString mustBe "2030"
-      scheduling.get.criteria.get.toString mustBe "Last"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.dayOfWeek.get.toString mustBe "7"
+        scheduling.get.dayType.get.toString mustBe "Weekend"
+        scheduling.get.year.get.toString mustBe "2030"
+        scheduling.get.criteria.get.toString mustBe "Last"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayType, month, year and criteria)" in {
@@ -5446,12 +5583,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.dayType.get.toString mustBe "Weekend"
-      scheduling.get.month.get.toString mustBe "1"
-      scheduling.get.year.get.toString mustBe "2037"
-      scheduling.get.criteria.get.toString mustBe "First"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.dayType.get.toString mustBe "Weekend"
+        scheduling.get.month.get.toString mustBe "1"
+        scheduling.get.year.get.toString mustBe "2037"
+        scheduling.get.criteria.get.toString mustBe "First"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType, month and criteria)" in {
@@ -5485,13 +5623,14 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "13"
-      scheduling.get.dayOfWeek.get.toString mustBe "1"
-      scheduling.get.dayType.get.toString mustBe "Weekend"
-      scheduling.get.month.get.toString mustBe "8"
-      scheduling.get.criteria.get.toString mustBe "Second"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "13"
+        scheduling.get.dayOfWeek.get.toString mustBe "1"
+        scheduling.get.dayType.get.toString mustBe "Weekend"
+        scheduling.get.month.get.toString mustBe "8"
+        scheduling.get.criteria.get.toString mustBe "Second"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType, year and criteria)" in {
@@ -5525,13 +5664,14 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "26"
-      scheduling.get.dayOfWeek.get.toString mustBe "2"
-      scheduling.get.dayType.get.toString mustBe "Weekday"
-      scheduling.get.year.get.toString mustBe "2032"
-      scheduling.get.criteria.get.toString mustBe "Third"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "26"
+        scheduling.get.dayOfWeek.get.toString mustBe "2"
+        scheduling.get.dayType.get.toString mustBe "Weekday"
+        scheduling.get.year.get.toString mustBe "2032"
+        scheduling.get.criteria.get.toString mustBe "Third"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, month, year and criteria)" in {
@@ -5565,13 +5705,14 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "6"
-      scheduling.get.dayOfWeek.get.toString mustBe "4"
-      scheduling.get.month.get.toString mustBe "8"
-      scheduling.get.year.get.toString mustBe "2036"
-      scheduling.get.criteria.get.toString mustBe "Fourth"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "6"
+        scheduling.get.dayOfWeek.get.toString mustBe "4"
+        scheduling.get.month.get.toString mustBe "8"
+        scheduling.get.year.get.toString mustBe "2036"
+        scheduling.get.criteria.get.toString mustBe "Fourth"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayType, month, year and criteria)" in {
@@ -5605,13 +5746,14 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "3"
-      scheduling.get.dayType.get.toString mustBe "Weekday"
-      scheduling.get.month.get.toString mustBe "7"
-      scheduling.get.year.get.toString mustBe "2033"
-      scheduling.get.criteria.get.toString mustBe "Last"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "6"
+        scheduling.get.dayOfWeek.get.toString mustBe "4"
+        scheduling.get.month.get.toString mustBe "8"
+        scheduling.get.year.get.toString mustBe "2036"
+        scheduling.get.criteria.get.toString mustBe "Fourth"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with dayOfWeek, dayType, month, year and criteria)" in {
@@ -5645,13 +5787,14 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.dayOfWeek.get.toString mustBe "6"
-      scheduling.get.dayType.get.toString mustBe "Weekday"
-      scheduling.get.month.get.toString mustBe "10"
-      scheduling.get.year.get.toString mustBe "2035"
-      scheduling.get.criteria.get.toString mustBe "First"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.dayOfWeek.get.toString mustBe "6"
+        scheduling.get.dayType.get.toString mustBe "Weekday"
+        scheduling.get.month.get.toString mustBe "10"
+        scheduling.get.year.get.toString mustBe "2035"
+        scheduling.get.criteria.get.toString mustBe "First"
+      }
     }
 
     "receive a POST request with a JSON body with the correct personalized task data and insert it into the database. (with day, dayOfWeek, dayType, month, year and criteria)" in {
@@ -5686,14 +5829,15 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe true
-      scheduling.get.day.get.toString mustBe "11"
-      scheduling.get.dayOfWeek.get.toString mustBe "1"
-      scheduling.get.dayType.get.toString mustBe "Weekend"
-      scheduling.get.month.get.toString mustBe "4"
-      scheduling.get.year.get.toString mustBe "2038"
-      scheduling.get.criteria.get.toString mustBe "Second"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield {
+        scheduling.isDefined mustBe true
+        scheduling.get.day.get.toString mustBe "11"
+        scheduling.get.dayOfWeek.get.toString mustBe "1"
+        scheduling.get.dayType.get.toString mustBe "Weekend"
+        scheduling.get.month.get.toString mustBe "4"
+        scheduling.get.year.get.toString mustBe "2038"
+        scheduling.get.criteria.get.toString mustBe "Second"
+      }
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (with no scheduling)" in {
@@ -5718,8 +5862,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidCreateTaskFormat) + "]"
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe false
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (with a scheduling with no parameters)" in {
@@ -5748,8 +5891,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingFormat) + "]"
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe false
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (with a scheduling with an unknown parameter)" in {
@@ -5779,8 +5921,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingFormat) + "]"
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe false
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (with schedulingId)" in {
@@ -5810,8 +5951,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingFormat) + "]"
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe false
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (with taskId)" in {
@@ -5841,8 +5981,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingFormat) + "]"
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe false
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (with schedulingDate and day)" in {
@@ -5873,8 +6012,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingFormat) + "]"
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe false
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (with schedulingDate and dayOfWeek)" in {
@@ -5905,8 +6043,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingFormat) + "]"
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe false
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (with schedulingDate and dayType)" in {
@@ -5937,8 +6074,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingFormat) + "]"
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe false
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (with schedulingDate and month)" in {
@@ -5969,8 +6105,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingFormat) + "]"
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe false
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (with schedulingDate and year)" in {
@@ -6001,8 +6136,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingFormat) + "]"
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe false
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (with only criteria)" in {
@@ -6032,8 +6166,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingFormat) + "]"
-      val scheduling = Await.result(schedulingRepo.selectScheduling(id), Duration.Inf)
-      scheduling.isDefined mustBe false
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (invalid schedulingDate format)" in {
@@ -6063,6 +6196,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingDateFormat) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (invalid schedulingDate values - before startDate)" in {
@@ -6092,6 +6226,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingDateValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (invalid schedulingDate values - after endDate)" in {
@@ -6121,6 +6256,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingDateValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (invalid day - before range)" in {
@@ -6150,6 +6286,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingDayValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (invalid day - after range)" in {
@@ -6179,6 +6316,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingDayValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (invalid day - 31st in a month without it)" in {
@@ -6195,7 +6333,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "schedulings": [
               {
                 "day": 31,
-                "month": 3
+                "month": 4
               }
             ]
           }
@@ -6209,6 +6347,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingDayValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (invalid day - 30th of February)" in {
@@ -6225,7 +6364,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "schedulings": [
               {
                 "day": 30,
-                "month": 1
+                "month": 2
               }
             ]
           }
@@ -6239,6 +6378,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingDayValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (invalid day - non leap year 29th of February)" in {
@@ -6255,7 +6395,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "schedulings": [
               {
                 "day": 29,
-                "month": 1,
+                "month": 2,
                 "year": 2031
               }
             ]
@@ -6270,6 +6410,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingDayValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (invalid dayOfWeek - before range)" in {
@@ -6299,6 +6440,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingDayOfWeekValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (invalid dayOfWeek - after range)" in {
@@ -6328,6 +6470,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingDayOfWeekValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (invalid dayOfWeek - with incompatible dayType - Weekday)" in {
@@ -6358,6 +6501,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingDayOfWeekValue) + "," + Json.toJsObject(invalidSchedulingDayTypeValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (invalid dayOfWeek - with incompatible dayType - Weekend)" in {
@@ -6388,6 +6532,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingDayOfWeekValue) + "," + Json.toJsObject(invalidSchedulingDayTypeValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (invalid dayType - unrecognized string)" in {
@@ -6417,6 +6562,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingDayTypeValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (invalid dayType - with incompatible dayOfWeek - 2 to 6)" in {
@@ -6447,6 +6593,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingDayOfWeekValue) + "," + Json.toJsObject(invalidSchedulingDayTypeValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (invalid dayType - with incompatible dayOfWeek - 1 and 7)" in {
@@ -6477,6 +6624,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingDayOfWeekValue) + "," + Json.toJsObject(invalidSchedulingDayTypeValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (invalid month - before range)" in {
@@ -6506,6 +6654,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingMonthValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (invalid month - after range)" in {
@@ -6535,6 +6684,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingMonthValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (invalid year - before startDate)" in {
@@ -6564,6 +6714,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingYearValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (invalid year - after endDate)" in {
@@ -6593,6 +6744,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingYearValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
     "receive a POST request with a JSON body with incorrect personalized task data. (invalid criteria)" in {
@@ -6623,6 +6775,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidSchedulingCriteriaValue) + "]"
+      for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
 
   }

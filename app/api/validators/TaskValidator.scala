@@ -422,47 +422,6 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
     }
   }
 
-  /*def areValidExclusionDayValues(exclusions: Option[List[ExclusionDTO]]): Boolean = {
-    def iter(list: List[ExclusionDTO]): Boolean = {
-      if (list.nonEmpty) {
-        println("nonempty")
-        val exclusion = list.head
-        if (exclusion.day.isDefined) {
-          println("daydefined")
-          if (exclusion.day.get >= 1 && exclusion.day.get <= 31) {
-            println("daybetweenrange")
-            if (exclusion.month.isDefined) {
-              println("monthdefined")
-              exclusion.day.get match {
-                case 29 =>
-                  println("case29")
-                  if ((exclusion.month.get == 2) || (exclusion.month.get != 2 || !isLeapYear(exclusion.year))) false
-                case 30 =>
-                  println("case30")
-                  if (exclusion.month.get == 2) false
-                case 31 =>
-                  println("case31")
-                  if (exclusion.month.get == 2 || exclusion.month.get != 4 || exclusion.month.get == 6 || exclusion.month.get == 9 || exclusion.month.get == 11) false
-                case _ =>
-              }
-              if (exclusion.year.isDefined) {
-                println("yeardefined")
-                if (exclusion.month.get == startCalendar.get(Calendar.MONTH) && exclusion.year.get == startCalendar.get(Calendar.YEAR)) if (exclusion.day.get >= startCalendar.get(Calendar.DAY_OF_MONTH)) iter(list.tail) else false
-                else if (exclusion.year.get >= startCalendar.get(Calendar.YEAR) && exclusion.month.get >= startCalendar.get(Calendar.MONTH)) iter(list.tail) else false
-              } else iter(list.tail)
-            } else iter(list.tail)
-          } else false
-        } else iter(list.tail)
-      } else true
-
-    }
-    exclusions match {
-      case Some(list) => iter(list)
-      case None => true
-    }
-
-  }*/
-
   private def areValidExclusionDayOfWeekValues(exclusions: Option[List[ExclusionDTO]]): Boolean = {
     def iter(list: List[ExclusionDTO]): Boolean = {
       if (list.nonEmpty) {
@@ -741,6 +700,29 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
     }
   }
 
+  /*def areValidExclusionDayValues(exclusions: Option[List[ExclusionDTO]]): Boolean = {
+    def iter(list: List[ExclusionDTO]): Boolean = {
+      if (list.nonEmpty) {
+        val exclusion = list.head
+        if (exclusion.day.isDefined) {
+          if (exclusion.day.get >= 1 && exclusion.day.get <= 31) {
+            if (exclusion.month.isDefined) {
+              if (exclusion.year.isDefined) if (isPossibleDate(exclusion.day.get, exclusion.month.get, exclusion.year.get)) iter(list.tail) else false
+              else if (isPossibleDateWithoutYear(exclusion.day.get, exclusion.month.get)) iter(list.tail) else false
+            } else {
+              if (exclusion.year.isDefined) if (isPossibleDateWithoutMonth(exclusion.day.get, exclusion.year.get)) iter(list.tail) else false
+              else iter(list.tail)
+            }
+          } else false
+        } else iter(list.tail)
+      } else true
+    }
+    exclusions match {
+      case Some(list) => iter(list)
+      case None => true
+    }
+  }*/
+
   private def areValidSchedulingDayValues(schedulings: Option[List[SchedulingDTO]]): Boolean = {
     def iter(list: List[SchedulingDTO]): Boolean = {
       if (list.nonEmpty) {
@@ -748,21 +730,15 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
         if (scheduling.day.isDefined) {
           if (scheduling.day.get >= 1 && scheduling.day.get <= 31) {
             if (scheduling.month.isDefined) {
-              scheduling.day.get match {
-                case 29 => if (scheduling.month.get != 1 || scheduling.year.isEmpty || isLeapYear(scheduling.year)) iter(list.tail) else false
-                case 30 => if (scheduling.month.get != 1) iter(list.tail) else false
-                case 31 => if (scheduling.month.get != 1 && scheduling.month.get != 3 && scheduling.month.get != 5 && scheduling.month.get != 8 && scheduling.month.get != 10) iter(list.tail) else false
-                case _ => iter(list.tail)
-              }
-              if (scheduling.year.isDefined) {
-                if (scheduling.month.get == startCalendar.get(Calendar.MONTH) && scheduling.year.get == startCalendar.get(Calendar.YEAR)) if (scheduling.day.get >= startCalendar.get(Calendar.DAY_OF_MONTH)) iter(list.tail) else false
-                else if (scheduling.year.get >= startCalendar.get(Calendar.YEAR) && scheduling.month.get >= startCalendar.get(Calendar.MONTH)) iter(list.tail) else false
-              } else iter(list.tail)
-            } else iter(list.tail)
+              if (scheduling.year.isDefined) if (isPossibleDate(scheduling.day.get, scheduling.month.get, scheduling.year.get)) iter(list.tail) else false
+              else if (isPossibleDateWithoutYear(scheduling.day.get, scheduling.month.get)) iter(list.tail) else false
+            } else {
+              if (scheduling.year.isDefined) if (isPossibleDateWithoutMonth(scheduling.day.get, scheduling.year.get)) iter(list.tail) else false
+              else iter(list.tail)
+            }
           } else false
         } else iter(list.tail)
       } else true
-
     }
     schedulings match {
       case Some(list) => iter(list)
