@@ -10,7 +10,7 @@ import api.utils.DateUtils.{ dateToDayTypeString, _ }
 import database.repositories.task.TaskRepository
 import database.repositories.file.FileRepository
 import executionengine.{ ExecutionJob, ExecutionManager }
-import executionengine.ExecutionJob.{ Cancel, Execute }
+import executionengine.ExecutionJob.{ Cancel, Start }
 import javax.inject.{ Inject, Singleton }
 
 import scala.collection._
@@ -42,12 +42,12 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
       case SchedulingType.RunOnce =>
         val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.RunOnce, task.startDateAndTime, None, None, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo, executionManager))
         actorMap += (task.taskId -> actorRef)
-        actorRef ! Execute
+        actorRef ! Start
 
       case SchedulingType.Personalized =>
         val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Personalized, task.startDateAndTime, None, task.endDateAndTime, task.timezone, calculateExclusions(task), calculateSchedulings(task), fileRepo, taskRepo, executionManager))
         actorMap += (task.taskId -> actorRef)
-        actorRef ! Execute
+        actorRef ! Start
 
       case SchedulingType.Periodic =>
 
@@ -56,32 +56,32 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
           case PeriodType.Minutely =>
             val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofMinutes(task.period.get)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo, executionManager))
             actorMap += (task.taskId -> actorRef)
-            actorRef ! Execute
+            actorRef ! Start
 
           case PeriodType.Hourly =>
             val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofHours(task.period.get)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo, executionManager))
             actorMap += (task.taskId -> actorRef)
-            actorRef ! Execute
+            actorRef ! Start
 
           case PeriodType.Daily =>
             val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo, executionManager))
             actorMap += (task.taskId -> actorRef)
-            actorRef ! Execute
+            actorRef ! Start
 
           case PeriodType.Weekly =>
             val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get * 7)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo, executionManager))
             actorMap += (task.taskId -> actorRef)
-            actorRef ! Execute
+            actorRef ! Start
 
           case PeriodType.Monthly =>
             val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get * 30)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo, executionManager))
             actorMap += (task.taskId -> actorRef)
-            actorRef ! Execute
+            actorRef ! Start
 
           case PeriodType.Yearly =>
             val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, fileId, SchedulingType.Periodic, task.startDateAndTime, Some(Duration.ofDays(task.period.get * 365)), task.endDateAndTime, task.timezone, calculateExclusions(task), None, fileRepo, taskRepo, executionManager))
             actorMap += (task.taskId -> actorRef)
-            actorRef ! Execute
+            actorRef ! Start
         }
     }
   }

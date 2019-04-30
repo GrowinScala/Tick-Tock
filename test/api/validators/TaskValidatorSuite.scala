@@ -16,10 +16,11 @@ import org.scalatest.{ AsyncWordSpec, MustMatchers, WordSpec }
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
+import api.utils.DateUtils._
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-class TaskValidatorSuite extends WordSpec with MustMatchers {
+class TaskValidatorSuite extends AsyncWordSpec with MustMatchers {
 
   private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
   private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
@@ -48,34 +49,34 @@ class TaskValidatorSuite extends WordSpec with MustMatchers {
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (RunOnce task with a startDate)" in {
       val dto = CreateTaskDTO("test1", SchedulingType.RunOnce, Some("2030-01-01 12:00:00"))
-      calendar.set(2030, 1 - 1, 1, 12, 0, 0)
-      val startDate = calendar.getTime
-
-      for {
-        validation <- validator.scheduleValidator(dto)
-      } yield validation mustBe Right(TaskDTO("asd1", "test1", SchedulingType.RunOnce, Some(startDate)))
+      val startDate = stringToDateFormat(dto.startDateAndTime.get, "yyyy-MM-dd HH:mm:ss")
+      val validatorResult = validator.scheduleValidator(dto)
+      validatorResult.map {
+        case Right(res) => res mustEqual TaskDTO("asd1", "test1", SchedulingType.RunOnce, Some(startDate))
+        case _ => fail
+      }
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (RunOnce task with a startDate and timezone)" in {
       val dto = CreateTaskDTO("test1", SchedulingType.RunOnce, Some("2030-01-01 12:00:00"), None, None, None, None, Some("PST"))
-      calendar.set(2030, 1 - 1, 1, 20, 0, 0) // 8 hours later due to the PST timezone
-      val startDate = calendar.getTime
-
-      for {
-        validation <- validator.scheduleValidator(dto)
-      } yield validation mustBe Right(TaskDTO("asd1", "test1", SchedulingType.RunOnce, Some(startDate), None, None, None, None, None, Some("PST")))
+      val startDate = stringToDateFormat("2030-01-01 20:00:00", "yyyy-MM-dd HH:mm:ss") // 8 hours later due to the PST timezone
+      val validatorResult = validator.scheduleValidator(dto)
+      validatorResult.map {
+        case Right(res) => res mustEqual TaskDTO("asd1", "test1", SchedulingType.RunOnce, Some(startDate), None, None, None, None, None, Some("PST"))
+        case _ => fail
+      }
     }
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Minutely Periodic task without startDate and with endDate" in {
       val dto = CreateTaskDTO("test1", SchedulingType.Periodic, None, Some(PeriodType.Minutely), Some(1), Some("2040-01-01 12:00:00"))
-      calendar.set(2040, 1 - 1, 1, 12, 0, 0)
-      val endDate = calendar.getTime
-
-      for {
-        validation <- validator.scheduleValidator(dto)
-      } yield validation mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, None, Some(PeriodType.Minutely), Some(1), Some(endDate)))
+      val endDate = stringToDateFormat(dto.endDateAndTime.get, "yyyy-MM-dd HH:mm:ss")
+      val validatorResult = validator.scheduleValidator(dto)
+      validatorResult.map {
+        case Right(res) => res mustEqual TaskDTO("asd1", "test1", SchedulingType.Periodic, None, Some(PeriodType.Minutely), Some(1), Some(endDate))
+        case _ => fail
+      }
     }
-
+    //TODO: change all remaining tests to match the ones above
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Minutely Periodic task with startDate and endDate)" in {
       val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(1), Some("2040-01-01 12:00:00"))
       calendar.set(2030, 1 - 1, 1, 12, 0, 0)
@@ -740,7 +741,6 @@ class TaskValidatorSuite extends WordSpec with MustMatchers {
         validation <- validator.scheduleValidator(dto)
       } yield validation mustBe Left(List(invalidSchedulingCriteriaValue))
     }
-
   }
 
 }

@@ -11,7 +11,7 @@ import api.services.SchedulingType._
 import api.utils.DateUtils._
 import database.repositories.file.FileRepository
 import database.repositories.task.TaskRepository
-import executionengine.ExecutionJob.{ Cancel, Delay, Execute, Start }
+import executionengine.ExecutionJob._
 import javax.inject.Inject
 
 import scala.collection._
@@ -19,7 +19,9 @@ import scala.concurrent.ExecutionContext
 
 object ExecutionJob {
   case object Start
-  case object Execute
+  case object ExecuteRunOnce
+  case object ExecutePeriodic
+  case object ExecutePersonalized
   case object Delay
   case object Cancel
 }
@@ -41,7 +43,9 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
    */
   def receive: Receive = {
     case Start => start()
-    case Execute => execute()
+    case ExecuteRunOnce => executeRunOnce()
+    case ExecutePeriodic => executePeriodic()
+    case ExecutePersonalized => executePersonalized()
     case Delay => delay()
     case Cancel => cancel()
   }
@@ -64,23 +68,63 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
     } else {
       schedulingType match {
         case RunOnce =>
-          timers.startSingleTimer("executionKey", Execute, delay)
+          timers.startSingleTimer("runOnceExecutionKey", ExecuteRunOnce, delay)
         case Periodic =>
-          timers.startPeriodicTimer("executionKey", Execute, interval.get)
+          timers.startPeriodicTimer("periodicExecutionKey", ExecutePeriodic, interval.get)
         case Personalized =>
           val nextDateDelay = calculateDelay(Some(schedulings.get.dequeue))
-          timers.startSingleTimer("executionKey", Execute, nextDateDelay)
+          timers.startSingleTimer("personalizedExecutionKey", ExecutePersonalized, nextDateDelay)
       }
     }
   }
 
-  def execute(): Unit = {
+  def executeRunOnce(): Unit = {
+    val currentDate = getTimeFromDate(new Date())
+    if (!isExcluded(currentDate)) {
+      executionManager.runFile(fileId)
+      printExecutionMessage()
+    }
+  }
+
+  def executePeriodic(): Unit = {
+    val currentDate = getTimeFromDate(new Date())
+    if (!isExcluded(currentDate)) {
+      if (endDate.isDefined) {
+        if (getCurrentDate.after(endDate.get)) {
+          executionManager.runFile(fileId)
+          printExecutionMessage()
+        }
+      } else {
+        taskRepo.selectCurrentOccurrencesByTaskId(taskId).map { occurrences =>
+          if (occurrences.get != 0) {
+            taskRepo.decrementCurrentOccurrencesByTaskId(taskId)
+            executionManager.runFile(fileId)
+            printExecutionMessage()
+          }
+        }
+      }
+    }
+  }
+
+  def executePersonalized(): Unit = {
+    if (schedulings.isDefined && schedulings.get.nonEmpty) {
+      val nextDateDelay = calculateDelay(Some(schedulings.get.dequeue))
+      timers.startSingleTimer("personalizedExecutionKey", ExecutePersonalized, nextDateDelay)
+    }
+    val currentDate = getTimeFromDate(new Date())
+    if (!isExcluded(currentDate)) {
+      executionManager.runFile(fileId)
+      printExecutionMessage()
+    }
+  }
+
+  /*def execute(): Unit = {
     val currentDate = getTimeFromDate(new Date())
     if (!isExcluded(currentDate)) {
       if (schedulingType == SchedulingType.RunOnce) {
         executionManager.runFile(fileId)
         printExecutionMessage()
-      } else { //if it's not a RunOnce task, its a periodic one, so it has to have either endDate or occurrences
+      } else { //if it's not a RunOnce task, its a periodic/personalized one, so it has to have either endDate or occurrences
         if (endDate.isDefined) {
           if (getCurrentDate.after(endDate.get)) {
             executionManager.runFile(fileId)
@@ -104,7 +148,7 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
         }
       }
     }
-  }
+  }*/
 
   def printExecutionMessage(): Unit = {
     if (startDate.isDefined) println("Ran file " + fileId + " scheduled to run at " + dateToStringFormat(startDate.get, "yyyy-MM-dd HH:mm:ss") + ".")
@@ -153,7 +197,7 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
   def runNextScheduling(): Unit = {
     if (schedulings.isDefined && schedulings.get.nonEmpty) {
       val nextDateDelay = calculateDelay(Some(schedulings.get.dequeue))
-      timers.startSingleTimer("schedulingKey", Execute, nextDateDelay)
+      timers.startSingleTimer("personalizedExecutionKey", ExecutePersonalized, nextDateDelay)
     }
   }
 
