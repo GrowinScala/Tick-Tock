@@ -19,7 +19,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test._
-import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.H2Profile.api._
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, ExecutionContext }
@@ -45,15 +45,11 @@ class FileFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
   private val fileUUID4: String = UUID.randomUUID().toString
 
   override def beforeAll: Unit = {
-    val result = for {
-      _ <- dtbase.run(createFilesTableAction)
-      _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", stringToDateFormat("01-01-2018 12:00:00", "dd-MM-yyyy HH:mm:ss")))
-      _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID2, "test2", stringToDateFormat("01-02-2018 12:00:00", "dd-MM-yyyy HH:mm:ss")))
-      _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID3, "test3", stringToDateFormat("01-03-2018 12:00:00", "dd-MM-yyyy HH:mm:ss")))
-      res <- fileRepo.insertInFilesTable(FileDTO(fileUUID4, "test4", stringToDateFormat("01-04-2018 12:00:00", "dd-MM-yyyy HH:mm:ss")))
-    } yield res
-    Await.result(result, Duration.Inf)
-
+    Await.result(dtbase.run(createFilesTableAction), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", stringToDateFormat("01-01-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID2, "test2", stringToDateFormat("01-02-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID3, "test3", stringToDateFormat("01-03-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID4, "test4", stringToDateFormat("01-04-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))), Duration.Inf)
   }
 
   override def afterAll: Unit = {

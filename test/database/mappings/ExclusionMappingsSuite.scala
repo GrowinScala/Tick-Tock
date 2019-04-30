@@ -10,7 +10,7 @@ import database.mappings.ExclusionMappings._
 import org.scalatest.Matchers._
 import org.scalatest._
 import play.api.inject.guice.GuiceApplicationBuilder
-import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.H2Profile.api._
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, ExecutionContext }

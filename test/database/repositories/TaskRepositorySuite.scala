@@ -15,13 +15,13 @@ import org.scalatest._
 import play.api.Mode
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
-import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.H2Profile.api._
 import slick.jdbc.meta.MTable
 
 import scala.concurrent.duration._
 import scala.concurrent.{ Await, ExecutionContext }
 
-class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with BeforeAndAfterEach with MustMatchers{
+class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with BeforeAndAfterEach with MustMatchers {
 
   private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder().in(Mode.Test)
   private lazy val injector: Injector = appBuilder.injector()
@@ -43,25 +43,21 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
   private val fileUUID4: String = UUID.randomUUID().toString
 
   override def beforeAll: Unit = {
-    for {
-      _ <- dtbase.run(createFilesTableAction)
-      _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", getCurrentDateTimestamp))
-      _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID2, "test2", getCurrentDateTimestamp))
-      _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID3, "test3", getCurrentDateTimestamp))
-      _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID4, "test4", getCurrentDateTimestamp))
-      result <- dtbase.run(createTasksTableAction)
-    } yield result
+    Await.result(dtbase.run(createFilesTableAction), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", getCurrentDateTimestamp)), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID2, "test2", getCurrentDateTimestamp)), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID3, "test3", getCurrentDateTimestamp)), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID4, "test4", getCurrentDateTimestamp)), Duration.Inf)
+    Await.result(dtbase.run(createTasksTableAction), Duration.Inf)
   }
 
   override def afterAll: Unit = {
-    for {
-      _ <- dtbase.run(dropTasksTableAction)
-      result <- dtbase.run(dropFilesTableAction)
-    } yield result
+    Await.result(dtbase.run(dropTasksTableAction), Duration.Inf)
+    Await.result(dtbase.run(dropFilesTableAction), Duration.Inf)
   }
 
   override def afterEach: Unit = {
-    for(result <- taskRepo.deleteAllTasks) yield result
+    Await.result(taskRepo.deleteAllTasks, Duration.Inf)
   }
 
   "DBTasksTable#drop/createTasksTable" should {

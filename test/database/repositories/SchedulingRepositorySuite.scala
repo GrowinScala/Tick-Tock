@@ -18,7 +18,7 @@ import org.scalatest._
 import play.api.Mode
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
-import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.H2Profile.api._
 import slick.jdbc.meta.MTable
 
 import scala.concurrent.duration._
@@ -49,28 +49,24 @@ class SchedulingRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll wit
   private val schedulingUUID4: String = UUID.randomUUID().toString
 
   override def beforeAll: Unit = {
-    for {
-      _ <- dtbase.run(createFilesTableAction)
-      _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", getCurrentDateTimestamp))
-      _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID2, "test2", getCurrentDateTimestamp))
-      _ <- dtbase.run(createTasksTableAction)
-      _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss"))))
-      _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.Periodic, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")), Some(PeriodType.Minutely), Some(2), Some(stringToDateFormat("01-01-2050 12:00:00", "dd-MM-yyyy HH:mm:ss"))))
-      _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID3, "test3", SchedulingType.Periodic, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")), Some(PeriodType.Hourly), Some(1), None, Some(5), Some(5)))
-      result <- dtbase.run(createSchedulingsTableAction)
-    } yield result
+    Await.result(dtbase.run(createFilesTableAction), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", getCurrentDateTimestamp)), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID2, "test2", getCurrentDateTimestamp)), Duration.Inf)
+    Await.result(dtbase.run(createTasksTableAction), Duration.Inf)
+    Await.result(taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")))), Duration.Inf)
+    Await.result(taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.Periodic, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")), Some(PeriodType.Minutely), Some(2), Some(stringToDateFormat("01-01-2050 12:00:00", "dd-MM-yyyy HH:mm:ss")))), Duration.Inf)
+    Await.result(taskRepo.insertInTasksTable(TaskDTO(taskUUID3, "test3", SchedulingType.Periodic, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")), Some(PeriodType.Hourly), Some(1), None, Some(5), Some(5))), Duration.Inf)
+    Await.result(dtbase.run(createSchedulingsTableAction), Duration.Inf)
   }
 
   override def afterAll: Unit = {
-    for{
-      _ <- dtbase.run(dropSchedulingsTableAction)
-      _ <- dtbase.run(dropTasksTableAction)
-      result <- dtbase.run(dropFilesTableAction)
-    } yield result
+    Await.result(dtbase.run(dropSchedulingsTableAction), Duration.Inf)
+    Await.result(dtbase.run(dropTasksTableAction), Duration.Inf)
+    Await.result(dtbase.run(dropFilesTableAction), Duration.Inf)
   }
 
   override def afterEach: Unit = {
-    for(scheduling <- schedulingRepo.deleteAllSchedulings) yield scheduling
+    Await.result(schedulingRepo.deleteAllSchedulings, Duration.Inf)
   }
 
   "DBSchedulingsTable#drop/createSchedulingsTable" should {

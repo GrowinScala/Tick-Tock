@@ -26,7 +26,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.H2Profile.api._
 import slick.jdbc.meta.MTable
 
 import scala.concurrent.duration.Duration
@@ -62,17 +62,14 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
   private val id = uuidGen.generateUUID
 
   override def beforeAll: Unit = {
-    val result = for {
-      _ <- dtbase.run(createFilesTableAction)
-      _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", getCurrentDateTimestamp))
-      _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID2, "test2", getCurrentDateTimestamp))
-      _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID3, "test3", getCurrentDateTimestamp))
-      _ <- fileRepo.insertInFilesTable(FileDTO(fileUUID4, "test4", getCurrentDateTimestamp))
-      _ <- dtbase.run(createTasksTableAction)
-      _ <- dtbase.run(createExclusionsTableAction)
-      res <- dtbase.run(createSchedulingsTableAction)
-    } yield res
-    Await.result(result, Duration.Inf)
+    Await.result(dtbase.run(createFilesTableAction), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", getCurrentDateTimestamp)), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID2, "test2", getCurrentDateTimestamp)), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID3, "test3", getCurrentDateTimestamp)), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID4, "test4", getCurrentDateTimestamp)), Duration.Inf)
+    Await.result(dtbase.run(createTasksTableAction), Duration.Inf)
+    Await.result(dtbase.run(createExclusionsTableAction), Duration.Inf)
+    Await.result(dtbase.run(createSchedulingsTableAction), Duration.Inf)
   }
 
   override def afterAll: Unit = {
@@ -86,7 +83,6 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
     Await.result(schedulingRepo.deleteAllSchedulings, Duration.Inf)
     Await.result(exclusionRepo.deleteAllExclusions, Duration.Inf)
     Await.result(taskRepo.deleteAllTasks, Duration.Inf)
-
   }
 
   "GET /" should {

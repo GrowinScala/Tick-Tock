@@ -9,7 +9,7 @@ import play.api.Mode
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 import slick.jdbc.meta.MTable
-import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.H2Profile.api._
 import database.mappings.FileMappings._
 import database.mappings.TaskMappings._
 import database.repositories.file.FileRepository
@@ -31,26 +31,20 @@ class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
   private val uuid4 = UUID.randomUUID().toString
 
   override def beforeAll(): Unit = {
-    for {
-      _ <- dtbase.run(createFilesTableAction)
-      result <- dtbase.run(createTasksTableAction)
-    } yield result
+    Await.result(dtbase.run(createFilesTableAction), Duration.Inf)
   }
 
   override def afterAll(): Unit = {
-    for {
-      _ <- dtbase.run(dropTasksTableAction)
-      result <- dtbase.run(dropFilesTableAction)
-    } yield result
+    Await.result(dtbase.run(dropFilesTableAction), Duration.Inf)
   }
 
   override def afterEach(): Unit = {
-    for(result <- fileRepo.deleteAllFiles) yield result
+    Await.result(fileRepo.deleteAllFiles, Duration.Inf)
   }
 
   "DBFilesTable#create/dropFilesTable" should {
     "create and then drop the Files table on the database." in {
-      for{
+      for {
         _ <- dtbase.run(MTable.getTables).map(item => assert(item.head.name.name.equals("files")))
         _ <- dtbase.run(dropFilesTableAction)
         _ <- dtbase.run(MTable.getTables).map(item => assert(item.isEmpty))
@@ -123,9 +117,9 @@ class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
         fileId1 <- fileRepo.selectFileIdFromFileName("test1")
-        result1 <- fileRepo.existsCorrespondingFileId(fileId1).map(result => assert(result))
+        result1 <- fileRepo.existsCorrespondingFileId(fileId1)
         fileId2 <- fileRepo.selectFileIdFromFileName("test2")
-        result2 <- fileRepo.existsCorrespondingFileId(fileId2).map(result => assert(result))
+        result2 <- fileRepo.existsCorrespondingFileId(fileId2)
         uuidWrong = UUID.randomUUID.toString
         result3 <- fileRepo.existsCorrespondingFileId(uuidWrong)
       } yield {

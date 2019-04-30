@@ -6,7 +6,7 @@ import api.utils.DateUtils._
 import database.mappings.FileMappings._
 import org.scalatest._
 import play.api.inject.guice.GuiceApplicationBuilder
-import slick.jdbc.MySQLProfile.api._
+import slick.jdbc.H2Profile.api._
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, ExecutionContext }
