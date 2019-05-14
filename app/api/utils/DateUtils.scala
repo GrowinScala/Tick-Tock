@@ -2,11 +2,13 @@ package api.utils
 
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
+import java.util.concurrent.TimeUnit
 import java.util.{ Calendar, Date, TimeZone }
 
 import api.services.DayType
 import api.services.DayType.DayType
 
+import scala.concurrent.duration.Duration
 import scala.util.Try
 
 object DateUtils {
@@ -101,6 +103,21 @@ object DateUtils {
     val sdf = new SimpleDateFormat("yyyy-MM-dd")
     val string = sdf.format(date)
     sdf.parse(string)
+  }
+
+  def getDateWithAddedSeconds(seconds: Int): Date = {
+    val cal = Calendar.getInstance()
+    cal.setTime(new Date())
+    cal.add(Calendar.SECOND, seconds)
+    cal.getTime
+  }
+
+  def getDateWithSubtractedSeconds(seconds: Int): Date = {
+    val cal = Calendar.getInstance()
+    cal.setTime(new Date())
+    cal.setLenient(true)
+    cal.set(Calendar.SECOND, cal.get(Calendar.SECOND) - seconds)
+    cal.getTime
   }
 
   /**

@@ -21,7 +21,7 @@ class TaskRepositoryImpl @Inject() (dtbase: Database) extends TaskRepository {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
-  private def taskRowToTaskDTO(maybeTask: Option[TaskRow]): Future[Option[TaskDTO]] = {
+  def taskRowToTaskDTO(maybeTask: Option[TaskRow]): Future[Option[TaskDTO]] = {
     val task = maybeTask.getOrElse(TaskRow("", "", 0))
     dtbase.run(getFileByFileId(task.fileId).map(_.fileName).result.headOption).map { maybeName =>
       val name = maybeName.getOrElse("")
@@ -37,7 +37,7 @@ class TaskRepositoryImpl @Inject() (dtbase: Database) extends TaskRepository {
     }
   }
 
-  private def taskDTOToTaskRow(task: TaskDTO): Future[TaskRow] = {
+  def taskDTOToTaskRow(task: TaskDTO): Future[TaskRow] = {
     dtbase.run(getFileByFileName(task.fileName).result.headOption)
       .map(maybeRow => maybeRow.getOrElse(FileRow("", "", new Date())).fileId)
       .map { fileId =>
@@ -126,8 +126,8 @@ class TaskRepositoryImpl @Inject() (dtbase: Database) extends TaskRepository {
       .map(_.currentOccurrences))
   }
 
-  def decrementCurrentOccurrencesByTaskId(id: String): Future[Unit] = {
-    selectCurrentOccurrencesByTaskId(id).map {
+  def decrementCurrentOccurrencesByTaskId(id: String): Future[Int] = {
+    selectCurrentOccurrencesByTaskId(id).flatMap {
       elem => dtbase.run(getTaskByTaskId(id).map(_.currentOccurrences).update(Some(elem.get - 1)))
     }
   }

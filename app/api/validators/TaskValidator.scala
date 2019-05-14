@@ -369,7 +369,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
           case Some(date) =>
             val parsedDate = parseDate(date)
             if (parsedDate.isDefined) iter(list.tail, parsedDate :: toReturn)
-            else List()
+            else Nil
           case None => iter(list.tail, None :: toReturn)
         }
       } else toReturn
@@ -688,7 +688,8 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
         if (scheduling.schedulingDate.isDefined) {
           if (scheduling.schedulingDate.get.after(startCalendar.getTime)) {
             if (endDate.isDefined)
-              if (endDate.get.after(scheduling.schedulingDate.get)) iter(list.tail) else false
+              if (endDate.get.after(scheduling.schedulingDate.get)) iter(list.tail)
+              else false
             else iter(list.tail)
           } else false
         } else iter(list.tail)

@@ -3,10 +3,20 @@ package database.repositories.task
 import api.dtos.TaskDTO
 import api.services.{ PeriodType, SchedulingType }
 import api.utils.DateUtils._
+import database.mappings.TaskMappings
+import database.mappings.TaskMappings.TaskRow
 
 import scala.concurrent.Future
 
 class FakeTaskRepository extends TaskRepository {
+
+  def taskRowToTaskDTO(maybeTask: Option[TaskRow]): Future[Option[TaskDTO]] = {
+    Future.successful(Some(TaskDTO("asd1", "dsa1", SchedulingType.RunOnce)))
+  }
+
+  def taskDTOToTaskRow(task: TaskDTO): Future[TaskRow] = {
+    Future.successful(TaskRow("asd1", "dsa1", 1))
+  }
 
   def selectAllTasks: Future[Seq[TaskDTO]] = {
     Future.successful(Seq(
@@ -62,8 +72,8 @@ class FakeTaskRepository extends TaskRepository {
    *
    * @param id - the identifier of the task we want to select.
    */
-  def decrementCurrentOccurrencesByTaskId(id: String): Future[Unit] = {
-    Future.successful((): Unit)
+  def decrementCurrentOccurrencesByTaskId(id: String): Future[Int] = {
+    Future.successful(1)
   }
 
   /**

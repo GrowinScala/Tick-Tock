@@ -22,7 +22,7 @@ var cancellableMap: scala.collection.mutable.Map[String, Cancellable] = scala.co
 cancellableMap += ("1" -> new ExecutionJob("1", "fileId", SchedulingType.RunOnce, Some(stringToDateFormat("2030-01-01 12:00:00" , "yyyy-MM-dd HH:mm:ss"))).start)
 cancellableMap.head */
 
-stringToDateFormat("2020-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")
-stringToDateFormat("2020-01-02 00:00:00", "yyyy-MM-dd HH:mm:ss")
-stringToDateFormat("2020-01-03 00:00:00", "yyyy-MM-dd HH:mm:ss")
-stringToDateFormat("2020-01-04 00:00:00", "yyyy-MM-dd HH:mm:ss")
+import api.utils.DateUtils._
+val futureDate = getDateWithAddedSeconds(3)
+
+println(futureDate)

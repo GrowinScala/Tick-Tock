@@ -1,10 +1,15 @@
 package database.repositories.task
 
 import api.dtos.TaskDTO
+import database.mappings.TaskMappings.TaskRow
 
 import scala.concurrent.Future
 
 trait TaskRepository {
+
+  def taskRowToTaskDTO(maybeTask: Option[TaskRow]): Future[Option[TaskDTO]]
+
+  def taskDTOToTaskRow(task: TaskDTO): Future[TaskRow]
 
   /**
    * Selects all rows from the tasks table on the database.
@@ -51,7 +56,7 @@ trait TaskRepository {
    *
    * @param id - the identifier of the task we want to select.
    */
-  def decrementCurrentOccurrencesByTaskId(id: String): Future[Unit]
+  def decrementCurrentOccurrencesByTaskId(id: String): Future[Int]
 
   /**
    * Deletes all tasks from the tasks table on the database.
