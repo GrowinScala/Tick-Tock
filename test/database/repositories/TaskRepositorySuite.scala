@@ -99,8 +99,39 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
     }
   }
 
+  "DBTasksTable#taskRowToTaskDTO" should {
+    "receive a taskRow and successfully transform it into its corresponding taskDTO." in {
+      taskRepo.taskRowToTaskDTO(None).map {
+        _ mustBe Some(TaskDTO("", "", SchedulingType.RunOnce, None, None, None, None, None, None, None, None, None))
+      }
+
+      val startDate1 = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
+      val endDate1 = stringToDateFormat("2040-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
+      taskRepo.taskRowToTaskDTO(Some(TaskRow("asd1", "dsa1", 3, Some(3), Some(startDate1), Some(endDate1)))).map {
+        _.getOrElse(None) mustBe TaskDTO("asd1", "", SchedulingType.Periodic, Some(startDate1), Some(PeriodType.Yearly), Some(3), Some(endDate1))
+      }
+
+      val startDate2 = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
+      val endDate2 = stringToDateFormat("2040-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
+      taskRepo.taskRowToTaskDTO(Some(TaskRow("asd2", "dsa2", 6, Some(1), Some(startDate2), Some(endDate2)))).map {
+        _.getOrElse(None) mustBe TaskDTO("asd2", "", SchedulingType.Periodic, Some(startDate2), Some(PeriodType.Yearly), Some(1), Some(endDate2))
+      }
+    }
+  }
+
+  "DBTasksTable#taskDTOToTaskRow" should {
+    "receive a taskDTO and successfully transform it into its corresponding taskRow." in {
+      val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
+      val endDate = stringToDateFormat("2040-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
+      taskRepo.taskDTOToTaskRow(TaskDTO("asd1", "dsa1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Daily), Some(1), Some(endDate))).map {
+        _ mustBe TaskRow("asd1", "", 3, Some(1), Some(startDate), Some(endDate))
+      }
+
+    }
+  }
+
   "DBTasksTable#selectTaskByTaskId" should {
-    "insert several rows and select a specific task by giving its taskId" in {
+    "insert several rows and select a specific task by giving its taskId." in {
       for {
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
@@ -111,7 +142,7 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
   }
 
   "DBTasksTable#selectFileIdByTaskId" should {
-    "inserts several rows and select a specific fileId from a task by giving its taskId" in {
+    "inserts several rows and select a specific fileId from a task by giving its taskId." in {
       for {
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
@@ -122,7 +153,7 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
   }
 
   "DBTasksTable#selectTotalOccurrencesByTaskId" should {
-    "inserts several rows and select the totalOccurrences from a task by giving its taskId" in {
+    "inserts several rows and select the totalOccurrences from a task by giving its taskId." in {
       val date = stringToDateFormat("01-07-2019 00:00:00", "dd-MM-yyyy HH:mm:ss")
       for {
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Minutely), Some(2), None, Some(5)))

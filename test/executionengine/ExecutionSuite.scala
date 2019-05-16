@@ -122,6 +122,7 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
     }
   }
 
+  /*
   "ExecutionJob" should {
     "run single run task immediately." in {
       val fileId = "asd1"
@@ -198,5 +199,6 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
       assert(stream.toString.contains("[" + getDateWithSubtractedSeconds(70) + "] Ran file " + fileId + " scheduled to run at " + dateToStringFormat(getDateWithSubtractedSeconds(70), "yyyy-MM-dd HH:mm:ss") + "."))
     }
   }
+   */
 
 }

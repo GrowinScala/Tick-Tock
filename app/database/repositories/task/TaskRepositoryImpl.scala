@@ -6,6 +6,7 @@ import api.dtos.TaskDTO
 import api.services.{ PeriodType, SchedulingType }
 import database.mappings.FileMappings._
 import database.mappings.TaskMappings._
+import database.repositories.file.FileRepository
 import javax.inject.Inject
 import slick.jdbc.MySQLProfile.api._
 

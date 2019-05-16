@@ -99,13 +99,24 @@ class SchedulingRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll wit
 
   "DBSchedulingsTable#selectSchedulingsBySchedulingId" should {
     "insert several rows and select a specific scheduling by giving its schedulingId" in {
-      val result = for {
+      for {
         _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID1, taskUUID3, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))
         _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID2, taskUUID1, None, Some(10), None, Some(DayType.Weekday), None, Some(2030)))
         _ <- schedulingRepo.selectScheduling(schedulingUUID2).map(dto => assert(dto.get.day.contains(10)))
         task <- schedulingRepo.selectScheduling(schedulingUUID1)
-      } yield task
-      result.map(dto => assert(dto.get.taskId == taskUUID3))
+      } yield task.get.taskId mustBe taskUUID3
+    }
+  }
+
+  "DBSchedulingTable#selectSchedulingsByTaskId" should {
+    "insert several rows and select a specific schedulingg by giving it taskId" in {
+      for {
+        _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID1, taskUUID3, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))
+        _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID2, taskUUID1, None, Some(10), None, Some(DayType.Weekday), None, Some(2030)))
+        _ <- schedulingRepo.selectSchedulingsByTaskId(taskUUID3).map(elem => assert(elem.get.size == 1 && elem.get.head.schedulingId == schedulingUUID1))
+        schedulingList <- schedulingRepo.selectSchedulingsByTaskId(taskUUID1)
+      } yield schedulingList.get.head.dayType mustBe DayType.Weekday
+
     }
   }
 

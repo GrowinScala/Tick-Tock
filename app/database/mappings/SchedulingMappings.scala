@@ -54,30 +54,6 @@ object SchedulingMappings {
   private def dateToTimestamp(date: Date): Timestamp = new Timestamp(date.getTime)
   private def timestampToDate(timestamp: Timestamp): Date = new Date(timestamp.getTime)
 
-  implicit val dayTypeColumnType: BaseColumnType[DayType] = MappedColumnType.base[DayType, Boolean](dayTypeToBoolean, booleanToDayType)
-  private def dayTypeToBoolean(dayType: DayType): Boolean = dayType == DayType.Weekend
-  private def booleanToDayType(boolean: Boolean): DayType = if (boolean) DayType.Weekend else DayType.Weekday
-
-  implicit val criteriaColumnType: BaseColumnType[Criteria] = MappedColumnType.base[Criteria, Int](criteriaToInt, intToCriteria)
-  private def criteriaToInt(criteria: Criteria): Int = {
-    criteria match {
-      case Criteria.First => 1
-      case Criteria.Second => 2
-      case Criteria.Third => 3
-      case Criteria.Fourth => 4
-      case Criteria.Last => 5
-    }
-  }
-  private def intToCriteria(int: Int): Criteria = {
-    int match {
-      case 1 => Criteria.First
-      case 2 => Criteria.Second
-      case 3 => Criteria.Third
-      case 4 => Criteria.Fourth
-      case 5 => Criteria.Last
-    }
-  }
-
   //---------------------------------------------------------
   //# QUERY EXTENSIONS
   //---------------------------------------------------------

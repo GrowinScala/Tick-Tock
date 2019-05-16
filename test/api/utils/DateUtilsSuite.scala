@@ -39,43 +39,43 @@ class DateUtilsSuite extends AsyncWordSpec with MustMatchers {
 
   "DateUtils#dateToDayOfWeekInt" should {
 
-    "covert a date to its corresponding day of the week in integer form. (Monday => 1)" in {
+    "convert a date to its corresponding day of the week in integer form. (Monday => 1)" in {
       calendar.set(2019, 3 - 1, 3, 0, 0, 0)
       val date = calendar.getTime
       dateToDayOfWeekInt(date) mustBe 1
     }
 
-    "covert a date to its corresponding day of the week in integer form. (Tuesday => 2)" in {
+    "convert a date to its corresponding day of the week in integer form. (Tuesday => 2)" in {
       calendar.set(2019, 3 - 1, 4, 0, 0, 0)
       val date = calendar.getTime
       dateToDayOfWeekInt(date) mustBe 2
     }
 
-    "covert a date to its corresponding day of the week in integer form. (Wednesday => 3)" in {
+    "convert a date to its corresponding day of the week in integer form. (Wednesday => 3)" in {
       calendar.set(2019, 3 - 1, 5, 0, 0, 0)
       val date = calendar.getTime
       dateToDayOfWeekInt(date) mustBe 3
     }
 
-    "covert a date to its corresponding day of the week in integer form. (Thursday => 4)" in {
+    "convert a date to its corresponding day of the week in integer form. (Thursday => 4)" in {
       calendar.set(2019, 3 - 1, 6, 0, 0, 0)
       val date = calendar.getTime
       dateToDayOfWeekInt(date) mustBe 4
     }
 
-    "covert a date to its corresponding day of the week in integer form. (Friday => 5)" in {
+    "convert a date to its corresponding day of the week in integer form. (Friday => 5)" in {
       calendar.set(2019, 3 - 1, 7, 0, 0, 0)
       val date = calendar.getTime
       dateToDayOfWeekInt(date) mustBe 5
     }
 
-    "covert a date to its corresponding day of the week in integer form. (Saturday => 6)" in {
+    "convert a date to its corresponding day of the week in integer form. (Saturday => 6)" in {
       calendar.set(2019, 3 - 1, 8, 0, 0, 0)
       val date = calendar.getTime
       dateToDayOfWeekInt(date) mustBe 6
     }
 
-    "covert a date to its corresponding day of the week in integer form. (Sunday => 7)" in {
+    "convert a date to its corresponding day of the week in integer form. (Sunday => 7)" in {
       calendar.set(2019, 3 - 1, 9, 0, 0, 0)
       val date = calendar.getTime
       dateToDayOfWeekInt(date) mustBe 7

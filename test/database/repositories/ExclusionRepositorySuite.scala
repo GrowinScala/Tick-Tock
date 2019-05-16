@@ -96,7 +96,7 @@ class ExclusionRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with
     }
   }
 
-  "DBExclusionsTable#selectExclusionByExclusionId" should {
+  "DBExclusionsTable#selectExclusion" should {
     "insert several rows and select a specific exclusion by giving its exclusionId" in {
       for {
         _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID1, taskUUID3, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))
@@ -104,6 +104,18 @@ class ExclusionRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with
         _ <- exclusionRepo.selectExclusion(exclusionUUID2).map(dto => assert(dto.get.day.contains(10)))
         exclusion <- exclusionRepo.selectExclusion(exclusionUUID1)
       } yield exclusion.get.taskId mustBe taskUUID3
+    }
+  }
+
+  "DBExclusionsTable#selectExclusionByTaskId" should {
+    "insert several rows and select a specific exclusion by giving its taskId" in {
+      for {
+        _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID1, taskUUID3, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))
+        _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID2, taskUUID1, None, Some(10), None, Some(DayType.Weekday), None, Some(2030)))
+        _ <- exclusionRepo.selectExclusionsByTaskId(taskUUID3).map(elem => assert(elem.get.size == 1 && elem.get.head.exclusionId == exclusionUUID1))
+        _ <- exclusionRepo.selectExclusionsByTaskId(taskUUID2).map(elem => assert(elem.get.isEmpty))
+        exclusionList <- exclusionRepo.selectExclusionsByTaskId(taskUUID1)
+      } yield exclusionList.get.head.dayType mustBe DayType.Weekday
     }
   }
 

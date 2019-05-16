@@ -42,12 +42,6 @@ object DateUtils {
     new Timestamp(getCurrentDate.getTime)
   }
 
-  def getDayOfWeekFromDate(date: Date): Int = { // 1- Sun, 2- Mon, 3- Tue, 4- Wed, 5- Thu, 6- Fri, 7- Sat
-    val calendar = Calendar.getInstance
-    calendar.setTime(date)
-    calendar.get(Calendar.DAY_OF_WEEK)
-  }
-
   /**
    * Converts a String to a Date by providing the Date and a String specifying the date format.
    *
@@ -186,16 +180,6 @@ object DateUtils {
       }
     }
     iter(0)
-  }
-
-  /**
-   * Method that returns the current time in a HH:mm:ss.SSS string format.
-   * @return String of the current date.
-   */
-  def getSpecificCurrentTime: String = {
-    val now = new Date()
-    val sdf = new SimpleDateFormat("HH:mm:ss.SSS")
-    sdf.format(now)
   }
 
 }

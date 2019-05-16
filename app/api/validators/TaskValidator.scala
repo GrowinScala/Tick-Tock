@@ -701,29 +701,6 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
     }
   }
 
-  /*def areValidExclusionDayValues(exclusions: Option[List[ExclusionDTO]]): Boolean = {
-    def iter(list: List[ExclusionDTO]): Boolean = {
-      if (list.nonEmpty) {
-        val exclusion = list.head
-        if (exclusion.day.isDefined) {
-          if (exclusion.day.get >= 1 && exclusion.day.get <= 31) {
-            if (exclusion.month.isDefined) {
-              if (exclusion.year.isDefined) if (isPossibleDate(exclusion.day.get, exclusion.month.get, exclusion.year.get)) iter(list.tail) else false
-              else if (isPossibleDateWithoutYear(exclusion.day.get, exclusion.month.get)) iter(list.tail) else false
-            } else {
-              if (exclusion.year.isDefined) if (isPossibleDateWithoutMonth(exclusion.day.get, exclusion.year.get)) iter(list.tail) else false
-              else iter(list.tail)
-            }
-          } else false
-        } else iter(list.tail)
-      } else true
-    }
-    exclusions match {
-      case Some(list) => iter(list)
-      case None => true
-    }
-  }*/
-
   private def areValidSchedulingDayValues(schedulings: Option[List[SchedulingDTO]]): Boolean = {
     def iter(list: List[SchedulingDTO]): Boolean = {
       if (list.nonEmpty) {

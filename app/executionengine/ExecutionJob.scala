@@ -143,7 +143,7 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
 
   def delay(): Unit = executionManager.delayFile(ExecutionJob.this)
 
-  def printDelayMessage(): Unit = println(getSpecificCurrentTime + " Received delayed task with storageName: " + fileId)
+  def printDelayMessage(): Unit = println(getCurrentDate + " Received delayed task with storageName: " + fileId)
 
   def cancel(): Unit = status = ExecutionStatus.Canceled; timers.cancelAll()
 

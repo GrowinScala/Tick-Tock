@@ -21,10 +21,6 @@ class FileController @Inject() (cc: ControllerComponents)(implicit exec: Executi
 
   private val conf = ConfigFactory.load()
 
-  def index: Action[AnyContent] = Action {
-    Ok("It works!")
-  }
-
   def upload: Action[AnyContent] = Action.async { request =>
     request.body.asMultipartFormData.get.file("file").map {
       file =>
