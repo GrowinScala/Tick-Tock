@@ -134,8 +134,13 @@ class TaskServiceSuite extends AsyncWordSpec with MustMatchers {
   }
 
   "TaskService#calculateExclusions" should {
-    "receive a valid TaskDTO with an exclusion and return a Queue with the corresponding Date(s) for that exclusion. (with exclusionDate)" in {
+    "receive a valid TaskDTO with an exclusion and return a Queue with the corresponding Date(s) for that exclusion. (with exclusionDate and no startDate)" in {
       val dto = TaskDTO("asd", "asd", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2040-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, Some(List(ExclusionDTO("asd", "asd", Some(stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))))
+      taskService.calculateExclusions(dto) mustBe Some(scala.collection.mutable.Queue(stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
+    }
+
+    "receive a valid TaskDTO with an exclusion and return a Queue with the correpsonding Date(s) for that exclusion. (with exclusionDate and startDate)" in {
+      val dto = TaskDTO("asd", "asd", SchedulingType.Periodic, None, Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2040-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, Some(List(ExclusionDTO("asd", "asd", Some(stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))))
       taskService.calculateExclusions(dto) mustBe Some(scala.collection.mutable.Queue(stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
     }
 
@@ -271,6 +276,11 @@ class TaskServiceSuite extends AsyncWordSpec with MustMatchers {
 
     "receive a valid TaskDTO with an exclusion and return a Queue with the corresponding Date(s) for that exclusion. (with day, dayType, year)" in {
       val dto = TaskDTO("asd", "asd", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2032-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, Some(List(ExclusionDTO("asd", "asd", None, Some(22), None, Some(DayType.Weekday), None, Some(2033)))))
+      taskService.calculateExclusions(dto) mustBe Some(scala.collection.mutable.Queue())
+    } //new
+
+    "receive a valid TaskDTo with an exclusion and return a Queue with the corresponding Date(s) for that exclusion. (with day, month, year)" in {
+      val dto = TaskDTO("asd", "asd", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2032-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, Some(List(ExclusionDTO("asd", "asd", None, Some(29), None, None, Some(10), Some(2031)))))
       taskService.calculateExclusions(dto) mustBe Some(scala.collection.mutable.Queue())
     } //new
 
@@ -415,12 +425,12 @@ class TaskServiceSuite extends AsyncWordSpec with MustMatchers {
     } //new
 
     "receive a valid TaskDTO with an exclusion and return a Queue with the corresponding Date(s) for that exclusion. (with day, dayType, year and criteria)" in {
-      val dto = TaskDTO("asd", "asd", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2031-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, Some(List(ExclusionDTO("asd", "asd", None, Some(5), None, Some(DayType.Weekday), None, Some(2034), Some(Criteria.Third)))))
+      val dto = TaskDTO("asd", "asd", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2031-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, Some(List(ExclusionDTO("asd", "asd", None, Some(5), None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First)))))
       taskService.calculateExclusions(dto) mustBe Some(scala.collection.mutable.Queue())
     } //new
 
     "receive a valid TaskDTO with an exclusion and return a Queue with the corresponding Date(s) for that exclusion. (with day, month, year and criteria)" in {
-      val dto = TaskDTO("asd", "asd", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2031-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, Some(List(ExclusionDTO("asd", "asd", None, Some(19), None, None, Some(7), Some(2034), Some(Criteria.Fourth)))))
+      val dto = TaskDTO("asd", "asd", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2031-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, Some(List(ExclusionDTO("asd", "asd", None, Some(19), None, None, Some(7), Some(2030), Some(Criteria.First)))))
       taskService.calculateExclusions(dto) mustBe Some(scala.collection.mutable.Queue())
     } //new
 
@@ -450,12 +460,12 @@ class TaskServiceSuite extends AsyncWordSpec with MustMatchers {
     }
 
     "receive a valid TaskDTO with an exclusion and return a Queue with the corresponding Date(s) for that exclusion. (with day, dayOfWeek, month, year and criteria)" in {
-      val dto = TaskDTO("asd", "asd", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2031-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, Some(List(ExclusionDTO("asd", "asd", None, Some(11), Some(2), None, Some(2), Some(2030), Some(Criteria.Third)))))
+      val dto = TaskDTO("asd", "asd", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2031-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, Some(List(ExclusionDTO("asd", "asd", None, Some(11), Some(2), None, Some(2), Some(2030), Some(Criteria.First)))))
       taskService.calculateExclusions(dto) mustBe Some(scala.collection.mutable.Queue())
     }
 
     "receive a valid TaskDTO with an exclusion and return a Queue with the corresponding Date(s) for that exclusion. (with day, dayType, month, year and criteria)" in {
-      val dto = TaskDTO("asd", "asd", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2031-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, Some(List(ExclusionDTO("asd", "asd", None, Some(9), None, Some(DayType.Weekday), Some(8), Some(2030), Some(Criteria.Fourth)))))
+      val dto = TaskDTO("asd", "asd", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2031-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, Some(List(ExclusionDTO("asd", "asd", None, Some(9), None, Some(DayType.Weekday), Some(8), Some(2030), Some(Criteria.First)))))
       taskService.calculateExclusions(dto) mustBe Some(scala.collection.mutable.Queue())
     }
 
@@ -470,7 +480,7 @@ class TaskServiceSuite extends AsyncWordSpec with MustMatchers {
     }
 
     "receive a valid TaskDTO with several exclusions and return a Queue with the corresponding Dates for those exclusions." in {
-      val dto = TaskDTO("asd", "asd", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2032-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, Some(List(ExclusionDTO("asd1", "asd", None, Some(30), None, Some(DayType.Weekday), None, Some(2030)), ExclusionDTO("asd2", "asd", Some(stringToDateFormat("2030-05-02 00:00:00", "yyyy-MM-dd HH:mm:ss"))), ExclusionDTO("asd3", "asd", None, None, Some(6), None, None, Some(2030), Some(Criteria.Third)))))
+      val dto = TaskDTO("asd", "asd", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2032-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, Some(List(ExclusionDTO("asd1", "asd", None, Some(30), None, Some(DayType.Weekday), None, Some(2030)), ExclusionDTO("asd2", "asd", Some(stringToDateFormat("2031-05-02 00:00:00", "yyyy-MM-dd HH:mm:ss"))), ExclusionDTO("asd3", "asd", None, None, Some(6), None, None, Some(2030), Some(Criteria.First)))))
       taskService.calculateExclusions(dto) mustBe Some(scala.collection.mutable.Queue(stringToDateFormat("2030-01-18 00:00:00", "yyyy-MM-dd HH:mm:ss"), stringToDateFormat("2030-01-30 00:00:00", "yyyy-MM-dd HH:mm:ss"), stringToDateFormat("2030-04-30 00:00:00", "yyyy-MM-dd HH:mm:ss"), stringToDateFormat("2030-05-02 00:00:00", "yyyy-MM-dd HH:mm:ss"), stringToDateFormat("2030-05-30 00:00:00", "yyyy-MM-dd HH:mm:ss"), stringToDateFormat("2030-07-30 00:00:00", "yyyy-MM-dd HH:mm:ss"), stringToDateFormat("2030-08-30 00:00:00", "yyyy-MM-dd HH:mm:ss"), stringToDateFormat("2030-09-30 00:00:00", "yyyy-MM-dd HH:mm:ss"), stringToDateFormat("2030-10-30 00:00:00", "yyyy-MM-dd HH:mm:ss"), stringToDateFormat("2030-12-30 00:00:00", "yyyy-MM-dd HH:mm:ss")))
     }
 
@@ -478,7 +488,12 @@ class TaskServiceSuite extends AsyncWordSpec with MustMatchers {
 
   "TaskService#calculateSchedulings" should {
 
-    "receive a valid TaskDTO with a scheduling and return a Queue with the corresponding Date(s) for that scheduling. (with schedulingDate)" in {
+    "receive a valid TaskDTO with a scheduling and return a Queue with the corresponding Date(s) for that scheduling. (with schedulingDate and no startTime)" in {
+      val dto = TaskDTO("asd", "asd", SchedulingType.Personalized, None, Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2040-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, Some(List(SchedulingDTO("asd", "asd", Some(stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))))
+      taskService.calculateSchedulings(dto) mustBe Some(scala.collection.mutable.Queue(stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
+    }
+
+    "receive a valid TaskDTO with a scheduling and return a Queue with the corresponding Date(s) for that scheduling. (with schedulingDate and startTime)" in {
       val dto = TaskDTO("asd", "asd", SchedulingType.Personalized, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2040-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, Some(List(SchedulingDTO("asd", "asd", Some(stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))))
       taskService.calculateSchedulings(dto) mustBe Some(scala.collection.mutable.Queue(stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
     }
@@ -764,7 +779,7 @@ class TaskServiceSuite extends AsyncWordSpec with MustMatchers {
     } //new
 
     "receive a valid TaskDTO with a scheduling and return a Queue with the corresponding Date(s) for that scheduling. (with day, month, year and criteria)" in {
-      val dto = TaskDTO("asd", "asd", SchedulingType.Personalized, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2031-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, Some(List(SchedulingDTO("asd", "asd", None, Some(12), Some(5), None, Some(1), Some(2030), Some(Criteria.Fourth)))))
+      val dto = TaskDTO("asd", "asd", SchedulingType.Personalized, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2031-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, Some(List(SchedulingDTO("asd", "asd", None, Some(12), None, None, Some(1), Some(2030), Some(Criteria.First)))))
       taskService.calculateSchedulings(dto) mustBe Some(scala.collection.mutable.Queue())
     } //new
 
@@ -794,12 +809,12 @@ class TaskServiceSuite extends AsyncWordSpec with MustMatchers {
     }
 
     "receive a valid TaskDTO with a scheduling and return a Queue with the corresponding Date(s) for that scheduling. (with day, dayOfWeek, month, year and criteria)" in {
-      val dto = TaskDTO("asd", "asd", SchedulingType.Personalized, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2031-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, Some(List(SchedulingDTO("asd", "asd", None, Some(11), Some(2), None, Some(2), Some(2030), Some(Criteria.Third)))))
+      val dto = TaskDTO("asd", "asd", SchedulingType.Personalized, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2031-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, Some(List(SchedulingDTO("asd", "asd", None, Some(11), Some(2), None, Some(2), Some(2030), Some(Criteria.First)))))
       taskService.calculateSchedulings(dto) mustBe Some(scala.collection.mutable.Queue())
     }
 
     "receive a valid TaskDTO with a scheduling and return a Queue with the corresponding Date(s) for that scheduling. (with day, dayType, month, year and criteria)" in {
-      val dto = TaskDTO("asd", "asd", SchedulingType.Personalized, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2031-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, Some(List(SchedulingDTO("asd", "asd", None, Some(9), None, Some(DayType.Weekday), Some(8), Some(2030), Some(Criteria.Fourth)))))
+      val dto = TaskDTO("asd", "asd", SchedulingType.Personalized, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2031-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, Some(List(SchedulingDTO("asd", "asd", None, Some(9), None, Some(DayType.Weekday), Some(8), Some(2030), Some(Criteria.First)))))
       taskService.calculateSchedulings(dto) mustBe Some(scala.collection.mutable.Queue())
     }
 
@@ -809,7 +824,7 @@ class TaskServiceSuite extends AsyncWordSpec with MustMatchers {
     }
 
     "receive a valid TaskDTO with a scheduling and return a Queue with the corresponding Date(s) for that scheduling. (with day, dayOfWeek, dayType, month, year and criteria)" in {
-      val dto = TaskDTO("asd", "asd", SchedulingType.Personalized, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2031-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, Some(List(SchedulingDTO("asd", "asd", None, Some(13), Some(2), Some(DayType.Weekday), Some(4), Some(2030), Some(Criteria.Second)))))
+      val dto = TaskDTO("asd", "asd", SchedulingType.Personalized, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2031-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, None, Some(List(SchedulingDTO("asd", "asd", None, Some(13), Some(2), Some(DayType.Weekday), Some(4), Some(2030), Some(Criteria.First)))))
       taskService.calculateSchedulings(dto) mustBe Some(scala.collection.mutable.Queue())
     }
 

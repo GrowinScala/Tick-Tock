@@ -54,6 +54,21 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
       val bodyText = contentAsString(result)
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/asd1"
     }
+
+    "be invalid in" in {
+      val fakeRequest = FakeRequest(POST, "/task")
+        .withHeaders(HOST -> LOCALHOST, CONTENT_TYPE -> "application/json")
+        .withBody(Json.parse("""
+          {
+            "unknownKey":"unknownValue"
+          }
+        """))
+      val taskController = new TaskController(cc)
+      val result = taskController.schedule.apply(fakeRequest)
+      val bodyText = contentAsString(result)
+      bodyText mustBe "{\"status\":\"Error:\",\"message\":{\"obj.taskType\":[{\"msg\":[\"error.path.missing\"],\"args\":[]}],\"obj.fileName\":[{\"msg\":[\"error.path.missing\"],\"args\":[]}]}}"
+
+    }
   }
 
   "TaskController#getSchedule (GET /task)" should {
@@ -98,6 +113,21 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
       val bodyText = contentAsString(result)
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
+
+    "be invalid in" in {
+      val id = "asd1"
+      val fakeRequest = FakeRequest(PATCH, s"/task/" + id)
+        .withHeaders(HOST -> LOCALHOST, CONTENT_TYPE -> "application/json")
+        .withBody(Json.parse("""
+          {
+            "unknownKey":"unknownValue"
+          }
+        """))
+      val taskController = new TaskController(cc)
+      val result = taskController.updateTask(id).apply(fakeRequest)
+      val bodyText = contentAsString(result)
+      bodyText mustBe ""
+    }
   }
 
   "TaskController#deleteTask (DELETE /task/:id)" should {
@@ -127,6 +157,21 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
       val result = taskController.replaceTask(id).apply(fakeRequest)
       val bodyText = contentAsString(result)
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+    }
+
+    "be invalid in" in {
+      val id = "asd1"
+      val fakeRequest = FakeRequest(PUT, s"/task/" + id)
+        .withHeaders(HOST -> LOCALHOST)
+        .withBody(Json.parse("""
+          {
+            "unknownKey":"unknownValue"
+          }
+        """))
+      val taskController = new TaskController(cc)
+      val result = taskController.replaceTask(id).apply(fakeRequest)
+      val bodyText = contentAsString(result)
+      bodyText mustBe "{\"status\":\"Error:\",\"message\":{\"obj.taskType\":[{\"msg\":[\"error.path.missing\"],\"args\":[]}],\"obj.fileName\":[{\"msg\":[\"error.path.missing\"],\"args\":[]}]}}"
     }
   }
 }
