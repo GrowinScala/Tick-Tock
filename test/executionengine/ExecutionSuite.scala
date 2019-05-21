@@ -1,7 +1,7 @@
 package executionengine
 
 import java.io.ByteArrayOutputStream
-import java.util.Calendar
+import java.util.{ Calendar, Date }
 
 import akka.actor.{ ActorSystem, Props }
 import akka.testkit.{ ImplicitSender, TestKit }
@@ -29,7 +29,7 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
   "ExecutionActor#Start" should {
     "start a task with date that needs to be delayed." in {
       val fileId = "test1"
-      val startDate = getDateWithAddedSeconds(30000000)
+      val startDate = getDateWithAddedSeconds(new Date(), 30000000)
       val task = TaskDTO("asd1", fileId, SchedulingType.RunOnce, Some(startDate))
       val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, None, None, None, None, None, fileRepo, taskRepo, executionManager))
       actorRef ! Start
@@ -40,7 +40,7 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
 
     "start a runOnce task and receive the corresponding message." in {
       val fileId = "test1"
-      val startDate = getDateWithAddedSeconds(30)
+      val startDate = getDateWithAddedSeconds(new Date(), 30)
       val task = TaskDTO("asd1", fileId, SchedulingType.RunOnce, Some(startDate))
       val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, None, None, None, None, None, fileRepo, taskRepo, executionManager))
       actorRef ! Start
@@ -51,7 +51,7 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
 
     "start a periodic task and receive the corresponding message." in {
       val fileId = "test1"
-      val startDate = getDateWithAddedSeconds(30)
+      val startDate = getDateWithAddedSeconds(new Date(), 30)
       val task = TaskDTO("asd1", fileId, SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(1), Some(stringToDateFormat("2040-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")))
       val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, Some(Duration.ofHours(1)), task.endDateAndTime, None, None, None, fileRepo, taskRepo, executionManager))
       actorRef ! Start
@@ -62,9 +62,9 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
 
     "start a personalized task and receive the corresponding message." in {
       val fileId = "test1"
-      val startDate = getDateWithAddedSeconds(30)
+      val startDate = getDateWithAddedSeconds(new Date(), 30)
       val task = TaskDTO("asd1", fileId, SchedulingType.Personalized, Some(startDate), Some(PeriodType.Hourly), Some(1), Some(stringToDateFormat("2040-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), None) // needed schedulings also but not needed for the test (we can give the date queue directly to the actor)
-      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, None, None, None, Some(mutable.Queue(getDateWithAddedSeconds(60))), None, fileRepo, taskRepo, executionManager))
+      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, None, None, None, Some(mutable.Queue(getDateWithAddedSeconds(new Date(), 60))), None, fileRepo, taskRepo, executionManager))
       actorRef ! Start
       actorRef ! GetStatus
       expectMsg(ExecutionStatus.PersonalizedWaiting)
@@ -100,7 +100,7 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
       val fileId = "test1"
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       val task = TaskDTO("asd1", fileId, SchedulingType.Personalized, Some(startDate), Some(PeriodType.Hourly), Some(1), Some(stringToDateFormat("2040-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), None) // needed schedulings also but not needed for the test (we can give the date queue directly to the actor)
-      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, None, None, None, Some(mutable.Queue(getDateWithAddedSeconds(60))), None, fileRepo, taskRepo, executionManager))
+      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, None, None, None, Some(mutable.Queue(getDateWithAddedSeconds(new Date(), 60))), None, fileRepo, taskRepo, executionManager))
       actorRef ! ExecutePersonalized
       actorRef ! GetStatus
       expectMsg(ExecutionStatus.PersonalizedRunning)
@@ -111,7 +111,7 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
   "ExecutionActor#Cancel" should {
     "cancel an ongoing task and receive the expected message." in {
       val fileId = "test1"
-      val startDate = getDateWithAddedSeconds(30)
+      val startDate = getDateWithAddedSeconds(new Date(), 30)
       val task = TaskDTO("asd1", fileId, SchedulingType.RunOnce, Some(startDate))
       val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, None, None, None, None, None, fileRepo, taskRepo, executionManager))
       actorRef ! Start

@@ -153,8 +153,9 @@ class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
         _ <- fileRepo.selectFileIdFromFileName("test1").map(result => assert(result == uuid1))
         _ <- fileRepo.selectFileIdFromFileName("test2").map(result => assert(result == uuid2))
-        result <- fileRepo.selectFileIdFromFileName("test3")
-      } yield result mustBe uuid3
+        _ <- fileRepo.selectFileIdFromFileName("test3").map(result => assert(result == uuid3))
+        result <- fileRepo.selectFileIdFromFileName("test4")
+      } yield result mustBe ""
     }
   }
 
@@ -166,8 +167,9 @@ class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
         _ <- fileRepo.selectFileNameFromFileId(uuid1).map(result => assert(result.equals("test1")))
         _ <- fileRepo.selectFileNameFromFileId(uuid2).map(result => assert(result.equals("test2")))
-        result <- fileRepo.selectFileNameFromFileId(uuid3)
-      } yield result mustBe "test3"
+        _ <- fileRepo.selectFileNameFromFileId(uuid3).map(result => assert(result.equals("test3")))
+        result <- fileRepo.selectFileNameFromFileId(uuid4)
+      } yield result mustBe ""
     }
   }
 }

@@ -99,16 +99,16 @@ object DateUtils {
     sdf.parse(string)
   }
 
-  def getDateWithAddedSeconds(seconds: Int): Date = {
+  def getDateWithAddedSeconds(date: Date, seconds: Int): Date = {
     val cal = Calendar.getInstance()
-    cal.setTime(new Date())
+    cal.setTime(date)
     cal.add(Calendar.SECOND, seconds)
     cal.getTime
   }
 
-  def getDateWithSubtractedSeconds(seconds: Int): Date = {
+  def getDateWithSubtractedSeconds(date: Date, seconds: Int): Date = {
     val cal = Calendar.getInstance()
-    cal.setTime(new Date())
+    cal.setTime(date)
     cal.setLenient(true)
     cal.set(Calendar.SECOND, cal.get(Calendar.SECOND) - seconds)
     cal.getTime

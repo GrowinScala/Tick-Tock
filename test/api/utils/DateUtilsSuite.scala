@@ -1,6 +1,6 @@
 package api.utils
 
-import java.util.Calendar
+import java.util.{ Calendar, Date }
 
 import api.services.DayType
 import api.utils.DateUtils._
@@ -141,9 +141,23 @@ class DateUtilsSuite extends AsyncWordSpec with MustMatchers {
   }
 
   "DateUtils#isLeapYear" should {
-    "return false when given None" in (isLeapYear(None) mustBe false)
+    "return false when given None." in (isLeapYear(None) mustBe false)
     "return false when given a non leap year." in (isLeapYear(Some(2019)) mustBe false)
-    "return true when given a leap year" in (isLeapYear(Some(2020)) mustBe true)
+    "return true when given a leap year." in (isLeapYear(Some(2020)) mustBe true)
+  }
+
+  "DateUtils#getDateWithAddedSeconds" should {
+    "return a date with added seconds." in {
+      val date = getDateWithAddedSeconds(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"), 5)
+      date mustBe stringToDateFormat("2030-01-01 00:00:05", "yyyy-MM-dd HH:mm:ss")
+    }
+  }
+
+  "DateUtils#getDateWithSubtractedSeconds" should {
+    "return a date with subtracted seconds." in {
+      val date = getDateWithSubtractedSeconds(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"), 5)
+      date mustBe stringToDateFormat("2029-12-12 23:59:55", "yyyy-MM-dd HH:mm:ss")
+    }
   }
 
   "DateUtils#dateToStringFormat" should {
@@ -242,6 +256,111 @@ class DateUtilsSuite extends AsyncWordSpec with MustMatchers {
       date.isDefined mustBe false
     }
 
+  }
+
+  "DateUtils#isPossibleDateWithoutYear" should {
+    "return true give a possible date. (any day before a 29th in any month)" in {
+      isPossibleDateWithoutYear(1, 1) mustBe true
+      isPossibleDateWithoutYear(5, 3) mustBe true
+      isPossibleDateWithoutYear(10, 4) mustBe true
+      isPossibleDateWithoutYear(12, 5) mustBe true
+      isPossibleDateWithoutYear(17, 7) mustBe true
+      isPossibleDateWithoutYear(21, 9) mustBe true
+      isPossibleDateWithoutYear(25, 11) mustBe true
+      isPossibleDateWithoutYear(27, 12) mustBe true
+    }
+
+    "return true given a possible date. (29th of any month except February)" in {
+      isPossibleDateWithoutYear(29, 3) mustBe true
+      isPossibleDateWithoutYear(29, 6) mustBe true
+      isPossibleDateWithoutYear(29, 9) mustBe true
+      isPossibleDateWithoutYear(29, 12) mustBe true
+    }
+
+    "return true given a possible date. (30th of any month except February)" in {
+      isPossibleDateWithoutYear(30, 1) mustBe true
+      isPossibleDateWithoutYear(30, 4) mustBe true
+      isPossibleDateWithoutYear(30, 7) mustBe true
+      isPossibleDateWithoutYear(30, 10) mustBe true
+    }
+
+    "return true given a possible date. (31st of any month except February/April/June/September/November)" in {
+      isPossibleDateWithoutYear(31, 1) mustBe true
+      isPossibleDateWithoutYear(31, 3) mustBe true
+      isPossibleDateWithoutYear(31, 5) mustBe true
+      isPossibleDateWithoutYear(31, 7) mustBe true
+      isPossibleDateWithoutYear(31, 8) mustBe true
+      isPossibleDateWithoutYear(31, 10) mustBe true
+      isPossibleDateWithoutYear(31, 12) mustBe true
+    }
+
+    "return false given an impossible date. (any day value after 31)" in {
+      isPossibleDateWithoutYear(32, 5) mustBe false
+      isPossibleDateWithoutYear(35, 8) mustBe false
+      isPossibleDateWithoutYear(40, 11) mustBe false
+    }
+
+    "return false given an impossible date. (any day value that is zero or negative)" in {
+      isPossibleDateWithoutYear(0, 4) mustBe false
+      isPossibleDateWithoutYear(-5, 9) mustBe false
+      isPossibleDateWithoutYear(-15, 12) mustBe false
+    }
+
+    "return false given an impossible date. (any month value after 12)" in {
+      isPossibleDateWithoutYear(5, 13) mustBe false
+      isPossibleDateWithoutYear(12, 15) mustBe false
+      isPossibleDateWithoutYear(26, 20) mustBe false
+    }
+
+    "return false given an impossible date. (any month value that is zero or negative)" in {
+      isPossibleDateWithoutYear(1, 0) mustBe false
+      isPossibleDateWithoutYear(11, -6) mustBe false
+      isPossibleDateWithoutYear(22, -12) mustBe false
+    }
+
+    "return false given an impossible date. (29th of February)" in {
+      isPossibleDateWithoutYear(29, 2) mustBe false
+    }
+
+    "return false given an impossible date. (30th of February)" in {
+      isPossibleDateWithoutYear(30, 2) mustBe false
+    }
+
+    "return false given an impossible date. (31st of February)" in {
+      isPossibleDateWithoutYear(31, 2) mustBe false
+    }
+
+    "return false given an impossible date. (31st of April)" in {
+      isPossibleDateWithoutYear(31, 4) mustBe false
+    }
+
+    "return false given an impossible date. (31st of June)" in {
+      isPossibleDateWithoutYear(31, 6) mustBe false
+    }
+
+    "return false given an impossible date. (31st of September)" in {
+      isPossibleDateWithoutYear(31, 9) mustBe false
+    }
+
+    "return false given an impossible date. (31st of November)" in {
+      isPossibleDateWithoutYear(31, 11) mustBe false
+    }
+
+  }
+
+  "DateUtils#isPossibleDateWithoutMonth" should {
+    "return true given a possible date. (any day value between 1 and 31)" in {
+      isPossibleDateWithoutMonth(5, 2030) mustBe true
+      isPossibleDateWithoutMonth(15, 2035) mustBe true
+      isPossibleDateWithoutMonth(25, 2040) mustBe true
+    }
+
+    "return false given an impossible date. (any day value before 1 or after 31)" in {
+      isPossibleDateWithoutMonth(-5, 2030) mustBe false
+      isPossibleDateWithoutMonth(0, 2032) mustBe false
+      isPossibleDateWithoutMonth(32, 2034) mustBe false
+      isPossibleDateWithoutMonth(50, 2036) mustBe false
+    }
   }
 
 }

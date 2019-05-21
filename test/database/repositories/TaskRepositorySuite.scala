@@ -105,16 +105,17 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
         _ mustBe Some(TaskDTO("", "", SchedulingType.RunOnce, None, None, None, None, None, None, None, None, None))
       }
 
-      val startDate1 = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
-      val endDate1 = stringToDateFormat("2040-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
-      taskRepo.taskRowToTaskDTO(Some(TaskRow("asd1", "dsa1", 3, Some(3), Some(startDate1), Some(endDate1)))).map {
-        _.getOrElse(None) mustBe TaskDTO("asd1", "", SchedulingType.Periodic, Some(startDate1), Some(PeriodType.Yearly), Some(3), Some(endDate1))
-      }
+      val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
+      val endDate = stringToDateFormat("2040-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
 
-      val startDate2 = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
-      val endDate2 = stringToDateFormat("2040-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
-      taskRepo.taskRowToTaskDTO(Some(TaskRow("asd2", "dsa2", 6, Some(1), Some(startDate2), Some(endDate2)))).map {
-        _.getOrElse(None) mustBe TaskDTO("asd2", "", SchedulingType.Periodic, Some(startDate2), Some(PeriodType.Yearly), Some(1), Some(endDate2))
+      taskRepo.taskRowToTaskDTO(Some(TaskRow("asd1", "dsa1", 2, Some(3), Some(startDate), Some(endDate)))).map {
+        _.getOrElse(None) mustBe TaskDTO("asd1", "", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Minutely), Some(3), Some(endDate))
+      }
+      taskRepo.taskRowToTaskDTO(Some(TaskRow("asd2", "dsa2", 4, Some(2), Some(startDate), Some(endDate)))).map {
+        _.getOrElse(None) mustBe TaskDTO("asd2", "", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Weekly), Some(2), Some(endDate))
+      }
+      taskRepo.taskRowToTaskDTO(Some(TaskRow("asd2", "dsa2", 6, Some(1), Some(startDate), Some(endDate)))).map {
+        _.getOrElse(None) mustBe TaskDTO("asd2", "", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Yearly), Some(1), Some(endDate))
       }
     }
   }
@@ -146,7 +147,10 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
       for {
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
+        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID3, "unknown", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.selectFileIdByTaskId(taskUUID1).map(fileId => assert(fileId.get == fileUUID1))
+        _ <- taskRepo.selectFileIdByTaskId(taskUUID3).map(fileId => assert(fileId.isEmpty))
+        _ <- taskRepo.selectFileIdByTaskId(taskUUID4).map(fileId => assert(fileId.isEmpty))
         fileId <- taskRepo.selectFileIdByTaskId(taskUUID2)
       } yield fileId.get mustBe fileUUID2
     }
@@ -159,9 +163,9 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Minutely), Some(2), None, Some(5)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Hourly), Some(1), Some(date)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID3, "test3", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
-        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID4, "test4", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Monthly), Some(3), None, Some(3)))
+        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID4, "unknown", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Monthly), Some(3), None, Some(3)))
         _ <- taskRepo.selectTotalOccurrencesByTaskId(taskUUID1).map(totalOccurrences => assert(totalOccurrences.contains(5)))
-        _ <- taskRepo.selectTotalOccurrencesByTaskId(taskUUID4).map(totalOccurrences => assert(totalOccurrences.contains(3)))
+        _ <- taskRepo.selectTotalOccurrencesByTaskId(taskUUID4).map(totalOccurrences => assert(totalOccurrences.isEmpty))
         _ <- taskRepo.selectTotalOccurrencesByTaskId(taskUUID3).map(totalOccurrences => assert(totalOccurrences.isEmpty))
         totalOccurrences <- taskRepo.selectTotalOccurrencesByTaskId(taskUUID2)
       } yield totalOccurrences.isEmpty mustBe true
@@ -175,9 +179,9 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Hourly), Some(1), Some(date)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID3, "test3", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Monthly), Some(3), None, Some(3), Some(3)))
-        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID4, "test4", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Minutely), Some(2), None, Some(5), Some(5)))
+        _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID4, "unknown", SchedulingType.Periodic, Some(getCurrentDateTimestamp), Some(PeriodType.Minutely), Some(2), None, Some(5), Some(5)))
         _ <- taskRepo.selectCurrentOccurrencesByTaskId(taskUUID3).map(currentOccurrences => assert(currentOccurrences.contains(3)))
-        _ <- taskRepo.selectCurrentOccurrencesByTaskId(taskUUID4).map(currentOccurrences => assert(currentOccurrences.contains(5)))
+        _ <- taskRepo.selectCurrentOccurrencesByTaskId(taskUUID4).map(currentOccurrences => assert(currentOccurrences.isEmpty))
         _ <- taskRepo.selectCurrentOccurrencesByTaskId(taskUUID2).map(currentOccurrences => assert(currentOccurrences.isEmpty))
         currentOccurrences <- taskRepo.selectCurrentOccurrencesByTaskId(taskUUID1)
       } yield currentOccurrences.isEmpty mustBe true

@@ -114,8 +114,9 @@ class SchedulingRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll wit
         _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID1, taskUUID3, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))
         _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID2, taskUUID1, None, Some(10), None, Some(DayType.Weekday), None, Some(2030)))
         _ <- schedulingRepo.selectSchedulingsByTaskId(taskUUID3).map(elem => assert(elem.get.size == 1 && elem.get.head.schedulingId == schedulingUUID1))
-        schedulingList <- schedulingRepo.selectSchedulingsByTaskId(taskUUID1)
-      } yield schedulingList.get.head.dayType mustBe DayType.Weekday
+        _ <- schedulingRepo.selectSchedulingsByTaskId(taskUUID1).map(elem => assert(elem.get.size == 1 && elem.get.head.dayType == Some(DayType.Weekday)))
+        schedulingList <- schedulingRepo.selectSchedulingsByTaskId("unknown")
+      } yield schedulingList.isEmpty mustBe true
 
     }
   }
