@@ -6803,7 +6803,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       Await.result(routeOption.get, Duration.Inf)
       val bodyText = contentAsString(routeOption.get)
       status(routeOption.get) mustBe OK
-      bodyText mustBe "[" + Json.toJsObject(dto1) + "," + Json.toJsObject(dto2) + "," + Json.toJsObject(dto3) + "]"
+      bodyText mustBe "[" + Json.toJson(dto1) + "," + Json.toJson(dto2) + "," + Json.toJson(dto3) + "]"
     }
   }
 
@@ -6826,7 +6826,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       Await.result(routeOption.get, Duration.Inf)
       val bodyText = contentAsString(routeOption.get)
       status(routeOption.get) mustBe OK
-      bodyText mustBe Json.toJsObject(dto2).toString
+      bodyText mustBe Json.toJson(dto2).toString
     }
 
     "receive a GET request with a non-existing id." in {
@@ -6908,7 +6908,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         elem =>
           elem.isDefined mustBe true
           val resultDto = TaskDTO("11231bd5-6f92-496c-9fe7-75bc180467b0", "test1", SchedulingType.RunOnce)
-          elem.get mustBe Json.toJsObject(resultDto).toString
+          elem.get mustBe Json.toJson(resultDto).toString
       }
 
     }
@@ -6943,7 +6943,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       task.map { elem =>
         elem.isDefined mustBe true
         val resultDto = TaskDTO("asd1", "test4", SchedulingType.RunOnce)
-        elem.get mustBe Json.toJsObject(resultDto).toString
+        elem.get mustBe Json.toJson(resultDto).toString
       }
     }
 
@@ -7009,7 +7009,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       bodyText mustBe "[" + Json.toJsObject(invalidUpdateTaskFormat) + "]"
       task.map { elem =>
         elem.isDefined mustBe true
-        elem.get mustBe Json.toJsObject(dto1).toString
+        elem.get mustBe Json.toJson(dto1).toString
       }
 
     }
@@ -7215,7 +7215,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       task.map { elem =>
         elem.isDefined mustBe true
         val resultDTO = dto3.copy(endDateAndTime = Some(stringToDateFormat("2050-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), totalOccurrences = None, currentOccurrences = None)
-        elem.get mustBe Json.toJsObject(resultDTO).toString
+        elem.get mustBe Json.toJson(resultDTO).toString
       }
     }
 
@@ -7248,7 +7248,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       task.map { elem =>
         elem.isDefined mustBe true
         val resultDto = dto3.copy(totalOccurrences = Some(5), currentOccurrences = Some(5))
-        elem.get mustBe Json.toJsObject(resultDto).toString
+        elem.get mustBe Json.toJson(resultDto).toString
       }
 
     }
@@ -7282,7 +7282,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       task.map { elem =>
         elem.isDefined mustBe true
         val resultDTO = dto2.copy(endDateAndTime = None, totalOccurrences = Some(5), currentOccurrences = Some(5))
-        elem.get mustBe Json.toJsObject(dto2).toString
+        elem.get mustBe Json.toJson(dto2).toString
       }
     }
 
@@ -7318,7 +7318,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       task.map { elem =>
         elem.isDefined mustBe true
         val resultDto = TaskDTO("11231bd5-6f92-496c-9fe7-75bc180467b0", "test4", SchedulingType.RunOnce, Some(stringToDateFormat("2050-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
-        elem.get mustBe Json.toJsObject(resultDto).toString
+        elem.get mustBe Json.toJson(resultDto).toString
       }
     }
 
@@ -7357,7 +7357,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       task.map { elem =>
         elem.isDefined mustBe true
         val resultDto = TaskDTO("11231bd5-6f92-496c-9fe7-75bc180467b0", "test4", SchedulingType.Periodic, Some(stringToDateFormat("2050-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Yearly), Some(2), None, Some(6), Some(6))
-        elem.get mustBe Json.toJsObject(resultDto).toString
+        elem.get mustBe Json.toJson(resultDto).toString
       }
 
     }
@@ -7505,7 +7505,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       task.map { elem =>
         elem.isDefined mustBe true
         val resultDto = TaskDTO("11231bd5-6f92-496c-9fe7-75bc180467b0", "test4", SchedulingType.Periodic, Some(stringToDateFormat("2019-07-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2020-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")))
-        elem.get mustBe Json.toJsObject(resultDto).toString
+        elem.get mustBe Json.toJson(resultDto).toString
       }
     }
 
@@ -7542,7 +7542,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       bodyText mustBe "[" + Json.toJsObject(invalidCreateTaskFormat) + "]"
       task.map { elem =>
         elem.isDefined mustBe true
-        elem.get mustBe Json.toJsObject(dto1).toString
+        elem.get mustBe Json.toJson(dto1).toString
       }
     }
   }

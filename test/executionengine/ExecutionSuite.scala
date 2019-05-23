@@ -49,11 +49,34 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
       system.stop(actorRef)
     }
 
-    "start a periodic task and receive the corresponding message." in {
+    "start a periodic task and receive the corresponding message. (with startDate)" in {
       val fileId = "test1"
       val startDate = getDateWithAddedSeconds(new Date(), 30)
       val task = TaskDTO("asd1", fileId, SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(1), Some(stringToDateFormat("2040-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")))
       val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, Some(Duration.ofHours(1)), task.endDateAndTime, None, None, None, fileRepo, taskRepo, executionManager))
+      actorRef ! Start
+      actorRef ! GetStatus
+      expectMsg(ExecutionStatus.PeriodicWaiting)
+      system.stop(actorRef)
+    }
+
+    "start a periodic task and receive the corresponding message. (with occurrences)" in {
+      val fileId = "test1"
+      val startDate = getDateWithAddedSeconds(new Date(), 30)
+      val task = TaskDTO("asd1", fileId, SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(1), None, Some(3), Some(3))
+      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, Some(Duration.ofHours(1)), task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone, fileRepo, taskRepo, executionManager))
+      actorRef ! Start
+      actorRef ! GetStatus
+      expectMsg(ExecutionStatus.PeriodicWaiting)
+      system.stop(actorRef)
+    }
+
+    "start a periodic task and receive the corresponding message. (with exclusions)" in {
+      val fileId = "test1"
+      val currentDate = new Date()
+      val startDate = getDateWithAddedSeconds(currentDate, 30)
+      val task = TaskDTO("asd1", fileId, SchedulingType.Periodic, Some(startDate), Some(PeriodType.Minutely), Some(1), Some(stringToDateFormat("2040-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, Some(List(ExclusionDTO("dsa1", "asd1", Some(getDateWithAddedSeconds(currentDate, 60))))))
+      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, Some(Duration.ofHours(1)), task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone, fileRepo, taskRepo, executionManager))
       actorRef ! Start
       actorRef ! GetStatus
       expectMsg(ExecutionStatus.PeriodicWaiting)
@@ -104,6 +127,19 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
       actorRef ! ExecutePersonalized
       actorRef ! GetStatus
       expectMsg(ExecutionStatus.PersonalizedRunning)
+      system.stop(actorRef)
+    }
+  }
+
+  "ExecutionActor#Delay" should {
+    "delay a task and receive the expected message." in {
+      val fileId = "test1"
+      val startDate = getDateWithAddedSeconds(new Date(), 30000000)
+      val task = TaskDTO("asd1", fileId, SchedulingType.RunOnce, Some(startDate))
+      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, None, None, None, None, None, fileRepo, taskRepo, executionManager))
+      actorRef ! Start
+      actorRef ! GetStatus
+      expectMsg(ExecutionStatus.Delaying)
       system.stop(actorRef)
     }
   }

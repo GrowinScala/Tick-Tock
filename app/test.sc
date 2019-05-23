@@ -8,9 +8,10 @@ import database.repositories.file.{FakeFileRepository, FileRepository}
 import database.repositories.task.{FakeTaskRepository, TaskRepository}
 import java.time.Duration
 
+import play.api.libs.json.Json
+
 import scala.util.Try
 
 
 val date = new Date()
-getDateWithSubtractedSeconds(3600)
-getDateWithAddedSeconds(3600)
+println(Json.toJsObject(date))

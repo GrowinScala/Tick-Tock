@@ -72,7 +72,7 @@ class TaskController @Inject() (cc: ControllerComponents)(implicit exec: Executi
    */
   def getSchedule: Action[AnyContent] = Action.async {
     taskRepo.selectAllTasks.map { seq =>
-      val result = JsArray(seq.map(tr => Json.toJsObject(tr)))
+      val result = JsArray(seq.map(tr => Json.toJson(tr)))
       Ok(result)
     }
   }
@@ -85,7 +85,7 @@ class TaskController @Inject() (cc: ControllerComponents)(implicit exec: Executi
    */
   def getScheduleById(id: String): Action[AnyContent] = Action.async {
     taskRepo.selectTask(id).map {
-      case Some(task) => Ok(Json.toJsObject(task))
+      case Some(task) => Ok(Json.toJson(task))
       case None => BadRequest(Json.toJsObject(invalidEndpointId))
     }
   }
