@@ -285,7 +285,7 @@ class TaskServiceSuite extends AsyncWordSpec with MustMatchers {
       taskService.calculateExclusions(dto) mustBe Some(scala.collection.mutable.Queue())
     } //new
 
-    "receive a valid TaskDTo with an exclusion and return a Queue with the corresponding Date(s) for that exclusion. (with day, month, year)" in {
+    "receive a valid TaskDTO with an exclusion and return a Queue with the corresponding Date(s) for that exclusion. (with day, month, year)" in {
       val dto = TaskDTO("asd", "asd", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Minutely), Some(5), Some(stringToDateFormat("2032-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, Some(List(ExclusionDTO("asd", "asd", None, Some(29), None, None, Some(10), Some(2031)))))
       taskService.calculateExclusions(dto) mustBe Some(scala.collection.mutable.Queue())
     } //new

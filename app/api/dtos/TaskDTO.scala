@@ -49,21 +49,16 @@ object TaskDTO {
 
   implicit val taskWrites = new Writes[TaskDTO] {
     def writes(task: TaskDTO) = {
-      Json.obj(
-        "taskId" -> task.taskId,
-        "fileName" -> task.fileName,
-        "taskType" -> task.taskType,
-        "startDateAndTime" -> task.startDateAndTime.toString,
-        "periodType" -> task.periodType,
-        "period" -> task.period,
-        "endDateAndTime" -> task.endDateAndTime.toString,
-        "totalOccurrences" -> task.totalOccurrences,
-        "currentOccurrences" -> task.currentOccurrences,
-        "timezone" -> task.timezone,
-        "exclusions" -> task.exclusions,
-        "schedulings" -> task.schedulings)
+      Json.obj("taskId" -> task.taskId, "fileName" -> task.fileName, "taskType" -> task.taskType) ++
+        (if (task.startDateAndTime.isDefined) Json.obj("startDateAndTime" -> task.startDateAndTime.get.toString) else Json.obj()) ++
+        (if (task.periodType.isDefined) Json.obj("periodType" -> task.periodType) else Json.obj()) ++
+        (if (task.period.isDefined) Json.obj("period" -> task.period) else Json.obj()) ++
+        (if (task.endDateAndTime.isDefined) Json.obj("endDateAndTime" -> task.endDateAndTime.get.toString) else Json.obj()) ++
+        (if (task.totalOccurrences.isDefined) Json.obj("totalOccurrences" -> task.totalOccurrences) else Json.obj()) ++
+        (if (task.currentOccurrences.isDefined) Json.obj("currentOccurrences" -> task.currentOccurrences) else Json.obj()) ++
+        (if (task.timezone.isDefined) Json.obj("timezone" -> task.timezone) else Json.obj()) ++
+        (if (task.exclusions.isDefined) Json.obj("exclusions" -> task.exclusions) else Json.obj()) ++
+        (if (task.schedulings.isDefined) Json.obj("schedulings" -> task.schedulings) else Json.obj())
     }
-
-
   }
 }

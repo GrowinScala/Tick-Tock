@@ -1,10 +1,15 @@
 package database.repositories.exclusion
 
 import api.dtos.ExclusionDTO
+import database.mappings.ExclusionMappings.ExclusionRow
 
 import scala.concurrent.Future
 
 trait ExclusionRepository {
+
+  def exclusionRowToExclusionDTO(exclusion: ExclusionRow): ExclusionDTO
+
+  def exclusionDTOToExclusionRow(exclusion: ExclusionDTO): ExclusionRow
 
   /**
    * Selects all rows from the exclusions table on the database.

@@ -14,9 +14,12 @@ class Module extends AbstractModule {
   def configure(): Unit = {
     bind(classOf[StartUpService]).asEagerSingleton()
 
+    val exclusionRepo = new ExclusionRepositoryImpl(DEFAULT_DB)
+    val schedulingRepo = new SchedulingRepositoryImpl(DEFAULT_DB)
+
     bind(classOf[Database]).toInstance(DEFAULT_DB)
     bind(classOf[FileRepository]).toInstance(new FileRepositoryImpl(DEFAULT_DB))
-    bind(classOf[TaskRepository]).toInstance(new TaskRepositoryImpl(DEFAULT_DB))
+    bind(classOf[TaskRepository]).toInstance(new TaskRepositoryImpl(DEFAULT_DB, exclusionRepo, schedulingRepo))
     bind(classOf[ExclusionRepository]).toInstance(new ExclusionRepositoryImpl(DEFAULT_DB))
     bind(classOf[SchedulingRepository]).toInstance(new SchedulingRepositoryImpl(DEFAULT_DB))
     bind(classOf[UUIDGenerator]).toInstance(new DefaultUUIDGenerator)

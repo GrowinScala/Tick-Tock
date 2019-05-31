@@ -6,11 +6,15 @@ import api.dtos.TaskDTO
 import api.services.{ PeriodType, SchedulingType }
 import database.mappings.FileMappings._
 import database.mappings.TaskMappings._
-import database.repositories.file.FileRepository
+import database.mappings.ExclusionMappings._
+import database.mappings.SchedulingMappings._
+import database.repositories.exclusion.ExclusionRepository
+import database.repositories.scheduling.SchedulingRepository
 import javax.inject.Inject
 import slick.jdbc.MySQLProfile.api._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.duration.Duration
+import scala.concurrent.{ Await, ExecutionContext, Future }
 
 /**
  * Class that handles the data layer for the scheduled tasks.
@@ -18,22 +22,30 @@ import scala.concurrent.{ ExecutionContext, Future }
  *
  * @param dtbase Database class that contains the database information.
  */
-class TaskRepositoryImpl @Inject() (dtbase: Database) extends TaskRepository {
+class TaskRepositoryImpl @Inject() (dtbase: Database, exclusionRepo: ExclusionRepository, schedulingRepo: SchedulingRepository) extends TaskRepository {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
   def taskRowToTaskDTO(maybeTask: Option[TaskRow]): Future[Option[TaskDTO]] = {
     val task = maybeTask.getOrElse(TaskRow("", "", 0))
+    val exclusions = Some(Await.result(dtbase.run(getExclusionByTaskId(task.taskId).result), Duration.Inf).map(exclusionRepo.exclusionRowToExclusionDTO).toList)
+    val schedulings = Some(Await.result(dtbase.run(getSchedulingByTaskId(task.taskId).result), Duration.Inf).map(schedulingRepo.schedulingRowToSchedulingDTO).toList)
     dtbase.run(getFileByFileId(task.fileId).map(_.fileName).result.headOption).map { maybeName =>
       val name = maybeName.getOrElse("")
       Some(task.period match {
         case 0 /*RunOnce*/ => TaskDTO(task.taskId, name, SchedulingType.RunOnce, task.startDateAndTime)
-        case 1 /*Minutely*/ => TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Minutely), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
-        case 2 /*Hourly*/ => TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Hourly), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
-        case 3 /*Daily*/ => TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Daily), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
-        case 4 /*Weekly*/ => TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Weekly), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
-        case 5 /*Monthly*/ => TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Monthly), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
-        case 6 /*Yearly*/ => TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Yearly), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
+        case 1 /*Minutely*/ => TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Minutely), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone, exclusions)
+        case 2 /*Hourly*/ => TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Hourly), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone, exclusions)
+        case 3 /*Daily*/ => TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Daily), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone, exclusions)
+        case 4 /*Weekly*/ => TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Weekly), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone, exclusions)
+        case 5 /*Monthly*/ => TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Monthly), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone, exclusions)
+        case 6 /*Yearly*/ => TaskDTO(task.taskId, name, SchedulingType.Periodic, task.startDateAndTime, Some(PeriodType.Yearly), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone, exclusions)
+        case 7 /*Personalized Minutely*/ => TaskDTO(task.taskId, name, SchedulingType.Personalized, task.startDateAndTime, Some(PeriodType.Minutely), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone, exclusions, schedulings)
+        case 8 /*Personalized Hourly*/ => TaskDTO(task.taskId, name, SchedulingType.Personalized, task.startDateAndTime, Some(PeriodType.Hourly), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone, exclusions, schedulings)
+        case 9 /*Personalized Daily*/ => TaskDTO(task.taskId, name, SchedulingType.Personalized, task.startDateAndTime, Some(PeriodType.Daily), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone, exclusions, schedulings)
+        case 10 /*Personalized Weekly*/ => TaskDTO(task.taskId, name, SchedulingType.Personalized, task.startDateAndTime, Some(PeriodType.Weekly), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone, exclusions, schedulings)
+        case 11 /*Personalized Monthly*/ => TaskDTO(task.taskId, name, SchedulingType.Personalized, task.startDateAndTime, Some(PeriodType.Monthly), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone, exclusions, schedulings)
+        case 12 /*Personalized Yearly*/ => TaskDTO(task.taskId, name, SchedulingType.Personalized, task.startDateAndTime, Some(PeriodType.Yearly), task.value, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone, exclusions, schedulings)
       })
     }
   }
@@ -61,7 +73,20 @@ class TaskRepositoryImpl @Inject() (dtbase: Database) extends TaskRepository {
                 TaskRow(task.taskId, fileId, 6, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
             }
           case SchedulingType.Personalized =>
-            TaskRow(task.taskId, fileId, 7, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
+            task.periodType.get match {
+              case PeriodType.Minutely =>
+                TaskRow(task.taskId, fileId, 7, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
+              case PeriodType.Hourly =>
+                TaskRow(task.taskId, fileId, 8, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
+              case PeriodType.Daily =>
+                TaskRow(task.taskId, fileId, 9, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
+              case PeriodType.Weekly =>
+                TaskRow(task.taskId, fileId, 10, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
+              case PeriodType.Monthly =>
+                TaskRow(task.taskId, fileId, 11, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
+              case PeriodType.Yearly =>
+                TaskRow(task.taskId, fileId, 12, task.period, task.startDateAndTime, task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone)
+            }
         }
       }
 
@@ -75,21 +100,8 @@ class TaskRepositoryImpl @Inject() (dtbase: Database) extends TaskRepository {
   def selectAllTasks: Future[Seq[TaskDTO]] = {
     dtbase.run(selectAllFromTasksTable.result).flatMap { seq =>
       Future.sequence {
-        seq.map { elem =>
-          dtbase.run(getFileByFileId(elem.fileId).map(_.fileName).result.headOption).map { maybeName =>
-            val name = maybeName.getOrElse("")
-            elem.period match {
-              case 0 /*RunOnce*/ => TaskDTO(elem.taskId, name, SchedulingType.RunOnce, elem.startDateAndTime)
-              case 1 /*Minutely*/ => TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Minutely), elem.value, elem.endDateAndTime, elem.totalOccurrences, elem.currentOccurrences, elem.timezone)
-              case 2 /*Hourly*/ => TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Hourly), elem.value, elem.endDateAndTime, elem.totalOccurrences, elem.currentOccurrences, elem.timezone)
-              case 3 /*Daily*/ => TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Daily), elem.value, elem.endDateAndTime, elem.totalOccurrences, elem.currentOccurrences, elem.timezone)
-              case 4 /*Weekly*/ => TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Weekly), elem.value, elem.endDateAndTime, elem.totalOccurrences, elem.currentOccurrences, elem.timezone)
-              case 5 /*Monthly*/ => TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Monthly), elem.value, elem.endDateAndTime, elem.totalOccurrences, elem.currentOccurrences, elem.timezone)
-              case 6 /*Yearly*/ => TaskDTO(elem.taskId, name, SchedulingType.Periodic, elem.startDateAndTime, Some(PeriodType.Yearly), elem.value, elem.endDateAndTime, elem.totalOccurrences, elem.currentOccurrences, elem.timezone)
-            }
-          }
-        }
-      }
+        seq.map(elem => taskRowToTaskDTO(Some(elem)))
+      }.map(elem => elem.flatten)
     }
   }
 
@@ -168,8 +180,31 @@ class TaskRepositoryImpl @Inject() (dtbase: Database) extends TaskRepository {
    */
   def insertInTasksTable(task: TaskDTO): Future[Boolean] = {
     dtbase.run(getFileByFileName(task.fileName).exists.result).flatMap { exists =>
-      if (exists) taskDTOToTaskRow(task).flatMap(elem => dtbase.run(insertTask(elem)).map(i => i == 1))
-      else Future.successful(false)
+      if (exists) {
+        val taskCode = taskDTOToTaskRow(task).flatMap(elem => dtbase.run(insertTask(elem)).map(i => i == 1))
+        task.exclusions match {
+          case Some(exclusionList) =>
+            val exclusionCodeList = exclusionList.map(dto => exclusionRepo.insertInExclusionsTable(dto))
+            val codeList = List(taskCode) ::: exclusionCodeList
+            task.schedulings match {
+              case Some(schedulingList) =>
+                val schedulingCodeList = schedulingList.map(dto => schedulingRepo.insertInSchedulingsTable(dto))
+                val finalCodeList = codeList ::: schedulingCodeList
+                Future.successful(finalCodeList.map(Await.result(_, Duration.Inf)).forall(_ == true))
+              case None =>
+                Future.successful(codeList.map(Await.result(_, Duration.Inf)).forall(_ == true))
+            }
+          case None =>
+            task.schedulings match {
+              case Some(schedulingList) =>
+                val schedulingCodeList = schedulingList.map(dto => schedulingRepo.insertInSchedulingsTable(dto))
+                val finalCodeList = List(taskCode) ::: schedulingCodeList
+                Future.successful(finalCodeList.map(Await.result(_, Duration.Inf)).forall(_ == true))
+              case None =>
+                taskCode
+            }
+        }
+      } else Future.successful(false)
     }
   }
 }

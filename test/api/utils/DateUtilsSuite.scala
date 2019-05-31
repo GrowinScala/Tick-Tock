@@ -156,7 +156,7 @@ class DateUtilsSuite extends AsyncWordSpec with MustMatchers {
   "DateUtils#getDateWithSubtractedSeconds" should {
     "return a date with subtracted seconds." in {
       val date = getDateWithSubtractedSeconds(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"), 5)
-      date mustBe stringToDateFormat("2029-12-12 23:59:55", "yyyy-MM-dd HH:mm:ss")
+      date mustBe stringToDateFormat("2029-12-31 23:59:55", "yyyy-MM-dd HH:mm:ss")
     }
   }
 

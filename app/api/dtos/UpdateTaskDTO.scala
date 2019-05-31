@@ -1,14 +1,15 @@
 package api.dtos
 
-import api.services.PeriodType.PeriodType
+import api.services.PeriodType.{Daily, Hourly, Minutely, Monthly, PeriodType, Weekly, Yearly}
 import api.services.SchedulingType.SchedulingType
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
-import play.api.libs.json.{ JsPath, Json, OWrites, Reads }
+import play.api.libs.json.{JsPath, Json, OWrites, Reads}
 
 import scala.concurrent.ExecutionContext
 
 case class UpdateTaskDTO(
+  toDelete: List[String] = List(), // list of strings of the field names to delete. To replace use the fields below.
   taskId: Option[String] = None,
   fileName: Option[String] = None,
   taskType: Option[SchedulingType] = None,
@@ -25,11 +26,14 @@ object UpdateTaskDTO {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
+  val taskParameterList: List[String] = List("taskId", "fileName", "taskType", "startDateAndTime", "periodType", "period", "endDateAndTime", "occurrences", "timezone", "exclusions", "schedulings")
+
   /**
    * Implicit that defines how an UpdateTaskDTO is read from the JSON request.
    * This implicit is used on the TaskController when Play's "validate" method is called.
    */
   implicit val updateTaskReads: Reads[UpdateTaskDTO] = (
+    (JsPath \ "toDelete").readNullable[List[String]] and
     (JsPath \ "taskId").readNullable[String] and
     (JsPath \ "fileName").readNullable[String] and
     (JsPath \ "taskType").readNullable[String] and

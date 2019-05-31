@@ -78,9 +78,9 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
       val taskController = new TaskController(cc)
       val result = taskController.getSchedule.apply(fakeRequest)
       val bodyText = contentAsString(result)
-      bodyText mustBe "[{\"taskId\":\"asd1\",\"fileName\":\"test1\",\"taskType\":\"RunOnce\",\"startDateAndTime\":1893499200000}," +
-        "{\"taskId\":\"asd2\",\"fileName\":\"test2\",\"taskType\":\"Periodic\",\"startDateAndTime\":1893499200000,\"periodType\":\"Minutely\",\"period\":2,\"endDateAndTime\":2524651200000}," +
-        "{\"taskId\":\"asd3\",\"fileName\":\"test3\",\"taskType\":\"Periodic\",\"startDateAndTime\":1893499200000,\"periodType\":\"Hourly\",\"period\":1,\"totalOccurrences\":5,\"currentOccurrences\":5}]"
+      bodyText mustBe "[{\"taskId\":\"asd1\",\"fileName\":\"test1\",\"taskType\":\"RunOnce\",\"startDateAndTime\":\"Tue Jan 01 12:00:00 GMT 2030\"}," +
+        "{\"taskId\":\"asd2\",\"fileName\":\"test2\",\"taskType\":\"Periodic\",\"startDateAndTime\":\"Tue Jan 01 12:00:00 GMT 2030\",\"periodType\":\"Minutely\",\"period\":2,\"endDateAndTime\":\"Sat Jan 01 12:00:00 GMT 2050\"}," +
+        "{\"taskId\":\"asd3\",\"fileName\":\"test3\",\"taskType\":\"Periodic\",\"startDateAndTime\":\"Tue Jan 01 12:00:00 GMT 2030\",\"periodType\":\"Hourly\",\"period\":1,\"totalOccurrences\":5,\"currentOccurrences\":5}]"
     }
   }
 
@@ -92,7 +92,7 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
       val taskController = new TaskController(cc)
       val result = taskController.getScheduleById(id).apply(fakeRequest)
       val bodyText = contentAsString(result)
-      bodyText mustBe "{\"taskId\":\"asd1\",\"fileName\":\"test1\",\"taskType\":\"RunOnce\",\"startDateAndTime\":1893499200000}"
+      bodyText mustBe "{\"taskId\":\"asd1\",\"fileName\":\"test1\",\"taskType\":\"RunOnce\",\"startDateAndTime\":\"Tue Jan 01 12:00:00 GMT 2030\"}"
     }
   }
 

@@ -35,6 +35,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
     val startDate = isValidStartDateFormat(task.startDateAndTime, task.timezone)
     val endDate = isValidEndDateFormat(task.endDateAndTime, task.timezone)
     val timezone = isValidTimezone(task.timezone)
+    val timezoneString = if (timezone.isDefined) Some(timezone.get.getID) else None
     val exclusionDates = areValidExclusionDateFormats(task.exclusions, startDate, endDate)
     val exclusions = areValidExclusionFormats(task.exclusions, exclusionDates, taskId)
     val schedulingDates = areValidSchedulingDateFormats(task.schedulings, startDate, endDate)
@@ -66,7 +67,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
 
     errorList.map(errList =>
 
-      if (errList.isEmpty) Right(TaskDTO(taskId, task.fileName, task.taskType, startDate, task.periodType, task.period, endDate, task.occurrences, task.occurrences, if (timezone.isDefined) Some(timezone.get.getID) else None, exclusions, schedulings))
+      if (errList.isEmpty) Right(TaskDTO(taskId, task.fileName, task.taskType, startDate, task.periodType, task.period, endDate, task.occurrences, task.occurrences, timezoneString, exclusions, schedulings))
       else Left(errList.unzip match {
         case (_, errors) => errors
       }))
@@ -83,15 +84,17 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
         val startDate = isValidStartDateFormat(task.startDateAndTime, task.timezone)
         val endDate = isValidEndDateFormat(task.endDateAndTime, task.timezone)
         val timezone = isValidTimezone(task.timezone)
+        val timezoneString = if (timezone.isDefined) Some(timezone.get.getID) else None
         val exclusionDates = areValidUpdateExclusionDateFormats(task.exclusions, startDate, endDate)
-        val exclusions = areValidUpdateExclusionFormats(dto.exclusions, task.exclusions, exclusionDates, id)
+        val exclusions = areValidUpdateExclusionFormats(task.exclusions, exclusionDates, id)
         val schedulingDates = areValidUpdateSchedulingDateFormats(task.schedulings, startDate, endDate)
-        val schedulings = areValidUpdateSchedulingFormats(dto.schedulings, task.schedulings, schedulingDates, id)
+        val schedulings = areValidUpdateSchedulingFormats(task.schedulings, schedulingDates, id)
 
         val errorList: Future[List[(Boolean, Error)]] = isValidFileName(task.fileName).map { validFileName =>
 
           (List(
             (isValidUpdateTask(task, dto), invalidUpdateTaskFormat),
+            (isValidListOfDeletes(task), invalidTaskDeleteList)
             (isValidUUID(task.taskId), invalidTaskUUID),
             (task.startDateAndTime.isEmpty || startDate.isDefined, invalidStartDateFormat),
             (isValidStartDateValue(startDate), invalidStartDateValue),
@@ -128,20 +131,41 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
               task.taskId.getOrElse(maybeDTO.get.taskId), //taskId
               task.fileName.getOrElse(maybeDTO.get.fileName), //fileName
               task.taskType.getOrElse(maybeDTO.get.taskType), //taskType
-              if (startDate.isDefined) startDate else oldStartDate, //startDate
-              if (task.periodType.isDefined) task.periodType else oldPeriodType, //periodType
-              if (task.period.isDefined) task.period else oldPeriod, //period
-              if (task.occurrences.isDefined && oldEndDate.isDefined) None else if (endDate.isDefined) endDate else oldEndDate, //endDate
-              if (endDate.isDefined && oldTotalOccurrences.isDefined) None else if (task.occurrences.isDefined) task.occurrences else oldTotalOccurrences, //totalOccurrences
-              if (endDate.isDefined && oldCurrentOccurrences.isDefined) None else if (task.occurrences.isDefined) task.occurrences else oldCurrentOccurrences, //currentOccurrences
-              if (task.timezone.isDefined) Some(timezone.get.getID) else oldTimezone, //timezone
-              if (task.exclusions.isDefined) exclusions else oldExclusions, //exclusions
-              if (task.schedulings.isDefined) schedulings else oldSchedulings //schedulings
+              if(task.startDateAndTime.isDefined) startDate else if(task.toDelete.contains("startDateAndTime")) None else dto.startDateAndTime, //startDate
+              if(task.periodType.isDefined) task.periodType else if(task.toDelete.contains("periodType")) None else dto.periodType, //periodType
+              if(task.period.isDefined) task.period else if(task.toDelete.contains("period")) None else dto.period, //period
+              if(task.endDateAndTime.isDefined) endDate else if(task.toDelete.contains("endDateAndTime")) None else dto.endDateAndTime, //endDate
+              if(task.occurrences.isDefined) task.occurrences else if(task.toDelete.contains("occurrences")) None else dto.totalOccurrences, //totalOccurrences
+              if(task.occurrences.isDefined) task.occurrences else if(task.toDelete.contains("occurrences")) None else dto.currentOccurrences, //currentOccurrences
+              if(task.timezone.isDefined) timezoneString else if(task.toDelete.contains("timezone")) None else dto.timezone, //timezone
+              if(task.exclusions.isDefined) exclusions else if(task.toDelete.contains("exclusions")) None else dto.exclusions, //exclusions
+              if(task.schedulings.isDefined) schedulings else if(task.toDelete.contains("schedulings")) None else dto.schedulings//schedulings
             ))
           } else Left(errList.unzip match {
             case (_, errors) => errors
           }))
       } else Future.successful(Left(List(invalidEndpointId))))
+
+    /*errorList.map(errList =>
+      if (errList.isEmpty) {
+        Right(TaskDTO(
+          task.taskId.getOrElse(maybeDTO.get.taskId), //taskId
+          task.fileName.getOrElse(maybeDTO.get.fileName), //fileName
+          task.taskType.getOrElse(maybeDTO.get.taskType), //taskType
+          startDate, //startDate
+          task.periodType, //periodType
+          task.period, //period
+          endDate, //endDate
+          task.occurrences, //totalOccurrences
+          task.occurrences, //currentOccurrences
+          timezoneString, //timezone
+          exclusions, //exclusions
+          schedulings //schedulings
+        ))
+      } else Left(errList.unzip match {
+        case (_, errors) => errors
+      }))
+  } else Future.successful(Left(List(invalidEndpointId))))*/
   }
 
   private def isValidCreateTask(task: CreateTaskDTO): Boolean = {
@@ -174,6 +198,30 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
         task.periodType.isDefined || task.period.isDefined || task.endDateAndTime.isDefined || task.occurrences.isDefined) &&
         !(task.endDateAndTime.isDefined && task.occurrences.isDefined)
     }
+
+  }
+
+  private def isValidListOfDeletes(task: UpdateTaskDTO): Boolean = {
+    if(task.toDelete.isDefined){
+      def iter(iterList: List[String]): Boolean = {
+        if(iterList.nonEmpty){
+          iterList.head match {
+            case "startDateAndTime" => if(task.startDateAndTime.isEmpty) iter(iterList.tail) else false
+            case "periodType" => if(task.periodType.isEmpty) iter(iterList.tail) else false
+            case "period" => if(task.period.isEmpty) iter(iterList.tail) else false
+            case "endDateAndTime" => if(task.endDateAndTime.isEmpty) iter(iterList.tail) else false
+            case "occurrences" => if(task.occurrences.isEmpty) iter(iterList.tail) else false
+            case "timezone" => if(task.timezone.isEmpty) iter(iterList.tail) else false
+            case "exclusions" => if(task.exclusions.isEmpty) iter(iterList.tail) else false
+            case "schedulings" => if(task.schedulings.isEmpty) iter(iterList.tail) else false
+            case _ => false
+          }
+        }
+        else true
+      }
+      iter(task.toDelete.get)
+    }
+    else true
 
   }
 
@@ -251,28 +299,25 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
   }
 
   //TODO fix exclusionDates.tail
-  private def areValidUpdateExclusionFormats(oldExclusions: Option[List[ExclusionDTO]], exclusions: Option[List[UpdateExclusionDTO]], exclusionDates: Option[List[Option[Date]]], taskId: String): Option[List[ExclusionDTO]] = {
+  private def areValidUpdateExclusionFormats(exclusions: Option[List[UpdateExclusionDTO]], exclusionDates: Option[List[Option[Date]]], taskId: String): Option[List[ExclusionDTO]] = {
     def iter(exclusions: List[UpdateExclusionDTO], exclusionDates: List[Option[Date]], toReturn: List[ExclusionDTO]): Option[List[ExclusionDTO]] = {
       if (exclusions.isEmpty) None
       else {
         val exclusion = exclusions.head
-        val oldExclusion = getOldExclusionWithExclusionId(exclusion.exclusionId, oldExclusions)
-        if (oldExclusion.isDefined) {
-          exclusion.exclusionDate match {
-            case Some(_) =>
-              val exclusionDate = exclusionDates.headOption.flatten
-              if (exclusionDate.isDefined && exclusion.day.isEmpty && exclusion.dayOfWeek.isEmpty &&
-                exclusion.dayType.isEmpty && exclusion.month.isEmpty && exclusion.year.isEmpty && exclusion.criteria.isEmpty) {
-                iter(exclusions.tail, exclusionDates.tail, ExclusionDTO(exclusion.exclusionId.get, taskId, exclusionDate) :: toReturn)
-              } else None
-            case None =>
-              if (exclusion.taskId.isDefined || exclusion.exclusionDate.isDefined || exclusion.day.isDefined
-                || exclusion.dayOfWeek.isDefined || exclusion.dayType.isDefined || exclusion.month.isDefined || exclusion.year.isDefined
-                || exclusion.criteria.isDefined) {
-                iter(exclusions.tail, exclusionDates.tail, ExclusionDTO(exclusion.exclusionId.get, taskId, None, exclusion.day, exclusion.dayOfWeek, exclusion.dayType, exclusion.month, exclusion.year, exclusion.criteria) :: toReturn)
-              } else None
-          }
-        } else None
+        exclusion.exclusionDate match {
+          case Some(_) =>
+            val exclusionDate = exclusionDates.head
+            if (exclusion.exclusionId.isDefined && exclusion.taskId.isDefined && exclusionDate.isDefined && exclusion.day.isEmpty &&
+              exclusion.dayOfWeek.isEmpty && exclusion.dayType.isEmpty && exclusion.month.isEmpty && exclusion.year.isEmpty && exclusion.criteria.isEmpty) {
+              iter(exclusions.tail, exclusionDates.tail, ExclusionDTO(exclusion.exclusionId.get, taskId, exclusionDate) :: toReturn)
+            } else None
+          case None =>
+            if (exclusion.taskId.isDefined || exclusion.exclusionDate.isDefined || exclusion.day.isDefined
+              || exclusion.dayOfWeek.isDefined || exclusion.dayType.isDefined || exclusion.month.isDefined || exclusion.year.isDefined
+              || exclusion.criteria.isDefined) {
+              iter(exclusions.tail, exclusionDates.tail, ExclusionDTO(exclusion.exclusionId.get, taskId, None, exclusion.day, exclusion.dayOfWeek, exclusion.dayType, exclusion.month, exclusion.year, exclusion.criteria) :: toReturn)
+            } else None
+        }
       }
     }
     exclusions match {
@@ -556,28 +601,26 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
     }
   }
 
-  private def areValidUpdateSchedulingFormats(oldSchedulings: Option[List[SchedulingDTO]], schedulings: Option[List[UpdateSchedulingDTO]], schedulingDates: Option[List[Option[Date]]], taskId: String): Option[List[SchedulingDTO]] = {
+  private def areValidUpdateSchedulingFormats(schedulings: Option[List[UpdateSchedulingDTO]], schedulingDates: Option[List[Option[Date]]], taskId: String): Option[List[SchedulingDTO]] = {
     def iter(schedulings: List[UpdateSchedulingDTO], schedulingDates: List[Option[Date]], toReturn: List[SchedulingDTO]): Option[List[SchedulingDTO]] = {
       if (schedulings.isEmpty) None
       else {
         val scheduling = schedulings.head
-        val oldExclusion = getOldSchedulingWithSchedulingId(scheduling.schedulingId, oldSchedulings)
-        if (oldExclusion.isDefined) {
-          scheduling.schedulingDate match {
-            case Some(_) =>
-              val exclusionDate = schedulingDates.head
-              if (exclusionDate.isDefined && scheduling.day.isEmpty && scheduling.dayOfWeek.isEmpty &&
-                scheduling.dayType.isEmpty && scheduling.month.isEmpty && scheduling.year.isEmpty && scheduling.criteria.isEmpty) {
-                iter(schedulings.tail, schedulingDates.tail, SchedulingDTO(scheduling.schedulingId.get, taskId, exclusionDate) :: toReturn)
-              } else None
-            case None =>
-              if (scheduling.taskId.isDefined || scheduling.schedulingDate.isDefined || scheduling.day.isDefined
-                || scheduling.dayOfWeek.isDefined || scheduling.dayType.isDefined || scheduling.month.isDefined || scheduling.year.isDefined
-                || scheduling.criteria.isDefined) {
-                iter(schedulings.tail, schedulingDates.tail, SchedulingDTO(scheduling.schedulingId.get, taskId, None, scheduling.day, scheduling.dayOfWeek, scheduling.dayType, scheduling.month, scheduling.year, scheduling.criteria) :: toReturn)
-              } else None
+        scheduling.schedulingDate match {
+          case Some(_) =>
+            val exclusionDate = schedulingDates.head
+            if (exclusionDate.isDefined && scheduling.day.isEmpty && scheduling.dayOfWeek.isEmpty &&
+              scheduling.dayType.isEmpty && scheduling.month.isEmpty && scheduling.year.isEmpty && scheduling.criteria.isEmpty) {
+              iter(schedulings.tail, schedulingDates.tail, SchedulingDTO(scheduling.schedulingId.get, taskId, exclusionDate) :: toReturn)
+            } else None
+          case None =>
+            if (scheduling.taskId.isDefined || scheduling.schedulingDate.isDefined || scheduling.day.isDefined
+              || scheduling.dayOfWeek.isDefined || scheduling.dayType.isDefined || scheduling.month.isDefined || scheduling.year.isDefined
+              || scheduling.criteria.isDefined) {
+              iter(schedulings.tail, schedulingDates.tail, SchedulingDTO(scheduling.schedulingId.get, taskId, None, scheduling.day, scheduling.dayOfWeek, scheduling.dayType, scheduling.month, scheduling.year, scheduling.criteria) :: toReturn)
+            } else None
           }
-        } else None
+
       }
     }
     schedulings match {

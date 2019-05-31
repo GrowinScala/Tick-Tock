@@ -13,11 +13,11 @@ class ExclusionRepositoryImpl @Inject() (dtbase: Database) extends ExclusionRepo
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
-  private def exclusionDTOToExclusionRow(exclusion: ExclusionDTO): ExclusionRow = {
+  def exclusionDTOToExclusionRow(exclusion: ExclusionDTO): ExclusionRow = {
     ExclusionRow(exclusion.exclusionId, exclusion.taskId, exclusion.exclusionDate, exclusion.day, exclusion.dayOfWeek, exclusion.dayType, exclusion.month, exclusion.year, exclusion.criteria)
   }
 
-  private def exclusionRowToExclusionDTO(exclusion: ExclusionRow): ExclusionDTO = {
+  def exclusionRowToExclusionDTO(exclusion: ExclusionRow): ExclusionDTO = {
     ExclusionDTO(exclusion.exclusionId, exclusion.taskId, exclusion.exclusionDate, exclusion.day, exclusion.dayOfWeek, exclusion.dayType, exclusion.month, exclusion.year, exclusion.criteria)
   }
 

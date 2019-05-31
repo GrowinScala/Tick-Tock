@@ -38,7 +38,7 @@ class FileControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
       val fileController = new FileController(cc)
       val result = fileController.getAllFiles.apply(fakeRequest)
       val bodyText = contentAsString(result)
-      bodyText mustBe """[{"fileId":"asd1","fileName":"test1","uploadDate":1514808000000},{"fileId":"asd2","fileName":"test2","uploadDate":1514808000000},{"fileId":"asd3","fileName":"test3","uploadDate":1514808000000}]"""
+      bodyText mustBe """[{"fileId":"asd1","fileName":"test1","uploadDate":"Mon Jan 01 12:00:00 GMT 2018"},{"fileId":"asd2","fileName":"test2","uploadDate":"Mon Jan 01 12:00:00 GMT 2018"},{"fileId":"asd3","fileName":"test3","uploadDate":"Mon Jan 01 12:00:00 GMT 2018"}]"""
     }
   }
 
@@ -49,7 +49,7 @@ class FileControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
       val fileController = new FileController(cc)
       val result = fileController.getFileById("asd1").apply(fakeRequest)
       val bodyText = contentAsString(result)
-      bodyText mustBe """{"fileId":"asd1","fileName":"test1","uploadDate":1514808000000}"""
+      bodyText mustBe """{"fileId":"asd1","fileName":"test1","uploadDate":"Mon Jan 01 12:00:00 GMT 2018"}"""
     }
   }
 

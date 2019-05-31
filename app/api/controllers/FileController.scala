@@ -51,7 +51,7 @@ class FileController @Inject() (cc: ControllerComponents)(implicit exec: Executi
    */
   def getAllFiles: Action[AnyContent] = Action.async {
     fileRepo.selectAllFiles.map { seq =>
-      val result = JsArray(seq.map(tr => Json.toJsObject(tr)))
+      val result = JsArray(seq.map(tr => Json.toJson(tr)))
       Ok(result)
     }
   }
@@ -64,7 +64,7 @@ class FileController @Inject() (cc: ControllerComponents)(implicit exec: Executi
    */
   def getFileById(id: String): Action[AnyContent] = Action.async {
     fileRepo.selectFileById(id).map {
-      case Some(file) => Ok(Json.toJsObject(file))
+      case Some(file) => Ok(Json.toJson(file))
       case None => BadRequest(Json.toJsObject(invalidFileName))
     }
   }

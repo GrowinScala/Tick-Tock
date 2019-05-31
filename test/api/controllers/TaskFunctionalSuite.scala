@@ -39,9 +39,9 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
   private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
   private val dtbase: Database = appBuilder.injector.instanceOf[Database]
   private implicit val fileRepo: FileRepository = new FileRepositoryImpl(TEST_DB)
-  private implicit val taskRepo: TaskRepository = new TaskRepositoryImpl(TEST_DB)
   private implicit val exclusionRepo: ExclusionRepository = new ExclusionRepositoryImpl(TEST_DB)
   private implicit val schedulingRepo: SchedulingRepository = new SchedulingRepositoryImpl(TEST_DB)
+  private implicit val taskRepo: TaskRepository = new TaskRepositoryImpl(TEST_DB, exclusionRepo, schedulingRepo)
   private implicit val uuidGen: UUIDGenerator = appBuilder.injector.instanceOf[UUIDGenerator]
   private implicit val executionManager: ExecutionManager = appBuilder.injector.instanceOf[ExecutionManager]
   private implicit val actorSystem: ActorSystem = ActorSystem()

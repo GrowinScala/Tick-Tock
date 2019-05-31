@@ -36,5 +36,16 @@ object ExclusionDTO {
     (JsPath \ "year").readNullable[Int] and
     (JsPath \ "criteria").readNullable[Criteria])(ExclusionDTO.apply _)
 
-  implicit val exclusionFormat: OWrites[ExclusionDTO] = Json.writes[ExclusionDTO]
+  implicit val exclusionWrites = new Writes[ExclusionDTO] {
+    def writes(exclusion: ExclusionDTO) = {
+      Json.obj("exclusionId" -> exclusion.exclusionId, "taskId" -> exclusion.taskId) ++
+        (if (exclusion.exclusionDate.isDefined) Json.obj("exclusionDate" -> exclusion.exclusionDate.get.toString) else Json.obj()) ++
+        (if (exclusion.day.isDefined) Json.obj("day" -> exclusion.day) else Json.obj()) ++
+        (if (exclusion.dayOfWeek.isDefined) Json.obj("dayOfWeek" -> exclusion.dayOfWeek) else Json.obj()) ++
+        (if (exclusion.dayType.isDefined) Json.obj("dayType" -> exclusion.dayType) else Json.obj()) ++
+        (if (exclusion.month.isDefined) Json.obj("month" -> exclusion.month) else Json.obj()) ++
+        (if (exclusion.year.isDefined) Json.obj("year" -> exclusion.year) else Json.obj()) ++
+        (if (exclusion.criteria.isDefined) Json.obj("criteria" -> exclusion.criteria) else Json.obj())
+    }
+  }
 }

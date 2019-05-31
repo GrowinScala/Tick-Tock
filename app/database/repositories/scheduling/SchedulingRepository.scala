@@ -1,10 +1,15 @@
 package database.repositories.scheduling
 
 import api.dtos.SchedulingDTO
+import database.mappings.SchedulingMappings.SchedulingRow
 
 import scala.concurrent.Future
 
 trait SchedulingRepository {
+
+  def schedulingDTOToSchedulingRow(scheduling: SchedulingDTO): SchedulingRow
+
+  def schedulingRowToSchedulingDTO(schedulingRow: SchedulingRow): SchedulingDTO
 
   /**
    * Selects all rows from the schedulings table on the database.

@@ -3,10 +3,19 @@ package database.repositories.scheduling
 import api.dtos.{ ExclusionDTO, SchedulingDTO }
 import api.services.{ Criteria, DayType }
 import api.utils.DateUtils._
+import database.mappings.SchedulingMappings.SchedulingRow
 
 import scala.concurrent.Future
 
 class FakeSchedulingRepository extends SchedulingRepository {
+
+  def schedulingDTOToSchedulingRow(scheduling: SchedulingDTO): SchedulingRow = {
+    SchedulingRow("dsa1", "asd1", Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")))
+  }
+
+  def schedulingRowToSchedulingDTO(schedulingRow: SchedulingRow): SchedulingDTO = {
+    SchedulingDTO("dsa1", "asd1", Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")))
+  }
 
   /**
    * Selects all rows from the exclusions table on the database.

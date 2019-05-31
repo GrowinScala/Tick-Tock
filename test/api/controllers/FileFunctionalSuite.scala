@@ -64,9 +64,9 @@ class FileFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val bodyText = contentAsString(result.get)
       status(result.get) mustBe OK
       bodyText mustBe """[{"fileId":""" + "\"" + fileUUID1 + "\"" +
-        ""","fileName":"test1","uploadDate":1514808000000},{"fileId":""" + "\"" + fileUUID2 + "\"" +
-        ""","fileName":"test2","uploadDate":1517486400000},{"fileId":""" + "\"" + fileUUID3 + "\"" +
-        ""","fileName":"test3","uploadDate":1519905600000},{"fileId":""" + "\"" + fileUUID4 + "\"" + ""","fileName":"test4","uploadDate":1522580400000}]"""
+        ""","fileName":"test1","uploadDate":"Mon Jan 01 12:00:00 GMT 2018"},{"fileId":""" + "\"" + fileUUID2 + "\"" +
+        ""","fileName":"test2","uploadDate":"Thu Feb 01 12:00:00 GMT 2018"},{"fileId":""" + "\"" + fileUUID3 + "\"" +
+        ""","fileName":"test3","uploadDate":"Thu Mar 01 12:00:00 GMT 2018"},{"fileId":""" + "\"" + fileUUID4 + "\"" + ""","fileName":"test4","uploadDate":"Sun Apr 01 12:00:00 BST 2018"}]"""
     }
   }
 
@@ -78,7 +78,7 @@ class FileFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val result = route(app, fakeRequest)
       val bodyText = contentAsString(result.get)
       status(result.get) mustBe OK
-      bodyText mustBe """{"fileId":""" + "\"" + toGet + "\"" + ""","fileName":"test2","uploadDate":1517486400000}"""
+      bodyText mustBe """{"fileId":""" + "\"" + toGet + "\"" + ""","fileName":"test2","uploadDate":"Thu Feb 01 12:00:00 GMT 2018"}"""
     }
 
     "receive a GET request with an invalid id" in {
@@ -105,7 +105,7 @@ class FileFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
     }
 
     "receive a DELETE request with an invalid id" in {
-      val toDelete = "asd"
+      val toDelete = "asd1"
       val fakeRequest = FakeRequest(DELETE, s"/file/" + toDelete)
         .withHeaders(HOST -> "localhost:9000")
       val result = route(app, fakeRequest)

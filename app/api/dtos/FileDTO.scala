@@ -2,6 +2,8 @@ package api.dtos
 
 import java.util.Date
 
+import play.api.libs.functional.syntax._
+import play.api.libs.json.Reads._
 import play.api.libs.json._
 
 /**
@@ -23,5 +25,13 @@ object FileDTO {
   /**
    * Implicit that defines how a FileDTO is written to a JSON format.
    */
-  implicit val fileFormat: OFormat[FileDTO] = Json.format[FileDTO]
+  implicit val fileReads: Reads[FileDTO] = (
+    (JsPath \ "fileId").read[String] and
+    (JsPath \ "fileName").read[String] and
+    (JsPath \ "uploadDate").read[Date])(FileDTO.apply _)
+
+  implicit val fileWrites = new Writes[FileDTO] {
+    def writes(file: FileDTO) =
+      Json.obj("fileId" -> file.fileId, "fileName" -> file.fileName, "uploadDate" -> file.uploadDate.toString)
+  }
 }

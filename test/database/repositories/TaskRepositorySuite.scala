@@ -9,7 +9,11 @@ import api.services.{ PeriodType, SchedulingType }
 import api.utils.DateUtils._
 import database.mappings.FileMappings._
 import database.mappings.TaskMappings._
+import database.mappings.ExclusionMappings._
+import database.mappings.SchedulingMappings._
+import database.repositories.exclusion.ExclusionRepository
 import database.repositories.file.FileRepository
+import database.repositories.scheduling.SchedulingRepository
 import database.repositories.task.TaskRepository
 import org.scalatest._
 import play.api.Mode
@@ -28,6 +32,8 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
   private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
   private implicit val fileRepo: FileRepository = injector.instanceOf[FileRepository]
   private implicit val taskRepo: TaskRepository = injector.instanceOf[TaskRepository]
+  //private implicit val exclusionRepo: ExclusionRepository = injector.instanceOf[ExclusionRepository]
+  //private implicit val schedulingRepo: SchedulingRepository = injector.instanceOf[SchedulingRepository]
   private val dtbase: Database = injector.instanceOf[Database]
   private implicit val actorSystem: ActorSystem = ActorSystem()
   private implicit val mat: Materializer = ActorMaterializer()
@@ -72,7 +78,6 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
         result.head.name.name mustBe "files"
         result.tail.head.name.name mustBe "tasks"
       }
-
     }
   }
 

@@ -1,12 +1,22 @@
 package database.repositories.exclusion
 
-import api.dtos.ExclusionDTO
-import api.services.{ Criteria, DayType }
+import api.dtos.{ ExclusionDTO, TaskDTO }
+import api.services.{ Criteria, DayType, SchedulingType }
 import api.utils.DateUtils._
+import database.mappings.ExclusionMappings.ExclusionRow
+import database.mappings.TaskMappings.TaskRow
 
 import scala.concurrent.Future
 
 class FakeExclusionRepository extends ExclusionRepository {
+
+  def exclusionRowToExclusionDTO(exclusion: ExclusionRow): ExclusionDTO = {
+    ExclusionDTO("dsa1", "asd1", Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")))
+  }
+
+  def exclusionDTOToExclusionRow(exclusion: ExclusionDTO): ExclusionRow = {
+    ExclusionRow("asd1", "dsa1", Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")))
+  }
 
   /**
    * Selects all rows from the exclusions table on the database.

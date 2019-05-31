@@ -9,6 +9,7 @@ import play.api.libs.json._
 import scala.concurrent.ExecutionContext
 
 case class UpdateSchedulingDTO(
+  toDelete: Option[List[String]] = None, // list of strings of the field names to delete. To replace use the fields below.
   schedulingId: Option[String] = None,
   taskId: Option[String] = None,
   schedulingDate: Option[String] = None,
@@ -28,6 +29,7 @@ object UpdateSchedulingDTO {
    * This implicit is used on the TaskController when Play's "validate" method is called.
    */
   implicit val updateSchedulingReads: Reads[UpdateSchedulingDTO] = (
+    (JsPath \ "toDelete").readNullable[List[String]] and
     (JsPath \ "exclusionId").readNullable[String] and
     (JsPath \ "taskId").readNullable[String] and
     (JsPath \ "exclusionDate").readNullable[String] and

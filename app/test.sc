@@ -9,9 +9,3 @@ import database.repositories.task.{FakeTaskRepository, TaskRepository}
 import java.time.Duration
 
 import play.api.libs.json.Json
-
-import scala.util.Try
-
-
-val date = new Date()
-println(Json.toJsObject(date))

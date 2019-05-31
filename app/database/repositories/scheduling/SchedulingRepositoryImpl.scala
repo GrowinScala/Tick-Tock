@@ -11,11 +11,11 @@ class SchedulingRepositoryImpl @Inject() (dtbase: Database) extends SchedulingRe
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
-  private def schedulingDTOToSchedulingRow(scheduling: SchedulingDTO): SchedulingRow = {
+  def schedulingDTOToSchedulingRow(scheduling: SchedulingDTO): SchedulingRow = {
     SchedulingRow(scheduling.schedulingId, scheduling.taskId, scheduling.schedulingDate, scheduling.day, scheduling.dayOfWeek, scheduling.dayType, scheduling.month, scheduling.year, scheduling.criteria)
   }
 
-  private def schedulingRowToSchedulingDTO(schedulingRow: SchedulingRow): SchedulingDTO = {
+  def schedulingRowToSchedulingDTO(schedulingRow: SchedulingRow): SchedulingDTO = {
     SchedulingDTO(schedulingRow.schedulingId, schedulingRow.taskId, schedulingRow.schedulingDate, schedulingRow.day, schedulingRow.dayOfWeek, schedulingRow.dayType, schedulingRow.month, schedulingRow.year, schedulingRow.criteria)
   }
 
