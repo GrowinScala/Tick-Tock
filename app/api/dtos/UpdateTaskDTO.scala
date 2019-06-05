@@ -1,10 +1,10 @@
 package api.dtos
 
-import api.services.PeriodType.{Daily, Hourly, Minutely, Monthly, PeriodType, Weekly, Yearly}
+import api.services.PeriodType.{ Daily, Hourly, Minutely, Monthly, PeriodType, Weekly, Yearly }
 import api.services.SchedulingType.SchedulingType
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
-import play.api.libs.json.{JsPath, Json, OWrites, Reads}
+import play.api.libs.json.{ JsPath, Json, OWrites, Reads }
 
 import scala.concurrent.ExecutionContext
 
@@ -33,7 +33,7 @@ object UpdateTaskDTO {
    * This implicit is used on the TaskController when Play's "validate" method is called.
    */
   implicit val updateTaskReads: Reads[UpdateTaskDTO] = (
-    (JsPath \ "toDelete").readNullable[List[String]] and
+    (JsPath \ "toDelete").read[List[String]] and
     (JsPath \ "taskId").readNullable[String] and
     (JsPath \ "fileName").readNullable[String] and
     (JsPath \ "taskType").readNullable[String] and

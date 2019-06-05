@@ -146,7 +146,7 @@ object Error {
 
   lazy val invalidTaskDeleteList = Error(
     errorCode = "error-14",
-    message ="""At least one of the field names in the toDelete list is invalid. The valid strings are:
+    message = """At least one of the field names in the toDelete list is invalid. The valid strings are:
                |"taskId", "fileName", "taskType", "startDateAndTime", "periodType", "period", "endDateAndTime", "occurrences", "timezone", "exclusions", "schedulings".
              """.stripMargin,
     reason = Error.invalid,
@@ -227,7 +227,7 @@ object Error {
 
   lazy val invalidExclusionDeleteList = Error(
     errorCode = "error-25",
-    message ="""At least one of the exclusion field names in the toDelete list is invalid. The valid strings are:
+    message = """At least one of the exclusion field names in the toDelete list is invalid. The valid strings are:
                |"exclusionId", "taskId", "exclusionDate", "day", "dayOfWeek", "dayType", "month", "year", "criteria".
              """.stripMargin,
     reason = Error.invalid,
@@ -299,7 +299,7 @@ object Error {
 
   lazy val invalidSchedulingDeleteList = Error(
     errorCode = "error-35",
-    message ="""At least one of the exclusion field names in the toDelete list is invalid. The valid strings are:
+    message = """At least one of the exclusion field names in the toDelete list is invalid. The valid strings are:
                |"schedulingId", "taskId", "schedulingDate", "day", "dayOfWeek", "dayType", "month", "year", "criteria".
              """.stripMargin,
     reason = Error.invalid,

@@ -112,9 +112,35 @@ class TaskRepositoryImpl @Inject() (dtbase: Database, exclusionRepo: ExclusionRe
    * @return the selected task according to the id given
    */
   def selectTask(id: String): Future[Option[TaskDTO]] = {
-    dtbase.run(getTaskByTaskId(id).result).flatMap { seq =>
-      if (seq.isEmpty) Future.successful(None)
-      else taskRowToTaskDTO(seq.headOption)
+    val result = for {
+      seq <- dtbase.run(getTaskByTaskId(id).result)
+      exclusionSeq <- dtbase.run(getExclusionByTaskId(id).result)
+      schedulingSeq <- dtbase.run(getSchedulingByTaskId(id).result)
+    } yield (seq, exclusionSeq, schedulingSeq)
+
+    result.flatMap {
+      {
+        case (seq, exclusionSeq, schedulingSeq) =>
+          seq.map(taskRow => taskRowToTaskDTO(Some(taskRow))).head.map {
+            {
+              case Some(task) =>
+                Some(TaskDTO(
+                  task.taskId,
+                  task.fileName,
+                  task.taskType,
+                  task.startDateAndTime,
+                  task.periodType,
+                  task.period,
+                  task.endDateAndTime,
+                  task.totalOccurrences,
+                  task.currentOccurrences,
+                  task.timezone,
+                  Some(exclusionSeq.map(exclusionRow => exclusionRepo.exclusionRowToExclusionDTO(exclusionRow)).toList),
+                  Some(schedulingSeq.map(schedulingRow => schedulingRepo.schedulingRowToSchedulingDTO(schedulingRow)).toList)))
+              case None => None
+            }
+          }
+      }
     }
   }
 
