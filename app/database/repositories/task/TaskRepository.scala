@@ -43,7 +43,7 @@ trait TaskRepository {
   def selectTotalOccurrencesByTaskId(id: String): Future[Option[Int]]
 
   /**
-   * Select the currentOccurrences from a task on the database by giving its id
+   * Select the currentOccurrences from a task on the database by giving its id.
    *
    * @param id - the identifier of the task we want to select.
    * @return an Int representing the currentOccurrences of the task.

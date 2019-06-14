@@ -50,14 +50,18 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
 
   override def beforeAll: Unit = {
     Await.result(dtbase.run(createFilesTableAction), Duration.Inf)
-    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", getCurrentDateTimestamp)), Duration.Inf)
-    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID2, "test2", getCurrentDateTimestamp)), Duration.Inf)
-    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID3, "test3", getCurrentDateTimestamp)), Duration.Inf)
-    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID4, "test4", getCurrentDateTimestamp)), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID1, taskUUID1, getCurrentDateTimestamp)), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID2, taskUUID2, getCurrentDateTimestamp)), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID3, taskUUID3, getCurrentDateTimestamp)), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID4, taskUUID4, getCurrentDateTimestamp)), Duration.Inf)
     Await.result(dtbase.run(createTasksTableAction), Duration.Inf)
+    Await.result(dtbase.run(createExclusionsTableAction), Duration.Inf)
+    Await.result(dtbase.run(createSchedulingsTableAction), Duration.Inf)
   }
 
   override def afterAll: Unit = {
+    Await.result(dtbase.run(dropSchedulingsTableAction), Duration.Inf)
+    Await.result(dtbase.run(dropExclusionsTableAction), Duration.Inf)
     Await.result(dtbase.run(dropTasksTableAction), Duration.Inf)
     Await.result(dtbase.run(dropFilesTableAction), Duration.Inf)
   }
@@ -75,6 +79,8 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
         _ <- dtbase.run(createTasksTableAction)
         result <- dtbase.run(MTable.getTables)
       } yield {
+        println(result.head.name.name)
+        println(result.tail.head.name.name)
         result.head.name.name mustBe "files"
         result.tail.head.name.name mustBe "tasks"
       }
@@ -153,11 +159,12 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID3, "unknown", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
-        _ <- taskRepo.selectFileIdByTaskId(taskUUID1).map(fileId => assert(fileId.get == fileUUID1))
-        _ <- taskRepo.selectFileIdByTaskId(taskUUID3).map(fileId => assert(fileId.get == ""))
-        _ <- taskRepo.selectFileIdByTaskId(taskUUID4).map(fileId => assert(fileId.isEmpty))
+        first <- taskRepo.selectFileIdByTaskId(taskUUID1).map(fileId => assert(fileId.get == fileUUID1))
+        second <- taskRepo.selectFileIdByTaskId(taskUUID3).map(fileId => assert(fileId.get == ""))
+        third <- taskRepo.selectFileIdByTaskId(taskUUID4).map(fileId => assert(fileId.isEmpty))
         fileId <- taskRepo.selectFileIdByTaskId(taskUUID2)
       } yield fileId.get mustBe fileUUID2
+
     }
   }
 

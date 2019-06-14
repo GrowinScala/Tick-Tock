@@ -113,9 +113,9 @@ class ExclusionRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with
         _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID1, taskUUID3, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))
         _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID2, taskUUID1, None, Some(10), None, Some(DayType.Weekday), None, Some(2030)))
         _ <- exclusionRepo.selectExclusionsByTaskId(taskUUID3).map(elem => assert(elem.get.size == 1 && elem.get.head.exclusionId == exclusionUUID1))
-        _ <- exclusionRepo.selectExclusionsByTaskId(taskUUID2).map(elem => assert(elem.get.isEmpty))
+        _ <- exclusionRepo.selectExclusionsByTaskId(taskUUID2).map(elem => assert(elem.isEmpty))
         exclusionList <- exclusionRepo.selectExclusionsByTaskId(taskUUID1)
-      } yield exclusionList.get.head.dayType mustBe DayType.Weekday
+      } yield exclusionList.get.head.dayType mustBe Some(DayType.Weekday)
     }
   }
 

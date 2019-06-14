@@ -336,10 +336,10 @@ class TaskValidatorSuite extends AsyncWordSpec with MustMatchers {
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with exclusions and timezone)" in {
       val dto = CreateTaskDTO("test1", SchedulingType.Personalized, Some("2030-01-01 12:00:00"), Some(PeriodType.Monthly), Some(1), None, Some(24), Some("PST"), Some(List(CreateExclusionDTO(Some("2035-01-01 00:00:00")))),
         Some(List(CreateSchedulingDTO(None, None, None, None, None, Some(2038), Some(Criteria.Last)))))
-      val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
+      val startDatePST = stringToDateFormat("2030-01-01 20:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.scheduleValidator(dto)
-      } yield validation mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("asd1", "asd1", None, None, None, None, None, Some(2038), Some(Criteria.Last))))))
+      } yield validation mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Personalized, Some(startDatePST), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), Some("PST"), Some(List(ExclusionDTO("asd1", "asd1", Some(stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Some(List(SchedulingDTO("asd1", "asd1", None, None, None, None, None, Some(2038), Some(Criteria.Last))))))
     }
 
     "receive an invalid CreateTaskDTO with missing fields. (Periodic task without any other fields)" in {

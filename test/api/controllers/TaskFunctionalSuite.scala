@@ -6866,6 +6866,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
+            "toDelete":[],
             "taskId":"newUUID"
           }
         """))
@@ -6893,6 +6894,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
+            "toDelete":[],
             "taskId":"11231bd5-6f92-496c-9fe7-75bc180467b0"
           }
         """))
@@ -6929,6 +6931,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
+            "toDelete":[],
             "fileName":"test4"
           }
         """))
@@ -6962,6 +6965,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
+            "toDelete":[],
             "taskType":"RunOnce"
           }
         """))
@@ -6996,6 +7000,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
+            "toDelete":[],
             "taskType":"Periodic"
           }
         """))
@@ -7029,6 +7034,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
+            "toDelete":[],
             "taskType":"Periodic",
             "startDateAndTime": "2019-07-01 00:00:00",
             "periodType": "Hourly",
@@ -7067,6 +7073,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
+            "toDelete":[],
             "startDateAndTime":"2019-07-01 00:00:00"
           }
         """))
@@ -7100,6 +7107,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
+            "toDelete":[],
             "periodType":"Hourly"
           }
         """))
@@ -7133,6 +7141,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
+            "toDelete":[],
             "period": 5
           }
         """))
@@ -7167,6 +7176,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
+            "toDelete":[],
             "endDateAndTime":"2050-01-01 00:00:00"
           }
         """))
@@ -7201,6 +7211,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
+            "toDelete":[],
             "endDateAndTime":"2050-01-01 00:00:00"
           }
         """))
@@ -7234,6 +7245,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
+            "toDelete":[],
             "occurrences": 5
           }
         """))
@@ -7268,6 +7280,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
+            "toDelete":[],
             "occurrences": 5
           }
         """))
@@ -7301,6 +7314,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
+            "toDelete":[],
             "taskId":"11231bd5-6f92-496c-9fe7-75bc180467b0",
             "fileName":"test4",
             "taskType":"RunOnce",
@@ -7337,6 +7351,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
+            "toDelete":[],
             "taskId":"11231bd5-6f92-496c-9fe7-75bc180467b0",
             "fileName":"test4",
             "taskType":"Periodic",
