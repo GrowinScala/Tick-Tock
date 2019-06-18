@@ -375,7 +375,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with year and criteria)" in {
       val dto = UpdateTaskDTO(List("endDateAndTime"), Some(taskUUID4), Some("test1"), Some(SchedulingType.Personalized), Some("2030-01-01 12:00:00"), Some(PeriodType.Monthly), Some(1), None, Some(24), None, None,
         Some(List(UpdateSchedulingDTO(Some(schedulingUUID1), Some(taskUUID4), None, None, None, None, None, Some(2038), Some(Criteria.Last)))))
-      val startDate = stringToDateFormat("2030-01-01 12:q00:00", "yyyy-MM-dd HH:mm:ss")
+      val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
       } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO(schedulingUUID1, taskUUID4, None, None, None, None, None, Some(2038), Some(Criteria.Last))))))
@@ -387,7 +387,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO(schedulingUUID1, taskUUID4, None, None, None, None, None, Some(2038), Some(Criteria.Last))))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), Some("PST"), None, Some(List(SchedulingDTO(schedulingUUID1, taskUUID4, None, None, None, None, None, Some(2038), Some(Criteria.Last))))))
     }
 
     "receive an invalid UpdateTaskDTO with missing fields. (Periodic task without any other fields)" in {

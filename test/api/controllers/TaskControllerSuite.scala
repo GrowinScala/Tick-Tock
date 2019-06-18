@@ -103,6 +103,7 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
         .withHeaders(HOST -> LOCALHOST, CONTENT_TYPE -> "application/json")
         .withBody(Json.parse("""
           {
+            "toDelete": [],
             "startDateAndTime": "2020-07-01 00:00:00",
             "fileName": "test1",
             "taskType": "RunOnce"
@@ -120,13 +121,13 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
         .withHeaders(HOST -> LOCALHOST, CONTENT_TYPE -> "application/json")
         .withBody(Json.parse("""
           {
-            "unknownKey":"unknownValue"
+            "taskId":"newUUID"
           }
         """))
       val taskController = new TaskController(cc)
       val result = taskController.updateTask(id).apply(fakeRequest)
       val bodyText = contentAsString(result)
-      bodyText mustBe ""
+      bodyText mustBe "Error replacing scheduled task : \nList((/toDelete,List(JsonValidationError(List(error.path.missing),WrappedArray()))))"
     }
   }
 

@@ -14,10 +14,10 @@ libraryDependencies ++= Seq(
    "com.enragedginger" %% "akka-quartz-scheduler" % "1.7.0-akka-2.5.x",
    "com.h2database" % "h2" % "1.4.197" % Test,
    "com.typesafe.akka" %% "akka-testkit" % "2.5.17" % Test,
-   "com.typesafe.slick" %% "slick-hikaricp" % "3.2.3",
+   "com.typesafe.slick" %% "slick-hikaricp" % "3.2.3", 
    guice,
    "mysql" % "mysql-connector-java" % "8.0.13",
    "org.flywaydb" % "flyway-core" % "5.2.1",
-   "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test
-  
+   "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test,
+   "org.mockito" %% "mockito-scala" % "1.5.11" % Test
 )

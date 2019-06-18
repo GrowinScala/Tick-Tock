@@ -50,10 +50,10 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
 
   override def beforeAll: Unit = {
     Await.result(dtbase.run(createFilesTableAction), Duration.Inf)
-    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID1, taskUUID1, getCurrentDateTimestamp)), Duration.Inf)
-    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID2, taskUUID2, getCurrentDateTimestamp)), Duration.Inf)
-    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID3, taskUUID3, getCurrentDateTimestamp)), Duration.Inf)
-    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID4, taskUUID4, getCurrentDateTimestamp)), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", getCurrentDateTimestamp)), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID2, "test2", getCurrentDateTimestamp)), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID3, "test3", getCurrentDateTimestamp)), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID4, "test4", getCurrentDateTimestamp)), Duration.Inf)
     Await.result(dtbase.run(createTasksTableAction), Duration.Inf)
     Await.result(dtbase.run(createExclusionsTableAction), Duration.Inf)
     Await.result(dtbase.run(createSchedulingsTableAction), Duration.Inf)
@@ -72,17 +72,19 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
 
   "DBTasksTable#drop/createTasksTable" should {
     "create and then drop the Tasks table on the database." in {
+      println(Await.result(dtbase.run(MTable.getTables), Duration.Inf))
       for {
-        _ <- dtbase.run(MTable.getTables).map(item => assert(item.head.name.name.equals("files") && item.tail.head.name.name.equals("tasks")))
+        _ <- dtbase.run(MTable.getTables).map(item => assert(item.head.name.name.equals("exclusions") && item.tail.head.name.name.equals("files") && item.tail.tail.head.name.name.equals("schedulings") && item.tail.tail.tail.head.name.name.equals("tasks") && item.size == 4))
         _ <- dtbase.run(dropTasksTableAction)
-        _ <- dtbase.run(MTable.getTables).map(item => assert(item.head.name.name.equals("files")))
+        _ <- dtbase.run(MTable.getTables).map(item => assert(item.head.name.name.equals("exclusions") && item.tail.head.name.name.equals("files") && item.tail.tail.head.name.name.equals("schedulings") && item.size == 3))
         _ <- dtbase.run(createTasksTableAction)
         result <- dtbase.run(MTable.getTables)
       } yield {
-        println(result.head.name.name)
-        println(result.tail.head.name.name)
-        result.head.name.name mustBe "files"
-        result.tail.head.name.name mustBe "tasks"
+        result.head.name.name mustBe "exclusions"
+        result.tail.head.name.name mustBe "files"
+        result.tail.tail.head.name.name mustBe "schedulings"
+        result.tail.tail.tail.head.name.name mustBe "tasks"
+        result.size mustBe 4
       }
     }
   }

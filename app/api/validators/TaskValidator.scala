@@ -81,15 +81,21 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
 
         val dto = maybeDTO.get
 
+        /*println("id: " + id)
+        println("task: " + task)
+        println("oldTask: " + dto)*/
+
         val startDate = isValidStartDateFormat(task.startDateAndTime, task.timezone)
         val endDate = isValidEndDateFormat(task.endDateAndTime, task.timezone)
         val timezone = isValidTimezone(task.timezone)
         val timezoneString = if (timezone.isDefined) Some(timezone.get.getID) else None
         val exclusionDates = areValidUpdateExclusionDateFormats(task.exclusions, startDate, endDate)
-        val exclusions = areValidUpdateExclusionFormats(task.exclusions, exclusionDates, task.taskId.get)
+        val exclusions = areValidUpdateExclusionFormats(task.exclusions, exclusionDates, task.taskId.getOrElse(dto.taskId))
         val schedulingDates = areValidUpdateSchedulingDateFormats(task.schedulings, startDate, endDate)
-        val schedulings = areValidUpdateSchedulingFormats(task.schedulings, schedulingDates, task.taskId.get)
+        val schedulings = areValidUpdateSchedulingFormats(task.schedulings, schedulingDates, task.taskId.getOrElse(dto.taskId))
         val resultDto = isValidUpdateTask(task, dto, startDate, endDate, timezoneString, exclusions, schedulings)
+
+        //println(resultDto)
 
         val errorList: Future[List[(Boolean, Error)]] = isValidFileName(task.fileName).map { validFileName =>
 
