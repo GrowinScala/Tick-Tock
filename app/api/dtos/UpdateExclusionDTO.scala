@@ -23,20 +23,22 @@ object UpdateExclusionDTO {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
+  def updateExclusionApply(exclusionDate: Option[String], day: Option[Int], dayOfWeek: Option[Int], dayType: Option[DayType], month: Option[Int], year: Option[Int], criteria: Option[Criteria]) = {
+    UpdateExclusionDTO(None, None, exclusionDate, day, dayOfWeek, dayType, month, year, criteria)
+  }
+
   /**
    * Implicit that defines how an UpdateExclusionDTO is read from the JSON request.
    * This implicit is used on the TaskController when Play's "validate" method is called.
    */
   implicit val updateExclusionReads: Reads[UpdateExclusionDTO] = (
-    (JsPath \ "exclusionId").readNullable[String] and
-    (JsPath \ "taskId").readNullable[String] and
     (JsPath \ "exclusionDate").readNullable[String] and
     (JsPath \ "day").readNullable[Int] and
     (JsPath \ "dayOfWeek").readNullable[Int] and
     (JsPath \ "dayType").readNullable[DayType] and
     (JsPath \ "month").readNullable[Int] and
     (JsPath \ "year").readNullable[Int] and
-    (JsPath \ "criteria").readNullable[Criteria])(UpdateExclusionDTO.apply _)
+    (JsPath \ "criteria").readNullable[Criteria])(UpdateExclusionDTO.updateExclusionApply _)
 
   /**
    * Implicit that defines how an UpdateExclusionDTO is written to a JSON format.

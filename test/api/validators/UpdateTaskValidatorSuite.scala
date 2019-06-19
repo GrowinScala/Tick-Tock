@@ -177,7 +177,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       println(dto)
       for {
         validation <- validator.updateValidator(taskUUID2, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Minutely), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO(exclusionUUID1, taskUUID4, Some(exclusionDate))))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Minutely), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("asd1", taskUUID4, Some(exclusionDate))))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with day)" in {
@@ -186,7 +186,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID2, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO(exclusionUUID1, taskUUID4, None, Some(10))))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("asd1", taskUUID4, None, Some(10))))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with dayOfWeek)" in {
@@ -195,7 +195,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID2, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO(exclusionUUID1, taskUUID4, None, None, Some(3))))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("asd1", taskUUID4, None, None, Some(3))))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with dayType)" in {
@@ -204,7 +204,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID2, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO(exclusionUUID1, taskUUID4, None, None, None, Some(DayType.Weekday))))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("asd1", taskUUID4, None, None, None, Some(DayType.Weekday))))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with month)" in {
@@ -213,7 +213,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID2, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO(exclusionUUID1, taskUUID4, None, None, None, None, Some(5))))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("asd1", taskUUID4, None, None, None, None, Some(5))))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with year)" in {
@@ -222,7 +222,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID2, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO(exclusionUUID1, taskUUID4, None, None, None, None, None, Some(2031))))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("asd1", taskUUID4, None, None, None, None, None, Some(2031))))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with day and criteria)" in {
@@ -231,7 +231,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID2, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO(exclusionUUID1, taskUUID4, None, Some(15), None, None, None, None, Some(Criteria.First))))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("asd1", taskUUID4, None, Some(15), None, None, None, None, Some(Criteria.First))))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with dayOfWeek and criteria)" in {
@@ -240,7 +240,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID2, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO(exclusionUUID1, taskUUID4, None, None, Some(5), None, None, None, Some(Criteria.Second))))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("asd1", taskUUID4, None, None, Some(5), None, None, None, Some(Criteria.Second))))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with dayType and criteria)" in {
@@ -249,7 +249,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID2, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO(exclusionUUID1, taskUUID4, None, None, None, Some(DayType.Weekend), None, None, Some(Criteria.Third))))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("asd1", taskUUID4, None, None, None, Some(DayType.Weekend), None, None, Some(Criteria.Third))))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with month and criteria)" in {
@@ -258,7 +258,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID2, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO(exclusionUUID1, taskUUID4, None, None, None, None, Some(9), None, Some(Criteria.Fourth))))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("asd1", taskUUID4, None, None, None, None, Some(9), None, Some(Criteria.Fourth))))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with exclusions => with year and criteria)" in {
@@ -268,7 +268,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
 
       for {
         validation <- validator.updateValidator(taskUUID2, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO(exclusionUUID1, taskUUID4, None, None, None, None, None, Some(2032), Some(Criteria.Last))))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("asd1", taskUUID4, None, None, None, None, None, Some(2032), Some(Criteria.Last))))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (with multiple complex exclusions)" in {
@@ -278,7 +278,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val exclusionDate = stringToDateFormat("2030-12-25 00:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID2, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO(exclusionUUID3, taskUUID4, None, None, None, Some(DayType.Weekend), Some(8), None, Some(Criteria.First)), ExclusionDTO(exclusionUUID2, taskUUID4, Some(exclusionDate)), ExclusionDTO(exclusionUUID1, taskUUID4, None, Some(13), Some(6), None, None, Some(2032))))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("asd1", taskUUID4, None, None, None, Some(DayType.Weekend), Some(8), None, Some(Criteria.First)), ExclusionDTO("asd1", taskUUID4, Some(exclusionDate)), ExclusionDTO("asd1", taskUUID4, None, Some(13), Some(6), None, None, Some(2032))))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with schedulingDate)" in {
@@ -288,7 +288,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val schedulingDate = stringToDateFormat("2035-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO(schedulingUUID1, taskUUID4, Some(schedulingDate), None, None, None, None, None, None)))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("asd1", taskUUID4, Some(schedulingDate), None, None, None, None, None, None)))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with day)" in {
@@ -297,7 +297,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO(schedulingUUID1, taskUUID4, None, Some(15), None, None, None, None, None)))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("asd1", taskUUID4, None, Some(15), None, None, None, None, None)))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with dayOfWeek)" in {
@@ -306,7 +306,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO(schedulingUUID1, taskUUID4, None, None, Some(1), None, None, None, None)))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("asd1", taskUUID4, None, None, Some(1), None, None, None, None)))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with dayType)" in {
@@ -315,7 +315,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO(schedulingUUID1, taskUUID4, None, None, None, Some(DayType.Weekday))))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("asd1", taskUUID4, None, None, None, Some(DayType.Weekday))))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with month)" in {
@@ -324,7 +324,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO(schedulingUUID1, taskUUID4, None, None, None, None, Some(10), None, None)))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("asd1", taskUUID4, None, None, None, None, Some(10), None, None)))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with year)" in {
@@ -333,7 +333,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO(schedulingUUID1, taskUUID4, None, None, None, None, None, Some(2033), None)))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("asd1", taskUUID4, None, None, None, None, None, Some(2033), None)))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with day and criteria)" in {
@@ -342,7 +342,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO(schedulingUUID1, taskUUID4, None, Some(31), None, None, None, None, Some(Criteria.First))))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("asd1", taskUUID4, None, Some(31), None, None, None, None, Some(Criteria.First))))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with dayOfWeek and criteria)" in {
@@ -351,7 +351,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO(schedulingUUID1, taskUUID4, None, None, Some(7), None, None, None, Some(Criteria.Second))))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("asd1", taskUUID4, None, None, Some(7), None, None, None, Some(Criteria.Second))))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with dayType and criteria)" in {
@@ -360,7 +360,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO(schedulingUUID1, taskUUID4, None, None, None, Some(DayType.Weekend), None, None, Some(Criteria.Third))))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("asd1", taskUUID4, None, None, None, Some(DayType.Weekend), None, None, Some(Criteria.Third))))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with month and criteria)" in {
@@ -369,7 +369,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO(schedulingUUID1, taskUUID4, None, None, None, None, Some(2), None, Some(Criteria.Fourth))))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("asd1", taskUUID4, None, None, None, None, Some(2), None, Some(Criteria.Fourth))))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with year and criteria)" in {
@@ -378,66 +378,66 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO(schedulingUUID1, taskUUID4, None, None, None, None, None, Some(2038), Some(Criteria.Last))))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("asd1", taskUUID4, None, None, None, None, None, Some(2038), Some(Criteria.Last))))))
     }
 
     "receive a valid UpdateTaskDTO, succeed in the validation and convert it to a TaskDTO. (Personalized task with exclusions and timezone)" in {
-      val dto = UpdateTaskDTO(List("endDateAndTime"), Some(taskUUID4), Some("test1"), Some(SchedulingType.Personalized), Some("2030-01-01 12:00:00"), Some(PeriodType.Monthly), Some(1), None, Some(24), Some("PST"), Some(List(UpdateExclusionDTO(Some("2030-01-01 00:00:00")))),
+      val dto = UpdateTaskDTO(List("endDateAndTime"), Some(taskUUID4), Some("test1"), Some(SchedulingType.Personalized), Some("2030-01-01 12:00:00"), Some(PeriodType.Monthly), Some(1), None, Some(24), Some("PST"), Some(List(UpdateExclusionDTO(Some(exclusionUUID1), Some(taskUUID4), Some("2040-01-01 00:00:00")))),
         Some(List(UpdateSchedulingDTO(Some(schedulingUUID1), Some(taskUUID4), None, None, None, None, None, Some(2038), Some(Criteria.Last)))))
-      val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
+      val startDate = stringToDateFormat("2030-01-01 20:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
-      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), Some("PST"), None, Some(List(SchedulingDTO(schedulingUUID1, taskUUID4, None, None, None, None, None, Some(2038), Some(Criteria.Last))))))
+      } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), Some("PST"), Some(List(ExclusionDTO("asd1", taskUUID4, Some(stringToDateFormat("2040-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Some(List(SchedulingDTO("asd1", taskUUID4, None, None, None, None, None, Some(2038), Some(Criteria.Last))))))
     }
 
     "receive an invalid UpdateTaskDTO with missing fields. (Periodic task without any other fields)" in {
-      val dto = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Periodic))
+      val dto = UpdateTaskDTO(List(), None, None, Some(SchedulingType.Periodic))
       for {
-        validation <- validator.updateValidator(taskUUID2, dto)
-      } yield validation mustBe Left(List(invalidCreateTaskFormat))
+        validation <- validator.updateValidator(taskUUID1, dto)
+      } yield validation mustBe Left(List(invalidUpdateTaskFormat))
     }
 
     "receive an invalid UpdateTaskDTO with missing fields. (Periodic task without period type or period)" in {
-      val dto = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), None, None, Some("2040-01-01 12:00:00"))
+      val dto = UpdateTaskDTO(List("period", "periodType", "exclusions"), Some(taskUUID4), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), None, None, Some("2040-01-01 12:00:00"))
       for {
         validation <- validator.updateValidator(taskUUID2, dto)
-      } yield validation mustBe Left(List(invalidCreateTaskFormat))
+      } yield validation mustBe Left(List(invalidUpdateTaskFormat))
     }
 
     "receive an invalid UpdateTaskDTO with missing fields. (Periodic task without period type)" in {
-      val dto = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), None, Some(3), Some("2040-01-01 12:00:00"))
+      val dto = UpdateTaskDTO(List("periodType", "exclusions"), Some(taskUUID4), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), None, Some(3), Some("2040-01-01 12:00:00"))
       for {
         validation <- validator.updateValidator(taskUUID2, dto)
-      } yield validation mustBe Left(List(invalidCreateTaskFormat))
+      } yield validation mustBe Left(List(invalidUpdateTaskFormat))
     }
 
     "receive an invalid UpdateTaskDTO with missing fields. (Periodic task without period)" in {
-      val dto = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), None, Some("2040-01-01 12:00:00"))
+      val dto = UpdateTaskDTO(List("period", "exclusions"), Some(taskUUID4), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), None, Some("2040-01-01 12:00:00"))
       for {
         validation <- validator.updateValidator(taskUUID2, dto)
-      } yield validation mustBe Left(List(invalidCreateTaskFormat))
+      } yield validation mustBe Left(List(invalidUpdateTaskFormat))
     }
 
     "receive an invalid UpdateTaskDTO with missing fields. (Periodic task without endDate or occurrences)" in {
-      val dto = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Monthly), Some(2))
+      val dto = UpdateTaskDTO(List("endDateAndTime", "occurrences", "exclusions"), Some(taskUUID4), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Monthly), Some(2))
       for {
         validation <- validator.updateValidator(taskUUID2, dto)
-      } yield validation mustBe Left(List(invalidCreateTaskFormat))
+      } yield validation mustBe Left(List(invalidUpdateTaskFormat))
     }
 
     "receive an invalid UpdateTaskDTO with invalid startDate format." in {
-      val dto1 = UpdateTaskDTO(List(), Some("asd1"), Some("test1"), Some(SchedulingType.RunOnce), Some("2030:01:01 12-00-00"))
-      val dto2 = UpdateTaskDTO(List(), Some("asd1"), Some("test1"), Some(SchedulingType.RunOnce), Some("2030-14-01 12:00:00"))
-      val dto3 = UpdateTaskDTO(List(), Some("asd1"), Some("test1"), Some(SchedulingType.RunOnce), Some("2030-01-32 12:00:00"))
-      val dto4 = UpdateTaskDTO(List(), Some("asd1"), Some("test1"), Some(SchedulingType.RunOnce), Some("2030-01-01 25:00:00"))
-      val dto5 = UpdateTaskDTO(List(), Some("asd1"), Some("test1"), Some(SchedulingType.RunOnce), Some("2030-01-01 12:61:00"))
+      val dto1 = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.RunOnce), Some("2030:01:01 12-00-00"))
+      val dto2 = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.RunOnce), Some("2030-14-01 12:00:00"))
+      val dto3 = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.RunOnce), Some("2030-01-32 12:00:00"))
+      val dto4 = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.RunOnce), Some("2030-01-01 25:00:00"))
+      val dto5 = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.RunOnce), Some("2030-01-01 12:61:00"))
 
       for {
-        validation1 <- validator.updateValidator("asd1", dto1)
-        validation2 <- validator.updateValidator("asd2", dto2)
-        validation3 <- validator.updateValidator("asd3", dto3)
-        validation4 <- validator.updateValidator("asd4", dto4)
-        validation5 <- validator.updateValidator("asd5", dto5)
+        validation1 <- validator.updateValidator(taskUUID1, dto1)
+        validation2 <- validator.updateValidator(taskUUID1, dto2)
+        validation3 <- validator.updateValidator(taskUUID1, dto3)
+        validation4 <- validator.updateValidator(taskUUID1, dto4)
+        validation5 <- validator.updateValidator(taskUUID1, dto5)
       } yield {
         validation1 mustBe Left(List(invalidStartDateFormat))
         validation2 mustBe Left(List(invalidStartDateFormat))
@@ -465,7 +465,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val dto = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some("Unknown"))
       for {
         validation <- validator.updateValidator(taskUUID1, dto)
-      } yield validation mustBe Left(List(invalidCreateTaskFormat, invalidTaskType))
+      } yield validation mustBe Left(List(invalidUpdateTaskFormat, invalidTaskType))
     }
 
     "receive an invalid UpdateTaskDTO with invalid period type." in {
@@ -483,18 +483,18 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
     }
 
     "receive an invalid UpdateTaskDTO with invalid endDate format." in {
-      val dto1 = UpdateTaskDTO(List(), Some("asd1"), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Daily), Some(1), Some("2040|01|01 12/00/00"))
-      val dto2 = UpdateTaskDTO(List(), Some("asd1"), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Daily), Some(3), Some("2040-14-01 12:00:00"))
-      val dto3 = UpdateTaskDTO(List(), Some("asd1"), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Daily), Some(3), Some("2040-01-32 12:00:00"))
-      val dto4 = UpdateTaskDTO(List(), Some("asd1"), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Daily), Some(3), Some("2040-01-01 25:00:00"))
-      val dto5 = UpdateTaskDTO(List(), Some("asd1"), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Daily), Some(3), Some("2040-01-01 12:61:00"))
+      val dto1 = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Daily), Some(1), Some("2040|01|01 12/00/00"))
+      val dto2 = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Daily), Some(3), Some("2040-14-01 12:00:00"))
+      val dto3 = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Daily), Some(3), Some("2040-01-32 12:00:00"))
+      val dto4 = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Daily), Some(3), Some("2040-01-01 25:00:00"))
+      val dto5 = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Daily), Some(3), Some("2040-01-01 12:61:00"))
 
       for {
-        validation1 <- validator.updateValidator("asd1", dto1)
-        validation2 <- validator.updateValidator("asd1", dto2)
-        validation3 <- validator.updateValidator("asd1", dto3)
-        validation4 <- validator.updateValidator("asd1", dto4)
-        validation5 <- validator.updateValidator("asd1", dto5)
+        validation1 <- validator.updateValidator(taskUUID2, dto1)
+        validation2 <- validator.updateValidator(taskUUID2, dto2)
+        validation3 <- validator.updateValidator(taskUUID2, dto3)
+        validation4 <- validator.updateValidator(taskUUID2, dto4)
+        validation5 <- validator.updateValidator(taskUUID2, dto5)
       } yield {
         validation1 mustBe Left(List(invalidEndDateFormat))
         validation2 mustBe Left(List(invalidEndDateFormat))
