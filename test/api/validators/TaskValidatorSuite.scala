@@ -40,7 +40,6 @@ class TaskValidatorSuite extends AsyncWordSpec with MustMatchers {
 
     "receive a valid CreateTaskDTO, succeed in the validation and convert it to a TaskDTO. (RunOnce task with no startDate)" in {
       val dto = CreateTaskDTO("test1", SchedulingType.RunOnce)
-
       for {
         validation <- validator.scheduleValidator(dto)
       } yield validation mustBe Right(TaskDTO("asd1", "test1", SchedulingType.RunOnce))
@@ -647,6 +646,7 @@ class TaskValidatorSuite extends AsyncWordSpec with MustMatchers {
         validation <- validator.scheduleValidator(dto)
       } yield validation mustBe Left(List(invalidSchedulingCriteriaValue))
     }
+
   }
 
 }

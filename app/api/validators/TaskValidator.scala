@@ -110,6 +110,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
             (isValidPeriodType(task.periodType), invalidPeriodType),
             (isValidPeriod(task.period), invalidPeriod),
             (task.endDateAndTime.isEmpty || endDate.isDefined, invalidEndDateFormat),
+            (isValidEndDateValue(startDate, endDate), invalidEndDateValue),
             (isValidOccurrences(task.occurrences), invalidOccurrences),
             (task.timezone.isEmpty || timezoneString.isDefined, invalidTimezone),
             (task.exclusions.isEmpty || exclusions.isDefined, invalidExclusionFormat),
@@ -167,21 +168,28 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
       if (task.schedulings.isDefined) schedulings else { if (task.toDelete.contains("schedulings")) None else oldTask.schedulings } //schedulings
     )
 
+    println("resultDTO: " + resultDto)
+
     val result = resultDto.taskType match {
       case SchedulingType.RunOnce =>
-        resultDto.periodType.isEmpty &&
-          resultDto.period.isEmpty &&
-          resultDto.endDateAndTime.isEmpty &&
-          resultDto.totalOccurrences.isEmpty &&
-          resultDto.currentOccurrences.isEmpty &&
-          resultDto.exclusions.isEmpty &&
-          resultDto.schedulings.isEmpty
+        (task.toDelete.contains("period") || (task.period.isEmpty && oldTask.period.isEmpty)) &&
+          (task.toDelete.contains("endDateAndTime") || (task.endDateAndTime.isEmpty && oldTask.endDateAndTime.isEmpty)) &&
+          (task.toDelete.contains("occurrences") || (task.occurrences.isEmpty && oldTask.totalOccurrences.isEmpty)) &&
+          (task.toDelete.contains("occurrences") || (task.occurrences.isEmpty && oldTask.currentOccurrences.isEmpty)) &&
+          (task.toDelete.contains("exclusions") || (task.exclusions.isEmpty && oldTask.exclusions.isEmpty)) &&
+          (task.toDelete.contains("schedulings") || (task.schedulings.isEmpty && oldTask.schedulings.isEmpty))
       case SchedulingType.Periodic =>
-        resultDto.periodType.isDefined && resultDto.period.isDefined && resultDto.schedulings.isEmpty &&
-          ((resultDto.endDateAndTime.isDefined && resultDto.totalOccurrences.isEmpty && resultDto.currentOccurrences.isEmpty) || (resultDto.endDateAndTime.isEmpty && resultDto.totalOccurrences.isDefined && resultDto.currentOccurrences.isDefined))
+        (!task.toDelete.contains("periodType") && (task.periodType.isDefined || oldTask.periodType.isDefined)) &&
+          (!task.toDelete.contains("period") && (task.period.isDefined || oldTask.period.isDefined)) &&
+          (task.toDelete.contains("schedulings") || (task.schedulings.isEmpty && oldTask.schedulings.isEmpty)) &&
+          (((!task.toDelete.contains("endDateAndTime") && (task.endDateAndTime.isDefined || oldTask.endDateAndTime.isDefined)) && (task.toDelete.contains("occurrences") || (task.occurrences.isEmpty && oldTask.totalOccurrences.isEmpty)) && (task.toDelete.contains("occurrences") || (task.occurrences.isEmpty && oldTask.currentOccurrences.isEmpty))) ||
+            ((task.toDelete.contains("endDateAndTime") || (task.endDateAndTime.isEmpty && oldTask.endDateAndTime.isEmpty)) && (!task.toDelete.contains("occurrences") && (task.occurrences.isDefined || oldTask.totalOccurrences.isDefined)) && (!task.toDelete.contains("occurrences") && (task.occurrences.isDefined || oldTask.currentOccurrences.isDefined))))
       case SchedulingType.Personalized =>
-        resultDto.periodType.isDefined && resultDto.period.isDefined && resultDto.schedulings.isDefined &&
-          ((resultDto.endDateAndTime.isDefined && resultDto.totalOccurrences.isEmpty && resultDto.currentOccurrences.isEmpty) || (resultDto.endDateAndTime.isEmpty && resultDto.totalOccurrences.isDefined && resultDto.currentOccurrences.isDefined))
+        (!task.toDelete.contains("periodType") && (task.periodType.isDefined || oldTask.periodType.isDefined)) &&
+          (!task.toDelete.contains("period") && (task.period.isDefined || oldTask.period.isDefined)) &&
+          (!task.toDelete.contains("schedulings") && (task.schedulings.isDefined || oldTask.schedulings.isDefined)) &&
+          (((!task.toDelete.contains("endDateAndTime") && (task.endDateAndTime.isDefined || oldTask.endDateAndTime.isDefined)) && (task.toDelete.contains("occurrences") || (task.occurrences.isEmpty && oldTask.totalOccurrences.isEmpty)) && (task.toDelete.contains("occurrences") || (task.occurrences.isEmpty && oldTask.currentOccurrences.isEmpty))) ||
+            ((task.toDelete.contains("endDateAndTime") || (task.endDateAndTime.isEmpty && oldTask.endDateAndTime.isEmpty)) && (!task.toDelete.contains("occurrences") && (task.occurrences.isDefined || oldTask.totalOccurrences.isDefined)) && (!task.toDelete.contains("occurrences") && (task.occurrences.isDefined || oldTask.currentOccurrences.isDefined))))
       case _ => false
     }
 
@@ -298,7 +306,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
             } else None
           case None =>
             if (exclusion.day.isDefined || exclusion.dayOfWeek.isDefined || exclusion.dayType.isDefined
-              || exclusion.month.isDefined || exclusion.year.isDefined || exclusion.criteria.isDefined) {
+              || exclusion.month.isDefined || exclusion.year.isDefined) {
               iter(exclusions.tail, exclusionDates.tail, ExclusionDTO(UUIDGen.generateUUID, taskId, None, exclusion.day, exclusion.dayOfWeek, exclusion.dayType, exclusion.month, exclusion.year, exclusion.criteria) :: toReturn)
             } else None
             iter(exclusions.tail, exclusionDates.tail, ExclusionDTO(UUIDGen.generateUUID, taskId, None, exclusion.day, exclusion.dayOfWeek, exclusion.dayType, exclusion.month, exclusion.year, exclusion.criteria) :: toReturn)
@@ -570,7 +578,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
         scheduling.schedulingDate match {
           case Some(_) =>
             val schedulingDate = schedulingDates.getOrElse(List(None)).headOption.flatten
-            if (scheduling.day.isEmpty && scheduling.dayOfWeek.isEmpty && scheduling.dayType.isEmpty && scheduling.month.isEmpty && scheduling.year.isEmpty)
+            if (schedulingDate.isDefined && scheduling.day.isEmpty && scheduling.dayOfWeek.isEmpty && scheduling.dayType.isEmpty && scheduling.month.isEmpty && scheduling.year.isEmpty)
               iter(list.tail, dateList.map(_.tail), SchedulingDTO(UUIDGen.generateUUID, taskId, schedulingDate) :: toReturn)
             else None
           case None =>
@@ -587,28 +595,31 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
   }
 
   private def areValidUpdateSchedulingFormats(schedulings: Option[List[UpdateSchedulingDTO]], schedulingDates: Option[List[Option[Date]]], taskId: String): Option[List[SchedulingDTO]] = {
-    def iter(schedulings: List[UpdateSchedulingDTO], schedulingDates: List[Option[Date]], toReturn: List[SchedulingDTO]): Option[List[SchedulingDTO]] = {
-      if (schedulings.isEmpty) { if (toReturn.isEmpty) None else Some(toReturn) }
-      else {
+    def iter(schedulings: List[UpdateSchedulingDTO], schedulingDates: Option[List[Option[Date]]], toReturn: List[SchedulingDTO]): Option[List[SchedulingDTO]] = {
+
+      if (schedulings.isEmpty) {
+        if (toReturn.isEmpty) None else Some(toReturn)
+      } else {
         val scheduling = schedulings.head
+        val schedulingDate = schedulingDates.getOrElse(List(None)).headOption.flatten
         scheduling.schedulingDate match {
           case Some(_) =>
-            val exclusionDate = schedulingDates.head
-            if (exclusionDate.isDefined && scheduling.day.isEmpty && scheduling.dayOfWeek.isEmpty &&
+            val schedulingDate = schedulingDates.getOrElse(List(None)).headOption.flatten
+            if (scheduling.day.isEmpty && scheduling.dayOfWeek.isEmpty &&
               scheduling.dayType.isEmpty && scheduling.month.isEmpty && scheduling.year.isEmpty && scheduling.criteria.isEmpty) {
-              iter(schedulings.tail, schedulingDates.tail, SchedulingDTO(UUIDGen.generateUUID, taskId, exclusionDate) :: toReturn)
+              iter(schedulings.tail, schedulingDates.map(_.tail), SchedulingDTO(UUIDGen.generateUUID, taskId, schedulingDate) :: toReturn)
             } else None
           case None =>
-            if (scheduling.schedulingDate.isDefined || scheduling.day.isDefined || scheduling.dayOfWeek.isDefined
-              || scheduling.dayType.isDefined || scheduling.month.isDefined || scheduling.year.isDefined || scheduling.criteria.isDefined) {
-              iter(schedulings.tail, schedulingDates.tail, SchedulingDTO(UUIDGen.generateUUID, taskId, None, scheduling.day, scheduling.dayOfWeek, scheduling.dayType, scheduling.month, scheduling.year, scheduling.criteria) :: toReturn)
+            if (scheduling.schedulingDate.isDefined || scheduling.day.isDefined || scheduling.dayOfWeek.isDefined || scheduling.dayType.isDefined
+              || scheduling.month.isDefined || scheduling.year.isDefined) {
+              iter(schedulings.tail, schedulingDates.map(_.tail), SchedulingDTO(UUIDGen.generateUUID, taskId, schedulingDate, scheduling.day, scheduling.dayOfWeek, scheduling.dayType, scheduling.month, scheduling.year, scheduling.criteria) :: toReturn)
             } else None
         }
 
       }
     }
     schedulings match {
-      case Some(schedulingList) => iter(schedulingList, schedulingDates.get, Nil)
+      case Some(schedulingList) => iter(schedulingList, schedulingDates, Nil)
       case None => None
     }
   }

@@ -23,6 +23,8 @@ cancellableMap += ("1" -> new ExecutionJob("1", "fileId", SchedulingType.RunOnce
 cancellableMap.head */
 
 import api.utils.DateUtils._
-val futureDate = getDateWithAddedSeconds(3)
 
-println(futureDate)
+
+val date = parseDate("2030:01:01 12:00:00")
+
+println(date)

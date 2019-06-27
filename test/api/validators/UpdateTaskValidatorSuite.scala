@@ -512,7 +512,7 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
     }
 
     "receive an invalid UpdateTaskDTO with invalid occurrences." in {
-      val dto = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), None, Some(-1))
+      val dto = UpdateTaskDTO(List("endDateAndTime"), Some(taskUUID4), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), None, Some(-1))
       for {
         validation <- validator.updateValidator(taskUUID2, dto)
       } yield validation mustBe Left(List(invalidOccurrences))
@@ -622,35 +622,35 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val dto = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Personalized), Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(1), Some("2040-01-01 00:00:00"), None, None, None, Some(List(UpdateSchedulingDTO(Some(schedulingUUID1), Some(taskUUID4)))))
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
-      } yield validation mustBe Left(List(invalidSchedulingFormat))
+      } yield validation mustBe Left(List(invalidUpdateTaskFormat, invalidSchedulingFormat))
     }
 
     "receive an invalid UpdateTaskDTO with invalid schedulings. (invalid scheduling format => schedulingDate + another parameter)" in {
       val dto = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Personalized), Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(1), Some("2040-01-01 00:00:00"), None, None, None, Some(List(UpdateSchedulingDTO(Some(schedulingUUID1), Some(taskUUID4), Some("2035-01-01 00:00:00"), None, None, None, Some(10)))))
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
-      } yield validation mustBe Left(List(invalidSchedulingFormat))
+      } yield validation mustBe Left(List(invalidUpdateTaskFormat, invalidSchedulingFormat))
     }
 
     "receive an invalid UpdateTaskDTO with invalid schedulings. (invalid scheduling format => only criteria)" in {
       val dto = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Personalized), Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(1), Some("2040-01-01 00:00:00"), None, None, None, Some(List(UpdateSchedulingDTO(Some(schedulingUUID1), Some(taskUUID4), None, None, None, None, None, None, Some(Criteria.Third)))))
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
-      } yield validation mustBe Left(List(invalidSchedulingFormat))
+      } yield validation mustBe Left(List(invalidUpdateTaskFormat, invalidSchedulingFormat))
     }
 
     "receive an invalid UpdateTaskDTO with invalid schedulings. (invalid schedulingDate format)" in {
       val dto = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Personalized), Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(1), Some("2040-01-01 00:00:00"), None, None, None, Some(List(UpdateSchedulingDTO(Some(schedulingUUID1), Some(taskUUID4), Some("2035:01:01 00:00:00")))))
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
-      } yield validation mustBe Left(List(invalidSchedulingDateFormat))
+      } yield validation mustBe Left(List(invalidUpdateTaskFormat, invalidSchedulingDateFormat))
     }
 
     "receive an invalid UpdateTaskDTO with invalid schedulings. (invalid schedulingDate values)" in {
       val dto = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Personalized), Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(1), Some("2040-01-01 00:00:00"), None, None, None, Some(List(UpdateSchedulingDTO(Some(schedulingUUID1), Some(taskUUID4), Some("2045-01-01 00:00:00")))))
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
-      } yield validation mustBe Left(List(invalidSchedulingDateValue))
+      } yield validation mustBe Left(List(invalidUpdateTaskFormat, invalidSchedulingDateValue))
     }
 
     "receive an invalid UpdateTaskDTO with invalid schedulings. (invalid day)" in {
@@ -658,39 +658,39 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
 
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
-      } yield validation mustBe Left(List(invalidSchedulingDayValue))
+      } yield validation mustBe Left(List(invalidUpdateTaskFormat, invalidSchedulingDayValue))
     }
 
     "receive an invalid UpdateTaskDTO with invalid schedulings. (invalid dayOfWeek)" in {
       val dto = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Personalized), Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(1), Some("2040-01-01 00:00:00"), None, None, None, Some(List(UpdateSchedulingDTO(Some(schedulingUUID1), Some(taskUUID4), None, None, Some(8)))))
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
-      } yield validation mustBe Left(List(invalidSchedulingDayOfWeekValue))
+      } yield validation mustBe Left(List(invalidUpdateTaskFormat, invalidSchedulingDayOfWeekValue))
     }
 
     "receive an invalid UpdateTaskDTO with invalid schedulings. (invalid dayType)" in {
-      val dto = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Personalized), Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(1), Some("2040-01-01 00:00:00"), None, None, None, Some(List(UpdateSchedulingDTO(Some(schedulingUUID1), Some(taskUUID4), None, None, None, Some("Christmas")))))
+      val dto = UpdateTaskDTO(List("occurrences"), Some(taskUUID4), Some("test1"), Some(SchedulingType.Personalized), Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(1), Some("2040-01-01 00:00:00"), None, None, None, Some(List(UpdateSchedulingDTO(Some(schedulingUUID1), Some(taskUUID4), None, None, None, Some("Christmas")))))
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
       } yield validation mustBe Left(List(invalidSchedulingDayTypeValue))
     }
 
     "receive an invalid UpdateTaskDTO with invalid schedulings. (invalid month)" in {
-      val dto = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Personalized), Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(1), Some("2040-01-01 00:00:00"), None, None, None, Some(List(UpdateSchedulingDTO(Some(schedulingUUID1), Some(taskUUID4), None, None, None, None, Some(13)))))
+      val dto = UpdateTaskDTO(List("occurrences"), Some(taskUUID4), Some("test1"), Some(SchedulingType.Personalized), Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(1), Some("2040-01-01 00:00:00"), None, None, None, Some(List(UpdateSchedulingDTO(Some(schedulingUUID1), Some(taskUUID4), None, None, None, None, Some(13)))))
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
       } yield validation mustBe Left(List(invalidSchedulingMonthValue))
     }
 
     "receive an invalid UpdateTaskDTO with invalid schedulings. (invalid year)" in {
-      val dto = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Personalized), Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(1), Some("2040-01-01 00:00:00"), None, None, None, Some(List(UpdateSchedulingDTO(Some(schedulingUUID1), Some(taskUUID4), None, None, None, None, None, Some(2006)))))
+      val dto = UpdateTaskDTO(List("occurrences"), Some(taskUUID4), Some("test1"), Some(SchedulingType.Personalized), Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(1), Some("2040-01-01 00:00:00"), None, None, None, Some(List(UpdateSchedulingDTO(Some(schedulingUUID1), Some(taskUUID4), None, None, None, None, None, Some(2006)))))
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
       } yield validation mustBe Left(List(invalidSchedulingYearValue))
     }
 
     "receive an invalid UpdateTaskDTO with invalid schedulings. (invalid criteria)" in {
-      val dto = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Personalized), Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(1), Some("2040-01-01 00:00:00"), None, None, None, Some(List(UpdateSchedulingDTO(Some(schedulingUUID1), Some(taskUUID4), None, Some(5), None, None, None, None, Some("Sixth")))))
+      val dto = UpdateTaskDTO(List("occurrences"), Some(taskUUID4), Some("test1"), Some(SchedulingType.Personalized), Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(1), Some("2040-01-01 00:00:00"), None, None, None, Some(List(UpdateSchedulingDTO(Some(schedulingUUID1), Some(taskUUID4), None, Some(5), None, None, None, None, Some("Sixth")))))
       for {
         validation <- validator.updateValidator(taskUUID3, dto)
       } yield validation mustBe Left(List(invalidSchedulingCriteriaValue))
