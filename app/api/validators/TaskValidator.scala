@@ -299,17 +299,16 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
         val exclusion = exclusions.head
         exclusion.exclusionDate match {
           case Some(_) =>
-            val exclusionDate = exclusionDates.head
-            if (exclusionDate.isDefined && exclusion.day.isEmpty &&
-              exclusion.dayOfWeek.isEmpty && exclusion.dayType.isEmpty && exclusion.month.isEmpty && exclusion.year.isEmpty && exclusion.criteria.isEmpty) {
-              iter(exclusions.tail, exclusionDates.tail, ExclusionDTO(UUIDGen.generateUUID, taskId, exclusionDate) :: toReturn)
+            val exclusionDate = if (exclusionDates.nonEmpty) exclusionDates.head else None
+            if (exclusion.day.isEmpty && exclusion.dayOfWeek.isEmpty && exclusion.dayType.isEmpty
+              && exclusion.month.isEmpty && exclusion.year.isEmpty && exclusion.criteria.isEmpty) {
+              iter(exclusions.tail, if (exclusionDates.nonEmpty) exclusionDates.tail else List(), ExclusionDTO(UUIDGen.generateUUID, taskId, exclusionDate) :: toReturn)
             } else None
           case None =>
             if (exclusion.day.isDefined || exclusion.dayOfWeek.isDefined || exclusion.dayType.isDefined
               || exclusion.month.isDefined || exclusion.year.isDefined) {
-              iter(exclusions.tail, exclusionDates.tail, ExclusionDTO(UUIDGen.generateUUID, taskId, None, exclusion.day, exclusion.dayOfWeek, exclusion.dayType, exclusion.month, exclusion.year, exclusion.criteria) :: toReturn)
+              iter(exclusions.tail, if (exclusionDates.nonEmpty) exclusionDates.tail else List(), ExclusionDTO(UUIDGen.generateUUID, taskId, None, exclusion.day, exclusion.dayOfWeek, exclusion.dayType, exclusion.month, exclusion.year, exclusion.criteria) :: toReturn)
             } else None
-            iter(exclusions.tail, exclusionDates.tail, ExclusionDTO(UUIDGen.generateUUID, taskId, None, exclusion.day, exclusion.dayOfWeek, exclusion.dayType, exclusion.month, exclusion.year, exclusion.criteria) :: toReturn)
         }
       }
     }

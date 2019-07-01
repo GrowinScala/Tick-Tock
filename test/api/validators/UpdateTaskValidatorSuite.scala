@@ -546,20 +546,19 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       } yield validation mustBe Left(List(invalidExclusionFormat))
     }
 
-    //TODO this
     "receive an invalid UpdateTaskDTO with invalid exclusions. (invalid exclusionDate format)" in {
-      val dto1 = UpdateTaskDTO(List(), Some("asd1"), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(UpdateExclusionDTO(Some(exclusionUUID1), Some(taskUUID4), Some("2035|01|01 00/00/00")))))
-      val dto2 = UpdateTaskDTO(List(), Some("asd1"), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(UpdateExclusionDTO(Some(exclusionUUID1), Some(taskUUID4), Some("2035-14-01 00:00:00")))))
-      val dto3 = UpdateTaskDTO(List(), Some("asd1"), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(UpdateExclusionDTO(Some(exclusionUUID1), Some(taskUUID4), Some("2035-01-32 00:00:00")))))
-      val dto4 = UpdateTaskDTO(List(), Some("asd1"), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(UpdateExclusionDTO(Some(exclusionUUID1), Some(taskUUID4), Some("2035-01-01 25:00:00")))))
-      val dto5 = UpdateTaskDTO(List(), Some("asd1"), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(UpdateExclusionDTO(Some(exclusionUUID1), Some(taskUUID4), Some("2035-01-01 00:61:00")))))
+      val dto1 = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(UpdateExclusionDTO(Some(exclusionUUID1), Some(taskUUID4), Some("2035|01|01 00/00/00")))))
+      val dto2 = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(UpdateExclusionDTO(Some(exclusionUUID1), Some(taskUUID4), Some("2035-14-01 00:00:00")))))
+      val dto3 = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(UpdateExclusionDTO(Some(exclusionUUID1), Some(taskUUID4), Some("2035-01-32 00:00:00")))))
+      val dto4 = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(UpdateExclusionDTO(Some(exclusionUUID1), Some(taskUUID4), Some("2035-01-01 25:00:00")))))
+      val dto5 = UpdateTaskDTO(List(), Some(taskUUID4), Some("test1"), Some(SchedulingType.Periodic), Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(UpdateExclusionDTO(Some(exclusionUUID1), Some(taskUUID4), Some("2035-01-01 00:61:00")))))
 
       for {
-        validation1 <- validator.updateValidator("asd1", dto1)
-        validation2 <- validator.updateValidator("asd1", dto2)
-        validation3 <- validator.updateValidator("asd1", dto3)
-        validation4 <- validator.updateValidator("asd1", dto4)
-        validation5 <- validator.updateValidator("asd1", dto5)
+        validation1 <- validator.updateValidator(taskUUID2, dto1)
+        validation2 <- validator.updateValidator(taskUUID2, dto2)
+        validation3 <- validator.updateValidator(taskUUID2, dto3)
+        validation4 <- validator.updateValidator(taskUUID2, dto4)
+        validation5 <- validator.updateValidator(taskUUID2, dto5)
       } yield {
         validation1 mustBe Left(List(invalidExclusionDateFormat))
         validation2 mustBe Left(List(invalidExclusionDateFormat))
