@@ -104,12 +104,12 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
         if (task.totalOccurrences.isDefined) {
           endCalendar.setTime(task.startDateAndTime.get)
           task.periodType.get match {
-            case PeriodType.Yearly => endCalendar.add(Calendar.YEAR, task.currentOccurrences.get)
-            case PeriodType.Monthly => endCalendar.add(Calendar.MONTH, task.currentOccurrences.get)
-            case PeriodType.Weekly => endCalendar.add(Calendar.WEEK_OF_YEAR, task.currentOccurrences.get)
-            case PeriodType.Daily => endCalendar.add(Calendar.DAY_OF_MONTH, task.currentOccurrences.get)
-            case PeriodType.Hourly => endCalendar.add(Calendar.HOUR_OF_DAY, task.currentOccurrences.get)
-            case PeriodType.Minutely => endCalendar.add(Calendar.MINUTE, task.currentOccurrences.get)
+            case PeriodType.Yearly => endCalendar.add(Calendar.YEAR, task.period.get * (task.currentOccurrences.get - 1))
+            case PeriodType.Monthly => endCalendar.add(Calendar.MONTH, task.period.get * (task.currentOccurrences.get - 1))
+            case PeriodType.Weekly => endCalendar.add(Calendar.WEEK_OF_YEAR, task.period.get * (task.currentOccurrences.get - 1))
+            case PeriodType.Daily => endCalendar.add(Calendar.DAY_OF_MONTH, task.period.get * (task.currentOccurrences.get - 1))
+            case PeriodType.Hourly => endCalendar.add(Calendar.HOUR_OF_DAY, task.period.get * (task.currentOccurrences.get - 1))
+            case PeriodType.Minutely => endCalendar.add(Calendar.MINUTE, task.period.get * (task.currentOccurrences.get - 1))
           }
         } else endCalendar.setTime(task.endDateAndTime.get)
       }
