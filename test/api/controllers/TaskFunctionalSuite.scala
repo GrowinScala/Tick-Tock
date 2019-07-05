@@ -123,7 +123,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test1",
             "taskType": "RunOnce",
-            "startDateAndTime": "2019-07-01 00:00:00"
+            "startDateAndTime": "2030-07-01 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -132,6 +132,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(routeOption.get)
+      println(bodyText)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
@@ -145,7 +146,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test2",
             "taskType": "RunOnce",
-            "startDateAndTime": "01-07-2019 00:00:00"
+            "startDateAndTime": "01-07-2030 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -154,6 +155,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(routeOption.get)
+      println(bodyText)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
@@ -166,7 +168,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test3",
             "taskType": "RunOnce",
-            "startDateAndTime": "2019/07/01 00:00:00"
+            "startDateAndTime": "2030/07/01 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -175,6 +177,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(routeOption.get)
+      println(bodyText)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
@@ -188,7 +191,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test4",
             "taskType": "RunOnce",
-            "startDateAndTime": "01/07/2019 00:00:00"
+            "startDateAndTime": "01/07/2030 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -197,6 +200,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(routeOption.get)
+      println(bodyText)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
@@ -218,6 +222,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(routeOption.get)
+      println(bodyText)
       result.map(tuple => tuple._2.size mustBe 1)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
@@ -256,7 +261,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "Unknown",
             "taskType": "RunOnce",
-            "startDateAndTime": "2019-07-01 00:00:00"
+            "startDateAndTime": "2030-07-01 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -277,7 +282,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test2",
             "taskType": "RunOnce",
-            "startDateAndTime": "01:07:2019 00:00:00"
+            "startDateAndTime": "01:07:2030 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -298,7 +303,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test3",
             "taskType": "RunOnce",
-            "startDateAndTime": "2019-14-01 00:00:00"
+            "startDateAndTime": "2030-14-01 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -319,7 +324,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test4",
             "taskType": "RunOnce",
-            "startDateAndTime": "2019-07-01 25:00:00"
+            "startDateAndTime": "2030-07-01 25:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -361,10 +366,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test2",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 2,
-            "endDateAndTime": "2020-01-01 00:00:00"
+            "endDateAndTime": "2040-01-01 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -385,7 +390,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test3",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 2,
             "occurrences": 5
@@ -409,7 +414,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test4",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "periodType": "Hourly",
             "period": 2,
             "occurrences": 5
@@ -433,7 +438,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test1",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "periodType": "Daily",
             "period": 2,
             "occurrences": 5
@@ -457,7 +462,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test2",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "periodType": "Weekly",
             "period": 2,
             "occurrences": 5
@@ -481,7 +486,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test3",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "periodType": "Monthly",
             "period": 2,
             "occurrences": 5
@@ -505,7 +510,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test4",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "periodType": "Yearly",
             "period": 2,
             "occurrences": 5
@@ -529,10 +534,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test1",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 2,
-            "endDateAndTime": "01-01-2020 00:00:00"
+            "endDateAndTime": "01-01-2040 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -553,10 +558,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test2",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 2,
-            "endDateAndTime": "2020/01/01 00:00:00"
+            "endDateAndTime": "2040/01/01 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -577,10 +582,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test3",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 2,
-            "endDateAndTime": "01/01/2020 00:00:00"
+            "endDateAndTime": "01/01/2040 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -601,10 +606,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test1",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 2,
-            "endDateAndTime": "01-01-2020 00:00:00",
+            "endDateAndTime": "01-01-2040 00:00:00",
             "timezone": "PST"
           }
         """))
@@ -631,7 +636,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test3",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00"
+            "startDateAndTime": "2030-07-01 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -652,7 +657,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test4",
             "taskType": "Unknown",
-            "startDateAndTime": "2019-07-01 00:00:00"
+            "startDateAndTime": "2030-07-01 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -673,7 +678,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test1",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "periodType": "Minutely",
             "period": -1,
             "occurrences": 5
@@ -697,7 +702,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test2",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 2,
             "endDateAndTime": "2020:01:01 00:00:00"
@@ -721,10 +726,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test3",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-01-01 00:00:00",
+            "startDateAndTime": "2030-01-01 00:00:00",
             "periodType": "Minutely",
             "period": 2,
-            "endDateAndTime": "2019-01-15 00:00:00"
+            "endDateAndTime": "2015-01-15 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -735,7 +740,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val bodyText = contentAsString(routeOption.get)
       result.map(tuple => tuple._2.size mustBe 0)
       status(routeOption.get) mustBe BAD_REQUEST
-      bodyText mustBe "[" + Json.toJsObject(invalidStartDateValue).toString + "," + Json.toJsObject(invalidEndDateValue).toString + "]"
+      bodyText mustBe "[" + Json.toJsObject(invalidEndDateValue).toString + "]"
     }
 
     "receive a POST request with a JSON body with incorrect periodic task data. (given endDate happens before startDate)" in {
@@ -745,10 +750,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test4",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2040-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 2,
-            "endDateAndTime": "2019-06-15 00:00:00"
+            "endDateAndTime": "2038-06-15 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -769,7 +774,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test1",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 2,
             "occurrences": -1
@@ -793,7 +798,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test2",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "period": 2,
             "occurrences": 5
           }
@@ -816,7 +821,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test3",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "periodType": "Minutely",
             "occurrences": 5
           }
@@ -839,7 +844,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test4",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 2
           }
@@ -6965,7 +6970,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
-            "toDelete":[],
+            "toDelete":["period", "periodType", "endDateAndTime"],
             "taskType":"RunOnce"
           }
         """))
@@ -6975,6 +6980,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         res <- taskRepo.selectTask(id)
       } yield res
       val bodyText = contentAsString(routeOption.get)
+      println(bodyText)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map { elem =>
@@ -7036,10 +7042,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "toDelete":[],
             "taskType":"Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "periodType": "Hourly",
             "period": 1,
-            "endDateAndTime": "2020-01-01 00:00:00"
+            "endDateAndTime": "2040-01-01 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -7048,6 +7054,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         res <- taskRepo.selectTask(id)
       } yield res
       val bodyText = contentAsString(routeOption.get)
+      println(bodyText)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map { elem =>
@@ -7074,7 +7081,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withBody(Json.parse("""
           {
             "toDelete":[],
-            "startDateAndTime":"2019-07-01 00:00:00"
+            "startDateAndTime":"2030-07-01 00:00:00"
           }
         """))
       val routeOption = route(app, fakeRequest)
@@ -7211,7 +7218,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
-            "toDelete":[],
+            "toDelete":["occurrences"],
             "endDateAndTime":"2050-01-01 00:00:00"
           }
         """))
@@ -7221,6 +7228,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         res <- taskRepo.selectTask(id)
       } yield res
       val bodyText = contentAsString(routeOption.get)
+      println(bodyText)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map { elem =>
@@ -7267,8 +7275,8 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
 
     "receive a PATCH request changing the occurrences of a task that already has an endDate field. (replaces endDate with the occurrences)" in {
       val dto1 = TaskDTO("asd1", "test1", SchedulingType.RunOnce)
-      val dto2 = TaskDTO("asd2", "test2", SchedulingType.Periodic, Some(stringToDateFormat("2020-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Daily), Some(2), Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")))
-      val dto3 = TaskDTO("asd3", "test3", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Monthly), Some(1), None, Some(12), Some(12))
+      val dto2 = TaskDTO("asd2", "test2", SchedulingType.Periodic, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Daily), Some(2), Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")))
+      val dto3 = TaskDTO("asd3", "test3", SchedulingType.Periodic, Some(stringToDateFormat("2040-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Monthly), Some(1), None, Some(12), Some(12))
       val result = for {
         _ <- taskRepo.insertInTasksTable(dto1)
         _ <- taskRepo.insertInTasksTable(dto2)
@@ -7280,7 +7288,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
-            "toDelete":[],
+            "toDelete":["endDateAndTime"],
             "occurrences": 5
           }
         """))
@@ -7290,6 +7298,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         res <- taskRepo.selectTask(id)
       } yield res
       val bodyText = contentAsString(routeOption.get)
+      println(bodyText)
       status(routeOption.get) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map { elem =>
@@ -7397,10 +7406,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test4",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 5,
-            "endDateAndTime": "2020-01-01 00:00:00"
+            "endDateAndTime": "2040-01-01 00:00:00"
            }
         """))
       val routeOption = route(app, fakeRequest)
@@ -7431,7 +7440,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
           {
             "fileName": "test4",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 5
            }
@@ -7465,7 +7474,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskId": "11231bd5-6f92-496c-9fe7-75bc180467b0",
             "fileName": "test4",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 5
            }
@@ -7503,10 +7512,10 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskId": "11231bd5-6f92-496c-9fe7-75bc180467b0",
             "fileName": "test4",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 5,
-            "endDateAndTime": "2020-01-01 00:00:00"
+            "endDateAndTime": "2040-01-01 00:00:00"
            }
         """))
       val routeOption = route(app, fakeRequest)
@@ -7542,7 +7551,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "taskId": "11231bd5-6f92-496c-9fe7-75bc180467b0",
             "fileName": "test4",
             "taskType": "Periodic",
-            "startDateAndTime": "2019-07-01 00:00:00",
+            "startDateAndTime": "2030-07-01 00:00:00",
             "periodType": "Minutely",
             "period": 5
            }

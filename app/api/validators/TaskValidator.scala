@@ -81,10 +81,6 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
 
         val dto = maybeDTO.get
 
-        println("id: " + id)
-        println("task: " + task)
-        println("oldTask: " + dto)
-
         val startDate = isValidStartDateFormat(task.startDateAndTime, task.timezone)
         val endDate = isValidEndDateFormat(task.endDateAndTime, task.timezone)
         val timezone = isValidTimezone(task.timezone)
@@ -167,8 +163,6 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
       if (task.exclusions.isDefined) exclusions else { if (task.toDelete.contains("exclusions")) None else oldTask.exclusions }, //exclusions
       if (task.schedulings.isDefined) schedulings else { if (task.toDelete.contains("schedulings")) None else oldTask.schedulings } //schedulings
     )
-
-    println("resultDTO: " + resultDto)
 
     val result = resultDto.taskType match {
       case SchedulingType.RunOnce =>

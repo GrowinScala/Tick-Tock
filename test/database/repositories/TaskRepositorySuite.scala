@@ -162,7 +162,7 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID3, "unknown", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         first <- taskRepo.selectFileIdByTaskId(taskUUID1).map(fileId => assert(fileId.get == fileUUID1))
-        second <- taskRepo.selectFileIdByTaskId(taskUUID3).map(fileId => assert(fileId.get == ""))
+        second <- taskRepo.selectFileIdByTaskId(taskUUID3).map(fileId => assert(fileId.isEmpty))
         third <- taskRepo.selectFileIdByTaskId(taskUUID4).map(fileId => assert(fileId.isEmpty))
         fileId <- taskRepo.selectFileIdByTaskId(taskUUID2)
       } yield fileId.get mustBe fileUUID2

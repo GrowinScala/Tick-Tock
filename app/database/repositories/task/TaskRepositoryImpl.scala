@@ -118,7 +118,7 @@ class TaskRepositoryImpl @Inject() (dtbase: Database, exclusionRepo: ExclusionRe
    * @param id - the identifier of the task we want to select
    * @return the selected task according to the id given
    */
-  def selectTask(id: String): Future[Option[TaskDTO]] = {
+  def selectTask(id: String) = {
     val result = for {
       seq <- dtbase.run(getTaskByTaskId(id).result)
       exclusionSeq <- dtbase.run(getExclusionByTaskId(id).result)
@@ -128,24 +128,28 @@ class TaskRepositoryImpl @Inject() (dtbase: Database, exclusionRepo: ExclusionRe
     result.flatMap {
       {
         case (seq, exclusionSeq, schedulingSeq) =>
-          seq.map(taskRow => taskRowToTaskDTO(Some(taskRow))).head.map {
-            {
-              case Some(task) =>
-                Some(TaskDTO(
-                  task.taskId,
-                  task.fileName,
-                  task.taskType,
-                  task.startDateAndTime,
-                  task.periodType,
-                  task.period,
-                  task.endDateAndTime,
-                  task.totalOccurrences,
-                  task.currentOccurrences,
-                  task.timezone,
-                  if (exclusionSeq.isEmpty) None else Some(exclusionSeq.map(exclusionRow => exclusionRepo.exclusionRowToExclusionDTO(exclusionRow)).toList),
-                  if (schedulingSeq.isEmpty) None else Some(schedulingSeq.map(schedulingRow => schedulingRepo.schedulingRowToSchedulingDTO(schedulingRow)).toList)))
-              case None => None
-            }
+          seq.map(taskRow => taskRowToTaskDTO(Some(taskRow))).headOption match {
+            case Some(futureTask) =>
+              futureTask.map {
+                {
+                  case Some(task) =>
+                    Some(TaskDTO(
+                      task.taskId,
+                      task.fileName,
+                      task.taskType,
+                      task.startDateAndTime,
+                      task.periodType,
+                      task.period,
+                      task.endDateAndTime,
+                      task.totalOccurrences,
+                      task.currentOccurrences,
+                      task.timezone,
+                      if (exclusionSeq.isEmpty) None else Some(exclusionSeq.map(exclusionRow => exclusionRepo.exclusionRowToExclusionDTO(exclusionRow)).toList),
+                      if (schedulingSeq.isEmpty) None else Some(schedulingSeq.map(schedulingRow => schedulingRepo.schedulingRowToSchedulingDTO(schedulingRow)).toList)))
+                  case None => None
+                }
+              }
+            case None => Future(None)
           }
       }
     }

@@ -49,7 +49,7 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
       system.stop(actorRef)
     }
 
-    "start a periodic task and receive the corresponding message. (with startDate)" in {
+    "start a periodic task and receive the corresponding message. (with endDate)" in {
       val fileId = "test1"
       val startDate = getDateWithAddedSeconds(new Date(), 30)
       val task = TaskDTO("asd1", fileId, SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(1), Some(stringToDateFormat("2040-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")))
@@ -61,10 +61,10 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
     }
 
     "start a periodic task and receive the corresponding message. (with occurrences)" in {
-      val fileId = "test1"
+      val fileId = "test3"
       val startDate = getDateWithAddedSeconds(new Date(), 30)
-      val task = TaskDTO("asd1", fileId, SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(1), None, Some(3), Some(3))
-      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, Some(Duration.ofHours(1)), task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone, fileRepo, taskRepo, executionManager))
+      val task = TaskDTO("asd3", fileId, SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(1), None, Some(5), Some(5))
+      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, Some(Duration.ofHours(1)), task.endDateAndTime, task.timezone, None, None, fileRepo, taskRepo, executionManager))
       actorRef ! Start
       actorRef ! GetStatus
       expectMsg(ExecutionStatus.PeriodicWaiting)
