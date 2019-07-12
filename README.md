@@ -26,7 +26,7 @@ Here is a list of all the different available endpoints with the url and the JSO
 - POST request at <http://localhost:9000/file> - used to send info on a new file through a JSON body. **[.jar file must be sent as an attachment]**
 - POST request at <http://localhost:9000/task> - used to send info on a new task through a JSON body. **[JSON body is required]**
 
-__Json body fields:__
+### Json body fields:
 
 **fileName** - String corresponding to the name of the file that the task will execute. The fileName must already exist or the field will be invalid. [Field is mandatory]
 **taskType** - String corresponding to the type of task. This field can only be "RunOnce" (for single run tasks), "Periodic" (for periodic tasks) or "Personalized" (for tasks with highly personalized executions). Any other String value will be invalid. [Field is mandatory]
@@ -61,7 +61,7 @@ __Json body fields:__
 - DELETE request at <http://localhost:9000/task/:id> - used to delete data of a task with the given id in the url. **[no JSON body required]**
 - PATCH request at <http://localhost:9000/task/:id> - used to replace 1 or more fields of an existing task with the given id in the url. Fields are given through a JSON body. **[JSON body is required]**
 
-__JSON body fields:__
+### JSON body fields:
 
 **toDelete** - Array with 1 or several strings with the names of the fields that are supposed
 All other fields are the same as listed in the POST /task JSON fields, but keep in mind all of them are now optional since they are used to replace existing fields. Refer to the examples section below for more information.
@@ -75,7 +75,7 @@ Refer to the POST /task JSON fields, since the format used in the PUT /task is t
 
 ## JSON Body Examples
 
-__POST /task JSON body example (RunOnce):__
+### POST /task JSON body example (RunOnce):
 
 ```
 {
@@ -91,7 +91,7 @@ Note that all other fields are not present because its a "RunOnce" task. The onl
 
 **[The task will run the file "EmailSender" at June 16th 2035 at 3pm]**
 
-__POST /task JSON body example (Periodic):__
+### POST /task JSON body example (Periodic):
 
 ```
 {
@@ -117,7 +117,7 @@ An exclusion is also set to exclude any day on a weekend from execution. What th
 
 **[The task will run the file "EmailSender" 10 times starting right now and every 3 days at the same time as the first run, except on weekdays]**
 
-__POST /task JSON body example (Personalized):__
+### POST /task JSON body example (Personalized):
 
 ```
 {
