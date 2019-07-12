@@ -72,19 +72,6 @@ Also keep in mind that you will get an error if the deletions/replacements chang
 
 Refer to the POST /task JSON fields, since the format used in the PUT /task is the same as the POST /task
 
-You can send several different types of HTTP requests to test the different endpoints.
-
-To test other endpoints, you can try sending a POST request to <http://localhost:9000/schedule> with a JSON body looking like this:
-
-```
-{
-	"startDateAndTime": "05/12/2018 10:42:00",
-	"taskName": "EmailSender"
-}
-```
-This will schedule the EmailSender file (which is already available within the project) to run on the 5th of December at 10:42 AM.
-
-I recommend using [Postman](https://www.getpostman.com/) to test HTTP requests with ease.
 
 ## JSON Body Examples
 
