@@ -18,15 +18,15 @@ To start the project, run the command ```sbt run``` in the console and you can t
 To test these endpoints, you can send a request to the localhost url with a JSON body. I recommend using [Postman](https://www.getpostman.com/) to send HTTP requests with ease. Also keep in mind you need a [MySQL](https://www.mysql.com/) database set up for this to work properly.
 Here is a list of all the different available endpoints with the url and the JSON body you need to send:
 
-- GET request at <http://localhost:9000> - returns the message "It works!". Used for basic testing. **[no JSON body required]**
-- GET request at <http://localhost:9000/file> - returns info of all the stored files. **[no JSON body required]**
-- GET request at <http://localhost:9000/task> - returns info of all the stored tasks. **[no JSON body required]**
-- GET request at <http://localhost:9000/file/:id> - returns info of the stored file with the given id in the url. **[no JSON body required]**
-- GET request at <http://localhost:9000/task/:id> - returns info of the stored task with the given id in the url. **[no JSON body required]**
-- POST request at <http://localhost:9000/file> - used to send info on a new file through a JSON body. **[.jar file must be sent as an attachment]**
-- POST request at <http://localhost:9000/task> - used to send info on a new task through a JSON body. **[JSON body is required]**
+### GET request at <http://localhost:9000> - returns the message "It works!". Used for basic testing. **[no JSON body required]**
+### GET request at <http://localhost:9000/file> - returns info of all the stored files. **[no JSON body required]**
+### GET request at <http://localhost:9000/task> - returns info of all the stored tasks. **[no JSON body required]**
+### GET request at <http://localhost:9000/file/:id> - returns info of the stored file with the given id in the url. **[no JSON body required]**
+### GET request at <http://localhost:9000/task/:id> - returns info of the stored task with the given id in the url. **[no JSON body required]**
+### POST request at <http://localhost:9000/file> - used to send info on a new file through a JSON body. **[.jar file must be sent as an attachment]**
+### POST request at <http://localhost:9000/task> - used to send info on a new task through a JSON body. **[JSON body is required]**
 
-### Json body fields:
+_Json body fields:_
 
 **fileName** - String corresponding to the name of the file that the task will execute. The fileName must already exist or the field will be invalid. [Field is mandatory]
 
@@ -66,44 +66,35 @@ optional. Field must be empty if any exclusionDate is already set or if no field
 
 **schedulings** - Array with 1 or several schedulings that define what dates should be included in task execution. This is used for "Personalized" tasks to heavily customize your task schedule. Below you can see the scheduling fields you can use. [Field is mandatory for "Personalized" tasks, but must be empty for "RunOnce"/"Periodic" ones]
 
-- **schedulingDate** - String with a date corresponding to the date that should be scheduled for execution. [Field is mandatory if all 
-other fields are empty. Field must be empty if any other field is set]
-- **day** - Integer between 1 and 31 corresponding to the days with that day value that should be scheduled for execution. [Field is 
-optional. Field must be empty if an schedulingDate is already set]
+- **schedulingDate** - String with a date corresponding to the date that should be scheduled for execution. [Field is mandatory if all other fields are empty. Field must be empty if any other field is set]
+- **day** - Integer between 1 and 31 corresponding to the days with that day value that should be scheduled for execution. [Field is optional. Field must be empty if an schedulingDate is already set]
 - **dayOfWeek** - Integer between 1 and 7 corresponding to the days of the week in every week that should be scheduled for execution. 
 (1 is Sunday and 7 is Saturday) [Field is optional. Field must be empty if an schedulingDate is already set]
-- **dayType** - String corresponding to the type of days that should be scheduled for execution. This field can only be either 
-"Weekday" or "Weekend". Any other String value will be invalid [Field is optional. Field must be empty if an schedulingDate is 
-already set]
-- **month** - Integer between 0 and 11 corresponding to months that should be scheduled for execution. (0 is January and 11 is 
-December) [Field is optional. Field must be empty if an schedulingDate is already set]
-- **year** - Integer corresponding to the current year or a future year that should be scheduled for execution. [Field is optional. 
-Field must be empty if an schedulingDate is already set]
-- **criteria** - String corresponding to a criteria. This criteria value can only be "First", "Second", "Third", "Fourth" or "Last" 
-and defines a single date to be scheduled for execution given all the other fields previously given. (example: If the day value is 
-set to "20" and criteria set to "Second", the only scheduled date will be the second day 20 since the startDate of the task) [Field 
-is optional. Field must be empty if any schedulingDate is already set or if no field is set]
+- **dayType** - String corresponding to the type of days that should be scheduled for execution. This field can only be either "Weekday" or "Weekend". Any other String value will be invalid [Field is optional. Field must be empty if an schedulingDate is already set]
+- **month** - Integer between 0 and 11 corresponding to months that should be scheduled for execution. (0 is January and 11 is December) [Field is optional. Field must be empty if an schedulingDate is already set]
+- **year** - Integer corresponding to the current year or a future year that should be scheduled for execution. [Field is optional. Field must be empty if an schedulingDate is already set]
+- **criteria** - String corresponding to a criteria. This criteria value can only be "First", "Second", "Third", "Fourth" or "Last" and defines a single date to be scheduled for execution given all the other fields previously given. (example: If the day value is set to "20" and criteria set to "Second", the only scheduled date will be the second day 20 since the startDate of the task) [Field is optional. Field must be empty if any schedulingDate is already set or if no field is set]
 
 
-- DELETE request at <http://localhost:9000/file/:id> - used to delete data of a file with the given id in the url. **[no JSON body required]**
-- DELETE request at <http://localhost:9000/task/:id> - used to delete data of a task with the given id in the url. **[no JSON body required]**
-- PATCH request at <http://localhost:9000/task/:id> - used to replace 1 or more fields of an existing task with the given id in the url. Fields are given through a JSON body. **[JSON body is required]**
+### DELETE request at <http://localhost:9000/file/:id> - used to delete data of a file with the given id in the url. **[no JSON body required]**
+### DELETE request at <http://localhost:9000/task/:id> - used to delete data of a task with the given id in the url. **[no JSON body required]**
+### PATCH request at <http://localhost:9000/task/:id> - used to replace 1 or more fields of an existing task with the given id in the url. Fields are given through a JSON body. **[JSON body is required]**
 
-### JSON body fields:
+_JSON body fields:_
 
 **toDelete** - Array with 1 or several strings with the names of the fields that are supposed
 All other fields are the same as listed in the POST /task JSON fields, but keep in mind all of them are now optional since they are used to replace existing fields. Refer to the examples section below for more information.
 Also keep in mind that you will get an error if the deletions/replacements change the task in a way where the task becomes invalid. Check the POST /task JSON field requirements above.
 
 
-- PUT request at <http://localhost:9000/task/:id> - used to replace an existing task with the given id in the url with a completely new task given through a JSON body. **[JSON body is required]**
+### PUT request at <http://localhost:9000/task/:id> - used to replace an existing task with the given id in the url with a completely new task given through a JSON body. **[JSON body is required]**
 
 Refer to the POST /task JSON fields, since the format used in the PUT /task is the same as the POST /task
 
 
 ## JSON Body Examples
 
-### POST /task JSON body example (RunOnce):
+_POST /task JSON body example (RunOnce):_
 
 ```
 {
@@ -119,7 +110,7 @@ Note that all other fields are not present because its a "RunOnce" task. The onl
 
 **[The task will run the file "EmailSender" at June 16th 2035 at 3pm]**
 
-### POST /task JSON body example (Periodic):
+_POST /task JSON body example (Periodic):_
 
 ```
 {
@@ -145,7 +136,7 @@ An exclusion is also set to exclude any day on a weekend from execution. What th
 
 **[The task will run the file "EmailSender" 10 times starting right now and every 3 days at the same time as the first run, except on weekdays]**
 
-### POST /task JSON body example (Personalized):
+_POST /task JSON body example (Personalized):_
 
 ```
 {
