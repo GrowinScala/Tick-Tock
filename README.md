@@ -18,13 +18,13 @@ To start the project, run the command ```sbt run``` in the console and you can t
 To test these endpoints, you can send a request to the localhost url with a JSON body. I recommend using [Postman](https://www.getpostman.com/) to send HTTP requests with ease. Also keep in mind you need a [MySQL](https://www.mysql.com/) database set up for this to work properly.
 Here is a list of all the different available endpoints with the url and the JSON body you need to send:
 
-● GET request at <http://localhost:9000> - returns the message "It works!". Used for basic testing. [no JSON body required]
-● GET request at <http://localhost:9000/file> - returns info of all the stored files. [no JSON body required]
-● GET request at <http://localhost:9000/task> - returns info of all the stored tasks. [no JSON body required]
-● GET request at <http://localhost:9000/file/:id> - returns info of the stored file with the given id in the url. [no JSON body required]
-● GET request at <http://localhost:9000/task/:id> - returns info of the stored task with the given id in the url. [no JSON body required]
-● POST request at <http://localhost:9000/file> - used to send info on a new file through a JSON body. **[.jar file must be sent as an attachment]**
-● POST request at <http://localhost:9000/task> - used to send info on a new task through a JSON body. **[JSON body is required]**
+- GET request at <http://localhost:9000> - returns the message "It works!". Used for basic testing. [no JSON body required]
+- GET request at <http://localhost:9000/file> - returns info of all the stored files. [no JSON body required]
+- GET request at <http://localhost:9000/task> - returns info of all the stored tasks. [no JSON body required]
+- GET request at <http://localhost:9000/file/:id> - returns info of the stored file with the given id in the url. [no JSON body required]
+- GET request at <http://localhost:9000/task/:id> - returns info of the stored task with the given id in the url. [no JSON body required]
+- POST request at <http://localhost:9000/file> - used to send info on a new file through a JSON body. **[.jar file must be sent as an attachment]**
+- POST request at <http://localhost:9000/task> - used to send info on a new task through a JSON body. **[JSON body is required]**
 
 Json body fields:
 
@@ -57,9 +57,9 @@ schedulings - Array with 1 or several schedulings that define what dates should 
     criteria - String corresponding to a criteria. This criteria value can only be "First", "Second", "Third", "Fourth" or "Last" and defines a single date to be scheduled for execution given all the other fields previously given. (example: If the day value is set to "20" and criteria set to "Second", the only scheduled date will be the second day 20 since the startDate of the task) [Field is optional. Field must be empty if any schedulingDate is already set or if no field is set]
 
 
-● DELETE request at <http://localhost:9000/file/:id> - used to delete data of a file with the given id in the url. [no JSON body required]
-● DELETE request at <http://localhost:9000/task/:id> - used to delete data of a task with the given id in the url. [no JSON body required]
-● PATCH request at <http://localhost:9000/task/:id> - used to replace 1 or more fields of an existing task with the given id in the url. Fields are given through a JSON body. **[JSON body is required]**
+- DELETE request at <http://localhost:9000/file/:id> - used to delete data of a file with the given id in the url. [no JSON body required]
+- DELETE request at <http://localhost:9000/task/:id> - used to delete data of a task with the given id in the url. [no JSON body required]
+- PATCH request at <http://localhost:9000/task/:id> - used to replace 1 or more fields of an existing task with the given id in the url. Fields are given through a JSON body. **[JSON body is required]**
 
 JSON body fields:
 
@@ -68,7 +68,7 @@ All other fields are the same as listed in the POST /task JSON fields, but keep 
 Also keep in mind that you will get an error if the deletions/replacements change the task in a way where the task becomes invalid. Check the POST /task JSON field requirements above.
 
 
-● PUT request at <http://localhost:9000/task/:id> - used to replace an existing task with the given id in the url with a completely new task given through a JSON body. **[JSON body is required]**
+- PUT request at <http://localhost:9000/task/:id> - used to replace an existing task with the given id in the url with a completely new task given through a JSON body. **[JSON body is required]**
 
 Refer to the POST /task JSON fields, since the format used in the PUT /task is the same as the POST /task
 
