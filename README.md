@@ -29,32 +29,60 @@ Here is a list of all the different available endpoints with the url and the JSO
 ### Json body fields:
 
 **fileName** - String corresponding to the name of the file that the task will execute. The fileName must already exist or the field will be invalid. [Field is mandatory]
+
 **taskType** - String corresponding to the type of task. This field can only be "RunOnce" (for single run tasks), "Periodic" (for periodic tasks) or "Personalized" (for tasks with highly personalized executions). Any other String value will be invalid. [Field is mandatory]
+
 **startDateAndTime** - String with a time and date corresponding to the start of the task execution. For "RunOnce" tasks, this marks the time and date of the single execution. For "Periodic"/"Personalized" tasks, it marks the first execution and the start of all the subsequent executions. Not setting a date means the startDate is set to start right away. [Field is optional]
+
 **periodType** - String corresponding to the type of periodicity of the task. This field can only be "Minutely", "Hourly", "Daily", "Weekly", "Monthly", "Yearly" depending on the periodicity. Any other String value will be invalid. [Field is mandatory for "Periodic"/"Personalized" tasks, but must be empty for "RunOnce" ones]
+
 **period** - Integer corresponding to the frequency of the periodicity of the task. (example: Setting period to 2 and periodType to "Minutely", the task will execute every 2 minutes) This integer must be a positive number excluding 0. [Field is mandatory for "Periodic/Personalized" tasks, but must be empty for "RunOnce" ones]
+
 **endDateAndTime** - String with a time and date corresponding to the end of the task execution. This field cannot be set if the "occurrences" field is already set. [Field is mandatory for "Periodic"/"Personalized" tasks if you don't have an occurrences field already set, but must be empty for "RunOnce" ones]
+
 **occurrences** - Integer corresponding to the amount of times the task is executed until it stops. This field cannot be set if the "endDateAndTime" field is already set. [Field is mandatory for "Periodic"/"Personalized" tasks if you don't have an endDateAndTime field already set, but must be empty for "RunOnce" ones]
+
 **timezone** - String corresponding to the timezone you want the dates to be processed at. Refer to this [list](https://garygregory.wordpress.com/2013/06/18/what-are-the-java-timezone-ids/) of all possible timezones. Any String not present in that list will be considered invalid. [Field is optional]
+
 **exclusions** - Array with 1 or several exclusions that define what dates should be excluded from task execution. Below you can see the exclusion fields you can use. [Field is optional]
 
-    **exclusionDate** - String with a date corresponding to the date that should be excluded from execution. [Field is mandatory if all other fields are empty. Field must be empty if any other field is set]
-    **day** - Integer between 1 and 31 corresponding to the days with that day value that should be excluded from execution. [Field is optional. Field must be empty if an exclusionDate is already set]
-    **dayOfWeek** - Integer between 1 and 7 corresponding to the days of the week in every week that should be excluded from execution. (1 is Sunday and 7 is Saturday) [Field is optional. Field must be empty if an exclusionDate is already set]
-    **dayType** - String corresponding to the type of days that should be excluded from execution. This field can only be either "Weekday" or "Weekend". Any other String value will be invalid [Field is optional. Field must be empty if an exclusionDate is already set]
-    **month** - Integer between 1 and 12 corresponding to months that should be excluded from execution. [Field is optional. Field must be empty if an exclusionDate is already set]
-    **year** - Integer corresponding to the current year or a future year that should be excluded from execution. [Field is optional. Field must be empty if an exclusionDate is already set]
-    **criteria** - String corresponding to a criteria. This criteria value can only be "First", "Second", "Third" or "Fourth" and defines a single date to be excluded from execution given all the other fields previously given. (example: If the day value is set to "20" and criteria set to "Second", the only excluded date will be the second day 20 since the startDate of the task) [Field is optional. Field must be empty if any exclusionDate is already set or if no field is set]
+- **exclusionDate** - String with a date corresponding to the date that should be excluded from execution. [Field is mandatory if all 
+other fields are empty. Field must be empty if any other field is set]    
+- **day** - Integer between 1 and 31 corresponding to the days with that day value that should be excluded from execution. [Field is 
+optional. Field must be empty if an exclusionDate is already set]   
+- **dayOfWeek** - Integer between 1 and 7 corresponding to the days of the week in every week that should be excluded from execution. 
+(1 is Sunday and 7 is Saturday) [Field is optional. Field must be empty if an exclusionDate is already set]  
+- **dayType** - String corresponding to the type of days that should be excluded from execution. This field can only be either 
+"Weekday" or "Weekend". Any other String value will be invalid [Field is optional. Field must be empty if an exclusionDate is 
+already set]
+- **month** - Integer between 1 and 12 corresponding to months that should be excluded from execution. [Field is optional. Field must 
+be empty if an exclusionDate is already set]
+- **year** - Integer corresponding to the current year or a future year that should be excluded from execution. [Field is optional. 
+Field must be empty if an exclusionDate is already set] 
+- **criteria** - String corresponding to a criteria. This criteria value can only be "First", "Second", "Third" or "Fourth" and 
+defines a single date to be excluded from execution given all the other fields previously given. (example: If the day value is set 
+to "20" and criteria set to "Second", the only excluded date will be the second day 20 since the startDate of the task) [Field is 
+optional. Field must be empty if any exclusionDate is already set or if no field is set]
 
 **schedulings** - Array with 1 or several schedulings that define what dates should be included in task execution. This is used for "Personalized" tasks to heavily customize your task schedule. Below you can see the scheduling fields you can use. [Field is mandatory for "Personalized" tasks, but must be empty for "RunOnce"/"Periodic" ones]
 
-    **schedulingDate** - String with a date corresponding to the date that should be scheduled for execution. [Field is mandatory if all other fields are empty. Field must be empty if any other field is set]
-    **day** - Integer between 1 and 31 corresponding to the days with that day value that should be scheduled for execution. [Field is optional. Field must be empty if an schedulingDate is already set]
-    **dayOfWeek** - Integer between 1 and 7 corresponding to the days of the week in every week that should be scheduled for execution. (1 is Sunday and 7 is Saturday) [Field is optional. Field must be empty if an schedulingDate is already set]
-    **dayType** - String corresponding to the type of days that should be scheduled for execution. This field can only be either "Weekday" or "Weekend". Any other String value will be invalid [Field is optional. Field must be empty if an schedulingDate is already set]
-    **month** - Integer between 0 and 11 corresponding to months that should be scheduled for execution. (0 is January and 11 is December) [Field is optional. Field must be empty if an schedulingDate is already set]
-    **year** - Integer corresponding to the current year or a future year that should be scheduled for execution. [Field is optional. Field must be empty if an schedulingDate is already set]
-    **criteria** - String corresponding to a criteria. This criteria value can only be "First", "Second", "Third", "Fourth" or "Last" and defines a single date to be scheduled for execution given all the other fields previously given. (example: If the day value is set to "20" and criteria set to "Second", the only scheduled date will be the second day 20 since the startDate of the task) [Field is optional. Field must be empty if any schedulingDate is already set or if no field is set]
+- **schedulingDate** - String with a date corresponding to the date that should be scheduled for execution. [Field is mandatory if all 
+other fields are empty. Field must be empty if any other field is set]
+- **day** - Integer between 1 and 31 corresponding to the days with that day value that should be scheduled for execution. [Field is 
+optional. Field must be empty if an schedulingDate is already set]
+- **dayOfWeek** - Integer between 1 and 7 corresponding to the days of the week in every week that should be scheduled for execution. 
+(1 is Sunday and 7 is Saturday) [Field is optional. Field must be empty if an schedulingDate is already set]
+- **dayType** - String corresponding to the type of days that should be scheduled for execution. This field can only be either 
+"Weekday" or "Weekend". Any other String value will be invalid [Field is optional. Field must be empty if an schedulingDate is 
+already set]
+- **month** - Integer between 0 and 11 corresponding to months that should be scheduled for execution. (0 is January and 11 is 
+December) [Field is optional. Field must be empty if an schedulingDate is already set]
+- **year** - Integer corresponding to the current year or a future year that should be scheduled for execution. [Field is optional. 
+Field must be empty if an schedulingDate is already set]
+- **criteria** - String corresponding to a criteria. This criteria value can only be "First", "Second", "Third", "Fourth" or "Last" 
+and defines a single date to be scheduled for execution given all the other fields previously given. (example: If the day value is 
+set to "20" and criteria set to "Second", the only scheduled date will be the second day 20 since the startDate of the task) [Field 
+is optional. Field must be empty if any schedulingDate is already set or if no field is set]
 
 
 - DELETE request at <http://localhost:9000/file/:id> - used to delete data of a file with the given id in the url. **[no JSON body required]**
