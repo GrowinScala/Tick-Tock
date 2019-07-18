@@ -416,7 +416,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
         if (exclusion.exclusionDate.isDefined) {
           if (exclusion.exclusionDate.get.after(startCalendar.getTime)) {
             if (endDate.isDefined)
-              if (endDate.get.after(exclusion.exclusionDate.get)) iter(list.tail)
+              if (endDate.get.compareTo(exclusion.exclusionDate.get) != -1) iter(list.tail)
               else false
             else iter(list.tail)
           } else false

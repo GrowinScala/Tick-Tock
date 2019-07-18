@@ -44,10 +44,11 @@ class FileControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
 
   "FileController#getFileById" should {
     "receive a GET request." in {
-      val fakeRequest = FakeRequest(GET, s"/file/asd1")
+      val id = "asd1"
+      val fakeRequest = FakeRequest(GET, s"/file/" + id)
         .withHeaders(HOST -> "localhost:9000")
       val fileController = new FileController(cc)
-      val result = fileController.getFileById("asd1").apply(fakeRequest)
+      val result = fileController.getFileById(id).apply(fakeRequest)
       val bodyText = contentAsString(result)
       bodyText mustBe """{"fileId":"asd1","fileName":"test1","uploadDate":"Mon Jan 01 12:00:00 GMT 2018"}"""
     }
@@ -55,10 +56,11 @@ class FileControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
 
   "FileController#deleteFile" should {
     "receive a DELETE request." in {
-      val fakeRequest = FakeRequest(DELETE, s"/file/asd1")
+      val id = "asd1"
+      val fakeRequest = FakeRequest(DELETE, s"/file/" + id)
         .withHeaders(HOST -> "localhost:9000")
       val fileController = new FileController(cc)
-      val result = fileController.deleteFile("asd1").apply(fakeRequest)
+      val result = fileController.deleteFile(id).apply(fakeRequest)
       val bodyText = contentAsString(result)
       bodyText mustBe ""
     }

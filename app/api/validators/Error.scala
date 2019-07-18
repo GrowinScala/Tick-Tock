@@ -21,7 +21,6 @@ object Error {
   lazy val forbidden: String = "forbidden"
 
   //location
-  lazy val param = Some("param")
   lazy val body = Some("body")
   lazy val endpoint = Some("endpoint")
 
@@ -319,7 +318,7 @@ object Error {
 
   lazy val invalidUploadFileName = Error(
     errorCode = "error-37",
-    message = "There's already another file with that fileName",
+    message = "There's already another file with that fileName in the file system.",
     reason = Error.invalid,
     locationType = Some("name"),
     location = body)

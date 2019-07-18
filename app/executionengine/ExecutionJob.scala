@@ -6,7 +6,6 @@ import java.time.Duration._
 import java.util.{ Calendar, Date }
 
 import akka.actor.{ Actor, Timers }
-import api.services.SchedulingType
 import api.services.SchedulingType._
 import api.utils.DateUtils._
 import database.repositories.file.FileRepository
@@ -40,9 +39,13 @@ object ExecutionJob {
 class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: SchedulingType, startDate: Option[Date] = None, interval: Option[Duration] = Some(ZERO), endDate: Option[Date] = None, timezone: Option[String] = None, schedulings: Option[mutable.Queue[Date]] = None, exclusions: Option[mutable.Queue[Date]] = None)(implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository, implicit val executionManager: ExecutionManager) extends Actor with Timers {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+  private final val MAX_DELAY_SECONDS = 21474835 //max delay handled by the akka.actor.Actor system.
+  private final val MAX_VARIANCE = -20000 //max variance between currentDate and endDate that accepts a date being the same as the planned one.
   val calendar: Calendar = Calendar.getInstance
 
   var status: ExecutionStatus = ExecutionStatus.Idle
+  var latency: Long = 0
+  var nextDateMillis: Long = startDate.getOrElse(getCurrentDate).getTime
 
   /**
    * Actor method that defined how to act when it receives a task.
@@ -59,8 +62,6 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
     case newStatus: ExecutionStatus => status = newStatus
   }
 
-  private final val MAX_DELAY_SECONDS = 21474835 //max delay handled by the akka.actor.Actor system.
-
   /**
    * Method that is called when a scheduling is made. It checks for the time delay until the task is supposed to be executed
    * by subtracting the schedule time and the current time:
@@ -76,21 +77,21 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
       status = ExecutionStatus.Delaying
       timers.startSingleTimer("delayKey", Delay, Duration.ofSeconds(MAX_DELAY_SECONDS))
     } else {
-      schedulingType match {
-        case RunOnce =>
-          status = ExecutionStatus.RunOnceWaiting
-          timers.startSingleTimer("runOnceExecutionKey", ExecuteRunOnce, delay)
-        case Periodic =>
-          executionManager.runFile(fileId)
-          printExecutionMessage()
-          status = ExecutionStatus.PeriodicWaiting
-          timers.startPeriodicTimer("periodicExecutionKey", ExecutePeriodic, interval.get)
-        case Personalized =>
-          status = ExecutionStatus.PersonalizedWaiting
-          if (schedulings.isDefined) {
-            val nextDateDelay = calculateDelay(Some(schedulings.get.dequeue), timezone)
-            timers.startSingleTimer("personalizedExecutionKey", ExecutePersonalized, nextDateDelay)
-          }
+      if (delay.getSeconds > 0) {
+        schedulingType match {
+          case RunOnce =>
+            status = ExecutionStatus.RunOnceWaiting
+            timers.startSingleTimer("runOnceExecutionKey", ExecuteRunOnce, delay.minusMillis(2500))
+          case Periodic =>
+            status = ExecutionStatus.PeriodicWaiting
+            timers.startSingleTimer("periodicExecutionKey", ExecutePeriodic, delay)
+          case Personalized =>
+            status = ExecutionStatus.PersonalizedWaiting
+            if (schedulings.isDefined) {
+              val nextDateDelay = calculateDelay(Some(schedulings.get.dequeue), timezone)
+              timers.startSingleTimer("personalizedExecutionKey", ExecutePersonalized, nextDateDelay)
+            }
+        }
       }
     }
   }
@@ -105,13 +106,20 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
   }
 
   def executePeriodic(): Unit = {
-    val currentDate = getTimeFromDate(new Date())
-    if (!isExcluded(currentDate)) {
+    if (!isExcluded(new Date())) {
       if (endDate.isDefined) {
-        if (endDate.get.after(getCurrentDate)) {
+        if (endDate.get.getTime - getCurrentDate.getTime >= MAX_VARIANCE) {
           executionManager.runFile(fileId)
           status = ExecutionStatus.PeriodicRunning
+          val currentDate = new Date()
+          println("current date: " + dateToStringFormat(currentDate, "yyyy-MM-dd HH:mm:ss.SSS"))
+          println("planned date: " + dateToStringFormat(new Date(nextDateMillis), "yyyy-MM-dd HH:mm:ss.SSS"))
+          latency = calculateLatency(currentDate.getTime, nextDateMillis)
+          nextDateMillis = calculateNextDateMillis(nextDateMillis)
+          println("calculated latency: " + latency)
+          println("next date: " + dateToStringFormat(new Date(nextDateMillis), "yyyy-MM-dd HH:mm:ss.SSS"))
           printExecutionMessage()
+          timers.startSingleTimer("periodicExecutionKey", ExecutePeriodic, interval.get.minusMillis(latency))
         } else status = ExecutionStatus.Idle
       } else {
         taskRepo.selectCurrentOccurrencesByTaskId(taskId).map { occurrences =>
@@ -119,7 +127,15 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
             taskRepo.decrementCurrentOccurrencesByTaskId(taskId)
             executionManager.runFile(fileId)
             status = ExecutionStatus.PeriodicRunning
+            val currentDate = new Date()
+            println("current date: " + dateToStringFormat(currentDate, "yyyy-MM-dd HH:mm:ss.SSS"))
+            println("planned date: " + dateToStringFormat(new Date(nextDateMillis), "yyyy-MM-dd HH:mm:ss.SSS"))
+            latency = calculateLatency(currentDate.getTime, nextDateMillis)
+            nextDateMillis = calculateNextDateMillis(nextDateMillis)
+            println("calculated latency: " + latency)
+            println("next date: " + dateToStringFormat(new Date(nextDateMillis), "yyyy-MM-dd HH:mm:ss.SSS"))
             printExecutionMessage()
+            timers.startSingleTimer("periodicExecutionKey", ExecutePeriodic, interval.get.minusMillis(latency))
           } else status = ExecutionStatus.Idle
         }
       }
@@ -137,7 +153,7 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
   }
 
   def printExecutionMessage(): Unit = {
-    if (startDate.isDefined) println("[" + getCurrentDate + "] Ran file " + fileId + " scheduled to run at " + dateToStringFormat(getCurrentDate, "yyyy-MM-dd HH:mm:ss") + ".")
+    if (startDate.isDefined) println("[" + getCurrentDate + "] Ran file " + fileId + " scheduled to run at " + dateToStringFormat(getCurrentDate, "yyyy-MM-dd HH:mm:ss.SSS") + ".")
     else println("[" + getCurrentDate + "] Ran file " + fileId + " scheduled to run immediately.")
   }
 
@@ -186,5 +202,9 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
       timers.startSingleTimer("personalizedExecutionKey", ExecutePersonalized, nextDateDelay)
     } else status = ExecutionStatus.Idle
   }
+
+  private def calculateNextDateMillis(date: Long): Long = date + interval.get.toMillis
+
+  private def calculateLatency(currentDateMillis: Long, plannedDateMillis: Long): Long = currentDateMillis - plannedDateMillis
 
 }

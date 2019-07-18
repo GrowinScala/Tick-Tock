@@ -28,16 +28,18 @@ class FileController @Inject() (cc: ControllerComponents)(implicit exec: Executi
           val uuid = UUIDGen.generateUUID
           val fileName = request.body.asMultipartFormData.get.dataParts.head._2.head
           val uploadDate = getCurrentDateTimestamp
-          fileRepo.existsCorrespondingFileName(fileName).map { elem =>
+          fileRepo.existsCorrespondingFileName(fileName).flatMap { elem =>
             if (elem) Future.successful(BadRequest(Json.toJsObject(invalidUploadFileName)))
+            else {
+              val initialFilePath = Paths.get(conf.getString("initialFilePath") + uuid)
+              val finalFilePath = Paths.get(conf.getString("finalFilePath") + uuid + ".jar")
+              file.ref.moveTo(initialFilePath, replace = false)
+              Files.move(initialFilePath, finalFilePath, StandardCopyOption.ATOMIC_MOVE)
+              fileRepo.insertInFilesTable(FileDTO(uuid, fileName, uploadDate))
+              val url = routes.FileController.getFileById(uuid).absoluteURL(request.secure)(request).stripSuffix("/").trim
+              Future.successful(Ok("File uploaded successfully => " + url))
+            }
           }
-          val initialFilePath = Paths.get(conf.getString("initialFilePath") + uuid)
-          val finalFilePath = Paths.get(conf.getString("finalFilePath") + uuid + ".jar")
-          file.ref.moveTo(initialFilePath, replace = false)
-          Files.move(initialFilePath, finalFilePath, StandardCopyOption.ATOMIC_MOVE)
-          fileRepo.insertInFilesTable(FileDTO(uuid, fileName, uploadDate))
-          val url = routes.FileController.getFileById(uuid).absoluteURL(request.secure)(request).stripSuffix("/").trim
-          Future.successful(Ok("File uploaded successfully => " + url))
         } else Future.successful(BadRequest(Json.toJsObject(invalidFileExtension)))
     }.getOrElse {
       Future.successful(BadRequest(Json.toJsObject(invalidUploadFormat)))
