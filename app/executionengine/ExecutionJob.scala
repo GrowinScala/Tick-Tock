@@ -36,7 +36,19 @@ object ExecutionJob {
  * @param taskId Id of the task registered on the database.
  * @param schedulingType Type of scheduling. (One time, Periodic, etc.)
  */
-class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: SchedulingType, startDate: Option[Date] = None, interval: Option[Duration] = Some(ZERO), endDate: Option[Date] = None, timezone: Option[String] = None, schedulings: Option[mutable.Queue[Date]] = None, exclusions: Option[mutable.Queue[Date]] = None)(implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository, implicit val executionManager: ExecutionManager) extends Actor with Timers {
+class ExecutionJob @Inject() (
+  taskId: String,
+  fileId: String,
+  schedulingType: SchedulingType,
+  startDate: Option[Date] = None,
+  interval: Option[Duration] = Some(ZERO),
+  endDate: Option[Date] = None,
+  timezone: Option[String] = None,
+  schedulings: Option[mutable.Queue[Date]] = None,
+  exclusions: Option[mutable.Queue[Date]] = None)(implicit
+  val fileRepo: FileRepository,
+  implicit val taskRepo: TaskRepository,
+  implicit val executionManager: ExecutionManager) extends Actor with Timers {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
   private final val MAX_DELAY_SECONDS = 21474835 //max delay handled by the akka.actor.Actor system.
@@ -73,11 +85,13 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
    */
   def start(): Unit = {
     val delay = calculateDelay(startDate, timezone)
+    println(delay.getSeconds)
     if (delay.getSeconds > MAX_DELAY_SECONDS) {
       status = ExecutionStatus.Delaying
-      timers.startSingleTimer("delayKey", Delay, Duration.ofSeconds(MAX_DELAY_SECONDS))
+      timers.startSingleTimer("delayKey", Start, Duration.ofSeconds(MAX_DELAY_SECONDS))
     } else {
       if (delay.getSeconds > 0) {
+        println(schedulingType)
         schedulingType match {
           case RunOnce =>
             status = ExecutionStatus.RunOnceWaiting
@@ -106,7 +120,7 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
   }
 
   def executePeriodic(): Unit = {
-    if (!isExcluded(new Date())) {
+    if (!isExcluded(new Date(nextDateMillis))) {
       if (endDate.isDefined) {
         if (endDate.get.getTime - getCurrentDate.getTime >= MAX_VARIANCE) {
           executionManager.runFile(fileId)
@@ -118,6 +132,9 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
           nextDateMillis = calculateNextDateMillis(nextDateMillis)
           println("calculated latency: " + latency)
           println("next date: " + dateToStringFormat(new Date(nextDateMillis), "yyyy-MM-dd HH:mm:ss.SSS"))
+          println("-------------------")
+          println("interval: " + interval.get.getSeconds)
+          println("latency: " + latency)
           printExecutionMessage()
           timers.startSingleTimer("periodicExecutionKey", ExecutePeriodic, interval.get.minusMillis(latency))
         } else status = ExecutionStatus.Idle
@@ -183,12 +200,26 @@ class ExecutionJob @Inject() (taskId: String, fileId: String, schedulingType: Sc
 
   def isExcluded(date: Date): Boolean = {
     def iter: Boolean = {
-      val exclusion = exclusions.get.dequeue
-      if (exclusion.before(date)) iter
-      else exclusion.equals(date)
+      exclusions match {
+        case Some(exclusionQueue) =>
+          exclusionQueue.headOption match {
+            case Some(exclusion) =>
+              exclusion.compareTo(date) match {
+                case -1 =>
+                  exclusionQueue.dequeue()
+                  iter
+                case 0 =>
+                  exclusionQueue.dequeue()
+                  true
+                case 1 =>
+                  false
+              }
+            case None => false
+          }
+        case None => false
+      }
     }
-    if (exclusions.isDefined && exclusions.get.nonEmpty) iter
-    else false
+    iter
   }
 
   /**
