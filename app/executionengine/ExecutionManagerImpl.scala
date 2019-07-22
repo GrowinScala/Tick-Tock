@@ -19,8 +19,8 @@ class ExecutionManagerImpl extends ExecutionManager {
    * @param file target file that will be executed
    * @return
    */
-  def runFile(file: String): Int = synchronized {
+  def runFile(file: String): Unit = {
     val pathSeq = Seq("java", "-jar", storagePath + file + ".jar")
-    pathSeq.!
+    pathSeq.run()
   }
 }

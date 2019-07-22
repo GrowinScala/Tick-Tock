@@ -8,5 +8,5 @@ class FakeExecutionManager extends ExecutionManager {
    * @param file target file that will be executed
    * @return
    */
-  def runFile(file: String): Int = 0
+  def runFile(file: String): Unit = ()
 }

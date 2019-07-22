@@ -34,6 +34,7 @@ CREATE TABLE schedulings(
 CREATE TABLE exclusions (
     exclusionId varchar(36) not null,
     taskId varchar(36) not null,
+    exclusionDate TIMESTAMP null,
     day int null,
     dayOfWeek int null,
     dayType int null,
