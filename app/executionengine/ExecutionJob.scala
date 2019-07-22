@@ -22,7 +22,6 @@ object ExecutionJob {
   case object ExecuteRunOnce
   case object ExecutePeriodic
   case object ExecutePersonalized
-  case object Delay
   case object Cancel
 
   case object GetStatus
@@ -67,7 +66,6 @@ class ExecutionJob @Inject() (
     case ExecuteRunOnce => executeRunOnce()
     case ExecutePeriodic => executePeriodic()
     case ExecutePersonalized => executePersonalized()
-    case Delay => delay()
     case Cancel => cancel()
 
     case GetStatus => sender() ! status
@@ -173,8 +171,6 @@ class ExecutionJob @Inject() (
     if (startDate.isDefined) println("[" + getCurrentDate + "] Ran file " + fileId + " scheduled to run at " + dateToStringFormat(getCurrentDate, "yyyy-MM-dd HH:mm:ss.SSS") + ".")
     else println("[" + getCurrentDate + "] Ran file " + fileId + " scheduled to run immediately.")
   }
-
-  def delay(): Unit = executionManager.delayFile(ExecutionJob.this)
 
   def printDelayMessage(): Unit = println(getCurrentDate + " Received delayed task with storageName: " + fileId)
 
