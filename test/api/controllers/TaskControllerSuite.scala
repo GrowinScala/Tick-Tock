@@ -5,7 +5,7 @@ import akka.stream.{ActorMaterializer, Materializer}
 import api.utils.{FakeUUIDGenerator, UUIDGenerator}
 import database.repositories.exclusion.ExclusionRepository
 import database.repositories.file.FileRepository
-import database.repositories.scheduling.{FakeSchedulingRepository, SchedulingRepository}
+import database.repositories.scheduling.SchedulingRepository
 import database.repositories.task.{FakeTaskRepository, TaskRepository}
 import executionengine.{ExecutionManager, FakeExecutionManager}
 import org.mockito.ArgumentMatchersSugar.any
@@ -31,7 +31,7 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
   private implicit val fileRepo: FileRepository = mock[FileRepository]
   private implicit val taskRepo: TaskRepository = new FakeTaskRepository
   private implicit val exclusionRepo: ExclusionRepository = mock[ExclusionRepository]
-  private implicit val schedulingRepo: SchedulingRepository = new FakeSchedulingRepository
+  private implicit val schedulingRepo: SchedulingRepository = mock[SchedulingRepository]
   private implicit val UUIDGen: UUIDGenerator = new FakeUUIDGenerator
   private implicit val executionManager: ExecutionManager = new FakeExecutionManager
   private val cc: ControllerComponents = injector.instanceOf[ControllerComponents]
@@ -44,6 +44,8 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
   when(fileRepo.selectFileIdFromFileName("test1")).thenReturn(Future.successful("asd1"))
 
   when(exclusionRepo.insertInExclusionsTable(any)).thenReturn(Future.successful(true))
+
+  when(schedulingRepo.insertInSchedulingsTable(any)).thenReturn(Future.successful(true))
 
   "TaskController#schedule (POST /task)" should {
     "be valid in" in {
