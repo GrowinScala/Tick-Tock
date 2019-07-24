@@ -5,7 +5,7 @@ import java.time.Duration
 import java.time.Duration._
 import java.util.{ Calendar, Date }
 
-import akka.actor.{ Actor, Timers }
+import akka.actor.{ Actor, PoisonPill, Timers }
 import api.services.SchedulingType._
 import api.utils.DateUtils._
 import database.repositories.file.FileRepository
@@ -43,8 +43,9 @@ class ExecutionJob @Inject() (
   interval: Option[Duration] = Some(ZERO),
   endDate: Option[Date] = None,
   timezone: Option[String] = None,
-  schedulings: Option[mutable.Queue[Date]] = None,
-  exclusions: Option[mutable.Queue[Date]] = None)(implicit
+  var exclusions: List[Date] = Nil,
+  var schedulings: List[Date] = Nil)(
+  implicit
   val fileRepo: FileRepository,
   implicit val taskRepo: TaskRepository,
   implicit val executionManager: ExecutionManager) extends Actor with Timers {
@@ -60,6 +61,7 @@ class ExecutionJob @Inject() (
 
   /**
    * Actor method that defined how to act when it receives a task.
+   * +
    */
   def receive: Receive = {
     case Start => start()
@@ -99,8 +101,9 @@ class ExecutionJob @Inject() (
             timers.startSingleTimer("periodicExecutionKey", ExecutePeriodic, delay)
           case Personalized =>
             status = ExecutionStatus.PersonalizedWaiting
-            if (schedulings.isDefined) {
-              val nextDateDelay = calculateDelay(Some(schedulings.get.dequeue), timezone)
+            if (schedulings.nonEmpty) {
+              val nextDateDelay = calculateDelay(Some(schedulings.head), timezone)
+              schedulings = schedulings.tail
               timers.startSingleTimer("personalizedExecutionKey", ExecutePersonalized, nextDateDelay)
             }
         }
@@ -109,12 +112,10 @@ class ExecutionJob @Inject() (
   }
 
   def executeRunOnce(): Unit = {
-    val currentDate = getTimeFromDate(new Date())
-    if (!isExcluded(currentDate)) {
-      executionManager.runFile(fileId)
-      status = ExecutionStatus.RunOnceRunning
-      printExecutionMessage()
-    }
+    executionManager.runFile(fileId)
+    status = ExecutionStatus.RunOnceRunning
+    printExecutionMessage()
+    self ! PoisonPill
   }
 
   def executePeriodic(): Unit = {
@@ -124,18 +125,18 @@ class ExecutionJob @Inject() (
           executionManager.runFile(fileId)
           status = ExecutionStatus.PeriodicRunning
           val currentDate = new Date()
-          println("current date: " + dateToStringFormat(currentDate, "yyyy-MM-dd HH:mm:ss.SSS"))
-          println("planned date: " + dateToStringFormat(new Date(nextDateMillis), "yyyy-MM-dd HH:mm:ss.SSS"))
+          //println("current date: " + dateToStringFormat(currentDate, "yyyy-MM-dd HH:mm:ss.SSS"))
+          //println("planned date: " + dateToStringFormat(new Date(nextDateMillis), "yyyy-MM-dd HH:mm:ss.SSS"))
           latency = calculateLatency(currentDate.getTime, nextDateMillis)
           nextDateMillis = calculateNextDateMillis(nextDateMillis)
-          println("calculated latency: " + latency)
-          println("next date: " + dateToStringFormat(new Date(nextDateMillis), "yyyy-MM-dd HH:mm:ss.SSS"))
-          println("-------------------")
-          println("interval: " + interval.get.getSeconds)
-          println("latency: " + latency)
+          //println("calculated latency: " + latency)
+          //println("next date: " + dateToStringFormat(new Date(nextDateMillis), "yyyy-MM-dd HH:mm:ss.SSS"))
+          //println("-------------------")
+          //println("interval: " + interval.get.getSeconds)
+          //println("latency: " + latency)
           printExecutionMessage()
           timers.startSingleTimer("periodicExecutionKey", ExecutePeriodic, interval.get.minusMillis(latency))
-        } else status = ExecutionStatus.Idle
+        } else self ! PoisonPill
       } else {
         taskRepo.selectCurrentOccurrencesByTaskId(taskId).map { occurrences =>
           if (occurrences.get != 0) {
@@ -143,15 +144,15 @@ class ExecutionJob @Inject() (
             executionManager.runFile(fileId)
             status = ExecutionStatus.PeriodicRunning
             val currentDate = new Date()
-            println("current date: " + dateToStringFormat(currentDate, "yyyy-MM-dd HH:mm:ss.SSS"))
-            println("planned date: " + dateToStringFormat(new Date(nextDateMillis), "yyyy-MM-dd HH:mm:ss.SSS"))
+            //println("current date: " + dateToStringFormat(currentDate, "yyyy-MM-dd HH:mm:ss.SSS"))
+            //println("planned date: " + dateToStringFormat(new Date(nextDateMillis), "yyyy-MM-dd HH:mm:ss.SSS"))
             latency = calculateLatency(currentDate.getTime, nextDateMillis)
             nextDateMillis = calculateNextDateMillis(nextDateMillis)
-            println("calculated latency: " + latency)
-            println("next date: " + dateToStringFormat(new Date(nextDateMillis), "yyyy-MM-dd HH:mm:ss.SSS"))
+            //println("calculated latency: " + latency)
+            //println("next date: " + dateToStringFormat(new Date(nextDateMillis), "yyyy-MM-dd HH:mm:ss.SSS"))
             printExecutionMessage()
             timers.startSingleTimer("periodicExecutionKey", ExecutePeriodic, interval.get.minusMillis(latency))
-          } else status = ExecutionStatus.Idle
+          } else self ! PoisonPill
         }
       }
     }
@@ -196,21 +197,19 @@ class ExecutionJob @Inject() (
 
   def isExcluded(date: Date): Boolean = {
     def iter: Boolean = {
-      exclusions match {
-        case Some(exclusionQueue) =>
-          exclusionQueue.headOption match {
-            case Some(exclusion) =>
-              exclusion.compareTo(date) match {
-                case -1 =>
-                  exclusionQueue.dequeue()
-                  iter
-                case 0 =>
-                  exclusionQueue.dequeue()
-                  true
-                case 1 =>
-                  false
-              }
-            case None => false
+      exclusions.headOption match {
+        case Some(exclusion) =>
+          exclusion.compareTo(date) match {
+            case -1 =>
+              exclusions.head
+              exclusions = exclusions.tail
+              iter
+            case 0 =>
+              exclusions.head
+              exclusions = exclusions.tail
+              true
+            case 1 =>
+              false
           }
         case None => false
       }
@@ -224,10 +223,11 @@ class ExecutionJob @Inject() (
    * @return
    */
   def runNextScheduling(): Unit = {
-    if (schedulings.isDefined && schedulings.get.nonEmpty) {
-      val nextDateDelay = calculateDelay(Some(schedulings.get.dequeue), timezone)
+    if (schedulings.nonEmpty) {
+      val nextDateDelay = calculateDelay(Some(schedulings.head), timezone)
+      schedulings = schedulings.tail
       timers.startSingleTimer("personalizedExecutionKey", ExecutePersonalized, nextDateDelay)
-    } else status = ExecutionStatus.Idle
+    } else self ! PoisonPill
   }
 
   private def calculateNextDateMillis(date: Long): Long = date + interval.get.toMillis

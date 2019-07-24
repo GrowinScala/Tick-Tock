@@ -29,7 +29,7 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
       val fileId = "test1"
       val startDate = getDateWithAddedSeconds(new Date(), 30000000)
       val task = TaskDTO("asd1", fileId, SchedulingType.RunOnce, Some(startDate))
-      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, None, None, None, None, None, fileRepo, taskRepo, executionManager))
+      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, None, None, None, Nil, Nil, fileRepo, taskRepo, executionManager))
       actorRef ! Start
       actorRef ! GetStatus
       expectMsg(ExecutionStatus.Delaying)
@@ -40,7 +40,7 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
       val fileId = "test1"
       val startDate = getDateWithAddedSeconds(new Date(), 30)
       val task = TaskDTO("asd1", fileId, SchedulingType.RunOnce, Some(startDate))
-      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, None, None, None, None, None, fileRepo, taskRepo, executionManager))
+      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, None, None, None, Nil, Nil, fileRepo, taskRepo, executionManager))
       actorRef ! Start
       actorRef ! GetStatus
       expectMsg(ExecutionStatus.RunOnceWaiting)
@@ -51,7 +51,7 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
       val fileId = "test1"
       val startDate = getDateWithAddedSeconds(new Date(), 30)
       val task = TaskDTO("asd1", fileId, SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(1), Some(stringToDateFormat("2040-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")))
-      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, Some(Duration.ofHours(1)), task.endDateAndTime, None, None, None, fileRepo, taskRepo, executionManager))
+      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, Some(Duration.ofHours(1)), task.endDateAndTime, None, Nil, Nil, fileRepo, taskRepo, executionManager))
       actorRef ! Start
       actorRef ! GetStatus
       expectMsg(ExecutionStatus.PeriodicWaiting)
@@ -62,7 +62,7 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
       val fileId = "test3"
       val startDate = getDateWithAddedSeconds(new Date(), 30)
       val task = TaskDTO("asd3", fileId, SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(1), None, Some(5), Some(5))
-      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, Some(Duration.ofHours(1)), task.endDateAndTime, task.timezone, None, None, fileRepo, taskRepo, executionManager))
+      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, Some(Duration.ofHours(1)), task.endDateAndTime, task.timezone, Nil, Nil, fileRepo, taskRepo, executionManager))
       actorRef ! Start
       actorRef ! GetStatus
       expectMsg(ExecutionStatus.PeriodicWaiting)
@@ -74,7 +74,7 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
       val currentDate = new Date()
       val startDate = getDateWithAddedSeconds(currentDate, 30)
       val task = TaskDTO("asd1", fileId, SchedulingType.Periodic, Some(startDate), Some(PeriodType.Minutely), Some(1), Some(stringToDateFormat("2040-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), None, None, None, Some(List(ExclusionDTO("dsa1", "asd1", Some(getDateWithAddedSeconds(currentDate, 60))))))
-      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, Some(Duration.ofHours(1)), task.endDateAndTime, task.totalOccurrences, task.currentOccurrences, task.timezone, fileRepo, taskRepo, executionManager))
+      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, Some(Duration.ofHours(1)), task.endDateAndTime, task.timezone, Nil, Nil, fileRepo, taskRepo, executionManager))
       actorRef ! Start
       actorRef ! GetStatus
       expectMsg(ExecutionStatus.PeriodicWaiting)
@@ -85,13 +85,12 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
       val fileId = "test1"
       val startDate = getDateWithAddedSeconds(new Date(), 30)
       val task = TaskDTO("asd1", fileId, SchedulingType.Personalized, Some(startDate), Some(PeriodType.Hourly), Some(1), Some(stringToDateFormat("2040-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), None) // needed schedulings also but not needed for the test (we can give the date queue directly to the actor)
-      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, None, None, None, Some(mutable.Queue(getDateWithAddedSeconds(new Date(), 60))), None, fileRepo, taskRepo, executionManager))
+      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, None, None, None, List(getDateWithAddedSeconds(new Date(), 60)), Nil, fileRepo, taskRepo, executionManager))
       actorRef ! Start
       actorRef ! GetStatus
       expectMsg(ExecutionStatus.PersonalizedWaiting)
       system.stop(actorRef)
     }
-
   }
 
   "ExecutionActor#Execute" should {
@@ -99,17 +98,18 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
       val fileId = "test1"
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       val task = TaskDTO("asd1", fileId, SchedulingType.RunOnce, Some(startDate))
-      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, None, None, None, None, None, fileRepo, taskRepo, executionManager))
+      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, None, None, None, Nil, Nil, fileRepo, taskRepo, executionManager))
       actorRef ! ExecuteRunOnce
       actorRef ! GetStatus
       expectMsg(ExecutionStatus.RunOnceRunning)
       system.stop(actorRef)
     }
+
     "execute a Periodic task and receive the expected message." in {
       val fileId = "test1"
       val startDate = getDateWithAddedSeconds(new Date(), 500000)
       val task = TaskDTO("asd1", fileId, SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(1), Some(getDateWithAddedSeconds(new Date(), 1000000)))
-      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, Some(Duration.ofHours(1)), task.endDateAndTime, None, None, None, fileRepo, taskRepo, executionManager))
+      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, Some(Duration.ofHours(1)), task.endDateAndTime, None, Nil, Nil, fileRepo, taskRepo, executionManager))
       actorRef ! ExecutePeriodic
       actorRef ! GetStatus
       expectMsg(ExecutionStatus.PeriodicRunning)
@@ -120,7 +120,7 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
       val fileId = "test1"
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       val task = TaskDTO("asd1", fileId, SchedulingType.Personalized, Some(startDate), Some(PeriodType.Hourly), Some(1), Some(stringToDateFormat("2040-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")), None) // needed schedulings also but not needed for the test (we can give the date queue directly to the actor)
-      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, None, None, None, Some(mutable.Queue(getDateWithAddedSeconds(new Date(), 60))), None, fileRepo, taskRepo, executionManager))
+      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, None, None, None, List(getDateWithAddedSeconds(new Date(), 60)), Nil, fileRepo, taskRepo, executionManager))
       actorRef ! ExecutePersonalized
       actorRef ! GetStatus
       expectMsg(ExecutionStatus.PersonalizedRunning)
@@ -133,7 +133,7 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
       val fileId = "test1"
       val startDate = getDateWithAddedSeconds(new Date(), 30000000)
       val task = TaskDTO("asd1", fileId, SchedulingType.RunOnce, Some(startDate))
-      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, None, None, None, None, None, fileRepo, taskRepo, executionManager))
+      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, None, None, None, Nil, Nil, fileRepo, taskRepo, executionManager))
       actorRef ! Start
       actorRef ! GetStatus
       expectMsg(ExecutionStatus.Delaying)
@@ -146,7 +146,7 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
       val fileId = "test1"
       val startDate = getDateWithAddedSeconds(new Date(), 30)
       val task = TaskDTO("asd1", fileId, SchedulingType.RunOnce, Some(startDate))
-      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, None, None, None, None, None, fileRepo, taskRepo, executionManager))
+      val actorRef = system.actorOf(Props(classOf[ExecutionJob], task.taskId, task.fileName, task.taskType, task.startDateAndTime, None, None, None, Nil, Nil, fileRepo, taskRepo, executionManager))
       actorRef ! Start
       actorRef ! Cancel
       actorRef ! GetStatus
