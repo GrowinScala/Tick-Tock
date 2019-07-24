@@ -1,15 +1,15 @@
 package api.controllers
 
 import akka.actor.ActorSystem
-import akka.stream.{ ActorMaterializer, Materializer }
-import api.utils.{ FakeUUIDGenerator, UUIDGenerator }
+import akka.stream.{ActorMaterializer, Materializer}
+import api.utils.{FakeUUIDGenerator, UUIDGenerator}
+import database.repositories.exclusion.{ExclusionRepository, FakeExclusionRepository}
 import database.repositories.file.FileRepository
-import database.repositories.exclusion.{ ExclusionRepository, FakeExclusionRepository }
-import database.repositories.file.FakeFileRepository
-import database.repositories.scheduling.{ FakeSchedulingRepository, SchedulingRepository }
-import database.repositories.task.{ FakeTaskRepository, TaskRepository }
-import executionengine.{ ExecutionManager, FakeExecutionManager }
-import org.scalatest.{ AsyncWordSpec, MustMatchers }
+import database.repositories.scheduling.{FakeSchedulingRepository, SchedulingRepository}
+import database.repositories.task.{FakeTaskRepository, TaskRepository}
+import executionengine.{ExecutionManager, FakeExecutionManager}
+import org.mockito.Mockito._
+import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.Injector
@@ -19,14 +19,15 @@ import play.api.mvc._
 import play.api.test.Helpers._
 import play.api.test._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
-class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite {
+//TODO implements missing tests
+class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite with MockitoSugar {
 
   private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
   private lazy val injector: Injector = appBuilder.injector()
   private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
-  private implicit val fileRepo: FileRepository = new FakeFileRepository
+  implicit val fileRepo: FileRepository = mock[FileRepository]
   private implicit val taskRepo: TaskRepository = new FakeTaskRepository
   private implicit val exclusionRepo: ExclusionRepository = new FakeExclusionRepository
   private implicit val schedulingRepo: SchedulingRepository = new FakeSchedulingRepository
@@ -37,6 +38,9 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
   private implicit val mat: Materializer = ActorMaterializer()
 
   private val LOCALHOST = "localhost:9000"
+
+  when(fileRepo.existsCorrespondingFileName("test1")).thenReturn(Future.successful(true))
+  when(fileRepo.selectFileIdFromFileName("test1")).thenReturn(Future.successful("asd1"))
 
   "TaskController#schedule (POST /task)" should {
     "be valid in" in {

@@ -1,30 +1,34 @@
 package api.services
 
-import akka.actor.{ ActorSystem, Props }
-import api.dtos.{ ExclusionDTO, SchedulingDTO, TaskDTO }
+import akka.actor.{ActorSystem, Props}
+import api.dtos.{ExclusionDTO, SchedulingDTO, TaskDTO}
 import api.utils.DateUtils._
-import database.repositories.file.{ FakeFileRepository, FileRepository }
-import database.repositories.task.{ FakeTaskRepository, TaskRepository }
-import executionengine.{ ExecutionJob, ExecutionManager, FakeExecutionManager }
-import org.scalatest.{ AsyncWordSpec, MustMatchers }
-import org.scalatestplus.play.PlaySpec
+import database.repositories.file.FileRepository
+import database.repositories.task.{FakeTaskRepository, TaskRepository}
+import executionengine.{ExecutionJob, ExecutionManager, FakeExecutionManager}
+import org.mockito.ArgumentMatchersSugar.any
+import org.mockito.Mockito._
+import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{AsyncWordSpec, MustMatchers}
 import play.api.Mode
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
-class TaskServiceSuite extends AsyncWordSpec with MustMatchers {
+class TaskServiceSuite extends AsyncWordSpec with MustMatchers with MockitoSugar {
 
   private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder().in(Mode.Test)
   private lazy val injector: Injector = appBuilder.injector()
   private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
-  private implicit val fileRepo: FileRepository = new FakeFileRepository
+  implicit val fileRepo: FileRepository = mock[FileRepository]
   private implicit val taskRepo: TaskRepository = new FakeTaskRepository
   private implicit val executionManager: ExecutionManager = new FakeExecutionManager
 
   private val taskService = new TaskService()
   private val system = ActorSystem("ExecutionSystem")
+
+  when(fileRepo.selectFileIdFromFileName(any)).thenReturn(Future.successful("asd1"))
 
   "TaskService#scheduleTask" should {
 

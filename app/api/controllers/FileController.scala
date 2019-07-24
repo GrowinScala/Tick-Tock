@@ -1,6 +1,6 @@
 package api.controllers
 
-import java.nio.file.{ Files, Paths, StandardCopyOption }
+import java.nio.file.{Files, Paths, StandardCopyOption}
 
 import api.dtos.FileDTO
 import api.utils.DateUtils._
@@ -9,12 +9,12 @@ import api.validators.Error._
 import com.typesafe.config.ConfigFactory
 import database.repositories.file.FileRepository
 import database.repositories.task.TaskRepository
-import javax.inject.{ Inject, Singleton }
+import javax.inject.{Inject, Singleton}
 import org.apache.commons.io.FilenameUtils
 import play.api.libs.json._
 import play.api.mvc._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class FileController @Inject() (cc: ControllerComponents)(implicit exec: ExecutionContext, implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository, implicit val UUIDGen: UUIDGenerator) extends AbstractController(cc) {
@@ -80,7 +80,8 @@ class FileController @Inject() (cc: ControllerComponents)(implicit exec: Executi
   def deleteFile(id: String): Action[AnyContent] = Action.async {
     fileRepo.selectFileById(id).map {
       case Some(_) =>
-        fileRepo.deleteFileById(id); NoContent
+        fileRepo.deleteFileById(id)
+        NoContent
       case None => BadRequest(Json.toJsObject(invalidEndpointId))
     }
   }

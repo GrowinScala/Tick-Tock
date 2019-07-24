@@ -3,30 +3,30 @@ package api.validators
 import java.util.Calendar
 
 import akka.actor.ActorSystem
-import akka.stream.{ ActorMaterializer, Materializer }
-import api.dtos.{ TaskDTO, _ }
-import api.services.{ Criteria, DayType, PeriodType, SchedulingType }
-import api.utils.{ FakeUUIDGenerator, UUIDGenerator }
+import akka.stream.{ActorMaterializer, Materializer}
+import api.dtos.{TaskDTO, _}
+import api.services.{Criteria, DayType, PeriodType, SchedulingType}
+import api.utils.DateUtils._
+import api.utils.{FakeUUIDGenerator, UUIDGenerator}
 import api.validators.Error._
 import com.google.inject.Guice
-import database.repositories.file.{ FakeFileRepository, FileRepository }
-import database.repositories.task.{ FakeTaskRepository, TaskRepository }
-import executionengine.{ ExecutionManager, FakeExecutionManager }
-import org.scalatest.{ AsyncWordSpec, MustMatchers, WordSpec }
-import org.scalatestplus.play.PlaySpec
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import database.repositories.file.FileRepository
+import database.repositories.task.{FakeTaskRepository, TaskRepository}
+import executionengine.{ExecutionManager, FakeExecutionManager}
+import org.mockito.ArgumentMatchersSugar.any
+import org.mockito.Mockito._
+import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{AsyncWordSpec, MustMatchers}
 import play.api.inject.guice.GuiceApplicationBuilder
-import api.utils.DateUtils._
 
-import scala.concurrent.{ ExecutionContext, Future }
-
-class TaskValidatorSuite extends AsyncWordSpec with MustMatchers {
+import scala.concurrent.{ExecutionContext, Future}
+class TaskValidatorSuite extends AsyncWordSpec with MustMatchers with MockitoSugar {
 
   private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
   private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
   Guice.createInjector(appBuilder.applicationModule).injectMembers(this)
 
-  private implicit val fileRepo: FileRepository = new FakeFileRepository
+  implicit val fileRepo: FileRepository = mock[FileRepository]
   private implicit val taskRepo: TaskRepository = new FakeTaskRepository
   private implicit val UUIDGen: UUIDGenerator = new FakeUUIDGenerator
   private implicit val executionManager: ExecutionManager = new FakeExecutionManager
@@ -35,6 +35,8 @@ class TaskValidatorSuite extends AsyncWordSpec with MustMatchers {
 
   private val validator = new TaskValidator
   private val calendar = Calendar.getInstance()
+
+  when(fileRepo.existsCorrespondingFileName(any)).thenReturn(Future.successful(true))
 
   "TaskValidator#scheduleValidator" should {
 
@@ -406,6 +408,8 @@ class TaskValidatorSuite extends AsyncWordSpec with MustMatchers {
     }
 
     "receive an invalid CreateTaskDTO with invalid file name." in {
+      when(fileRepo.existsCorrespondingFileName("test5")).thenReturn(Future.successful(false))
+
       val dto = CreateTaskDTO("test5", SchedulingType.RunOnce)
       for {
         validation <- validator.scheduleValidator(dto)
