@@ -11,8 +11,9 @@ object ExecutionStatus extends Enumeration {
   lazy val RunOnceRunning = "RunOnceRunning"
   lazy val PeriodicRunning = "PeriodicRunning"
   lazy val PersonalizedRunning = "PersonalizedRunning"
+  lazy val Delaying = "Delaying"
   lazy val Canceled = "Canceled"
 
-  val executionStatusList: List[ExecutionStatus] = List(Idle, RunOnceWaiting, PeriodicWaiting, PersonalizedWaiting, RunOnceRunning, PeriodicRunning, PersonalizedRunning, Canceled)
+  val executionStatusList: List[ExecutionStatus] = List(Idle, RunOnceWaiting, PeriodicWaiting, PersonalizedWaiting, RunOnceRunning, PeriodicRunning, PersonalizedRunning, Delaying, Canceled)
 }
 

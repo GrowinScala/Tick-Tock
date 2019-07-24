@@ -5,6 +5,7 @@ import akka.stream.{ ActorMaterializer, Materializer }
 import api.dtos.FileDTO
 import api.utils.DateUtils.stringToDateFormat
 import api.utils.{ FakeUUIDGenerator, UUIDGenerator }
+import api.validators.Error.{ invalidEndpointId, invalidFileName }
 import database.repositories.file.FileRepository
 import executionengine.{ ExecutionManager, FakeExecutionManager }
 import org.mockito.Mockito._
@@ -44,7 +45,7 @@ class FileControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
   when(fileRepo.selectAllFiles).thenReturn(Future.successful(seqFiles))
 
   "FileController#getAllFiles" should {
-    "receive a GET request" in {
+    "receive a GET request with several files" in {
       val fakeRequest = FakeRequest(GET, s"/file")
         .withHeaders(HOST -> "localhost:9000")
       val fileController = new FileController(cc)
@@ -53,12 +54,25 @@ class FileControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(seqFiles)
     }
+
+    "receive a GET request with no files" in {
+      val emptySeq: Seq[FileDTO] = Seq()
+      when(fileRepo.selectAllFiles).thenReturn(Future.successful(emptySeq))
+
+      val fakeRequest = FakeRequest(GET, s"/file")
+        .withHeaders(HOST -> "localhost:9000")
+      val fileController = new FileController(cc)
+      val result = fileController.getAllFiles.apply(fakeRequest)
+
+      status(result) mustBe OK
+      contentAsJson(result) mustBe Json.toJson(emptySeq)
+    }
   }
 
   when(fileRepo.selectFileById("asd1")).thenReturn(Future.successful(Some(file1)))
 
   "FileController#getFileById" should {
-    "receive a GET request." in {
+    "receive a valid GET request" in {
       val id = "asd1"
       val fakeRequest = FakeRequest(GET, s"/file/" + id)
         .withHeaders(HOST -> "localhost:9000")
@@ -68,12 +82,25 @@ class FileControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(file1)
     }
+
+    "receive an invalid GET request" in {
+      when(fileRepo.selectFileById("asd1")).thenReturn(Future.successful(None))
+
+      val id = "asd1"
+      val fakeRequest = FakeRequest(GET, s"/file/" + id)
+        .withHeaders(HOST -> "localhost:9000")
+      val fileController = new FileController(cc)
+      val result = fileController.getFileById(id).apply(fakeRequest)
+
+      status(result) mustBe BAD_REQUEST
+    }
   }
 
   when(fileRepo.deleteFileById("asd1")).thenReturn(Future.successful(1))
 
   "FileController#deleteFile" should {
-    "receive a DELETE request." in {
+    "receive a valid DELETE request" in {
+      when(fileRepo.selectFileById("asd1")).thenReturn(Future.successful(Some(file1)))
       val id = "asd1"
       val fakeRequest = FakeRequest(DELETE, s"/file/" + id)
         .withHeaders(HOST -> "localhost:9000")
@@ -81,6 +108,18 @@ class FileControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
       val result = fileController.deleteFile(id).apply(fakeRequest)
 
       status(result) mustBe NO_CONTENT
+    }
+
+    "receive an invalid DELETE request" in {
+      when(fileRepo.selectFileById("asd1")).thenReturn(Future.successful(None))
+
+      val id = "asd1"
+      val fakeRequest = FakeRequest(DELETE, s"/file/" + id)
+        .withHeaders(HOST -> "localhost:9000")
+      val fileController = new FileController(cc)
+      val result = fileController.deleteFile(id).apply(fakeRequest)
+
+      status(result) mustBe BAD_REQUEST
     }
   }
 
