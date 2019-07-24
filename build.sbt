@@ -9,7 +9,6 @@ resolvers += Resolver.sonatypeRepo("snapshots")
 scalaVersion := "2.12.7"
 
 libraryDependencies ++= Seq(
-
    "commons-io" % "commons-io" % "2.6",
    "com.enragedginger" %% "akka-quartz-scheduler" % "1.7.0-akka-2.5.x",
    "com.h2database" % "h2" % "1.4.197" % Test,

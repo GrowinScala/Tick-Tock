@@ -1,30 +1,29 @@
 package executionengine
 
-import java.io.ByteArrayOutputStream
-import java.util.{ Calendar, Date }
+import java.time.Duration
+import java.util.Date
 
 import akka.actor.{ ActorSystem, Props }
 import akka.testkit.{ ImplicitSender, TestKit }
-import api.dtos.{ ExclusionDTO, SchedulingDTO, TaskDTO }
-import api.services.{ PeriodType, SchedulingType, TaskService }
-import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
+import api.dtos.{ ExclusionDTO, TaskDTO }
+import api.services.{ PeriodType, SchedulingType }
 import api.utils.DateUtils._
 import api.utils.{ FakeUUIDGenerator, UUIDGenerator }
-import database.repositories.file.{ FakeFileRepository, FileRepository }
-import database.repositories.task.{ FakeTaskRepository, TaskRepository }
+import database.repositories.file.FileRepository
+import database.repositories.task.TaskRepository
 import executionengine.ExecutionJob._
-import java.time.Duration
-
-import slick.jdbc.MySQLProfile.api._
+import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
 
 import scala.collection.mutable
 
-class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSender with WordSpecLike with BeforeAndAfterAll with Matchers {
+class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSender with WordSpecLike with BeforeAndAfterAll with Matchers with MockitoSugar {
 
-  private implicit val fileRepo: FileRepository = new FakeFileRepository
-  private implicit val taskRepo: TaskRepository = new FakeTaskRepository
+  implicit val fileRepo: FileRepository = mock[FileRepository]
+  private implicit val taskRepo: TaskRepository = mock[TaskRepository]
   private implicit val UUIDGen: UUIDGenerator = new FakeUUIDGenerator
   private implicit val executionManager: ExecutionManager = new FakeExecutionManager
+
   "ExecutionActor#Start" should {
     "start a task with date that needs to be delayed." in {
       val fileId = "test1"

@@ -17,7 +17,7 @@ import play.api.mvc._
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class FileController @Inject() (cc: ControllerComponents)(implicit exec: ExecutionContext, implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository, implicit val UUIDGen: UUIDGenerator) extends AbstractController(cc) {
+class FileController @Inject() (cc: ControllerComponents)(implicit exec: ExecutionContext, implicit val fileRepo: FileRepository, implicit val UUIDGen: UUIDGenerator) extends AbstractController(cc) {
 
   private val conf = ConfigFactory.load()
 
@@ -80,7 +80,8 @@ class FileController @Inject() (cc: ControllerComponents)(implicit exec: Executi
   def deleteFile(id: String): Action[AnyContent] = Action.async {
     fileRepo.selectFileById(id).map {
       case Some(_) =>
-        fileRepo.deleteFileById(id); NoContent
+        fileRepo.deleteFileById(id)
+        NoContent
       case None => BadRequest(Json.toJsObject(invalidEndpointId))
     }
   }
