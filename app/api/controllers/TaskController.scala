@@ -127,7 +127,8 @@ class TaskController @Inject() (cc: ControllerComponents)(implicit exec: Executi
   def deleteTask(id: String): Action[AnyContent] = Action.async {
     taskRepo.selectTask(id).map {
       case Some(_) =>
-        taskRepo.deleteTaskById(id); NoContent
+        taskRepo.deleteTaskById(id)
+        NoContent
       case None => BadRequest(Json.toJsObject(invalidEndpointId))
     }
   }

@@ -1,26 +1,25 @@
 package api.controllers
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.stream.{ ActorMaterializer, Materializer }
 import api.dtos.FileDTO
 import api.utils.DateUtils.stringToDateFormat
-import api.utils.{FakeUUIDGenerator, UUIDGenerator}
+import api.utils.{ FakeUUIDGenerator, UUIDGenerator }
 import database.repositories.file.FileRepository
-import database.repositories.task.{FakeTaskRepository, TaskRepository}
-import executionengine.{ExecutionManager, FakeExecutionManager}
+import executionengine.{ ExecutionManager, FakeExecutionManager }
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, MustMatchers}
+import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach, MustMatchers }
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
-import play.api.mvc.{ControllerComponents, Results}
+import play.api.mvc.{ ControllerComponents, Results }
 import play.api.test.Helpers._
 import play.api.test._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 //TODO implements missing tests
 class FileControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite with BeforeAndAfterAll with BeforeAndAfterEach with MustMatchers with MockitoSugar {
@@ -28,8 +27,8 @@ class FileControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
   private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
   private lazy val injector: Injector = appBuilder.injector()
   private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
-  implicit val fileRepo: FileRepository = mock[FileRepository]
-  private implicit val taskRepo: TaskRepository = new FakeTaskRepository
+  private implicit val fileRepo: FileRepository = mock[FileRepository]
+  //private implicit val taskRepo: TaskRepository = new FakeTaskRepository
   private implicit val UUIDGen: UUIDGenerator = new FakeUUIDGenerator
   private implicit val executionManager: ExecutionManager = new FakeExecutionManager
   private val cc: ControllerComponents = injector.instanceOf[ControllerComponents]

@@ -3,24 +3,24 @@ package executionengine
 import java.time.Duration
 import java.util.Date
 
-import akka.actor.{ActorSystem, Props}
-import akka.testkit.{ImplicitSender, TestKit}
-import api.dtos.{ExclusionDTO, TaskDTO}
-import api.services.{PeriodType, SchedulingType}
+import akka.actor.{ ActorSystem, Props }
+import akka.testkit.{ ImplicitSender, TestKit }
+import api.dtos.{ ExclusionDTO, TaskDTO }
+import api.services.{ PeriodType, SchedulingType }
 import api.utils.DateUtils._
-import api.utils.{FakeUUIDGenerator, UUIDGenerator}
+import api.utils.{ FakeUUIDGenerator, UUIDGenerator }
 import database.repositories.file.FileRepository
-import database.repositories.task.{FakeTaskRepository, TaskRepository}
+import database.repositories.task.TaskRepository
 import executionengine.ExecutionJob._
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
 
 import scala.collection.mutable
 
 class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSender with WordSpecLike with BeforeAndAfterAll with Matchers with MockitoSugar {
 
   implicit val fileRepo: FileRepository = mock[FileRepository]
-  private implicit val taskRepo: TaskRepository = new FakeTaskRepository
+  private implicit val taskRepo: TaskRepository = mock[TaskRepository]
   private implicit val UUIDGen: UUIDGenerator = new FakeUUIDGenerator
   private implicit val executionManager: ExecutionManager = new FakeExecutionManager
 
