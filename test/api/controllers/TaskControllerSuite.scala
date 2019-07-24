@@ -3,11 +3,12 @@ package api.controllers
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
 import api.utils.{FakeUUIDGenerator, UUIDGenerator}
-import database.repositories.exclusion.{ExclusionRepository, FakeExclusionRepository}
+import database.repositories.exclusion.ExclusionRepository
 import database.repositories.file.FileRepository
 import database.repositories.scheduling.{FakeSchedulingRepository, SchedulingRepository}
 import database.repositories.task.{FakeTaskRepository, TaskRepository}
 import executionengine.{ExecutionManager, FakeExecutionManager}
+import org.mockito.ArgumentMatchersSugar.any
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play._
@@ -27,9 +28,9 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
   private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
   private lazy val injector: Injector = appBuilder.injector()
   private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
-  implicit val fileRepo: FileRepository = mock[FileRepository]
+  private implicit val fileRepo: FileRepository = mock[FileRepository]
   private implicit val taskRepo: TaskRepository = new FakeTaskRepository
-  private implicit val exclusionRepo: ExclusionRepository = new FakeExclusionRepository
+  private implicit val exclusionRepo: ExclusionRepository = mock[ExclusionRepository]
   private implicit val schedulingRepo: SchedulingRepository = new FakeSchedulingRepository
   private implicit val UUIDGen: UUIDGenerator = new FakeUUIDGenerator
   private implicit val executionManager: ExecutionManager = new FakeExecutionManager
@@ -41,6 +42,8 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
 
   when(fileRepo.existsCorrespondingFileName("test1")).thenReturn(Future.successful(true))
   when(fileRepo.selectFileIdFromFileName("test1")).thenReturn(Future.successful("asd1"))
+
+  when(exclusionRepo.insertInExclusionsTable(any)).thenReturn(Future.successful(true))
 
   "TaskController#schedule (POST /task)" should {
     "be valid in" in {

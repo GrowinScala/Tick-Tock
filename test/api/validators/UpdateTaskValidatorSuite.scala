@@ -1,31 +1,30 @@
 package api.validators
 
-import java.util.{ Calendar, UUID }
+import java.util.{Calendar, UUID}
 
 import akka.actor.ActorSystem
-import akka.stream.{ ActorMaterializer, Materializer }
-import api.dtos.{ TaskDTO, _ }
-import api.services.{ Criteria, DayType, PeriodType, SchedulingType }
-import api.utils.{ FakeUUIDGenerator, UUIDGenerator }
-import api.validators.Error._
-import com.google.inject.Guice
-import database.repositories.file.{ FakeFileRepository, FileRepository, FileRepositoryImpl }
-import database.repositories.task.{ FakeTaskRepository, TaskRepository, TaskRepositoryImpl }
-import executionengine.{ ExecutionManager, FakeExecutionManager }
-import org.scalatest._
-import play.api.inject.guice.GuiceApplicationBuilder
+import akka.stream.{ActorMaterializer, Materializer}
+import api.dtos.{TaskDTO, _}
+import api.services.{Criteria, DayType, PeriodType, SchedulingType}
 import api.utils.DateUtils._
+import api.utils.UUIDGenerator
+import api.validators.Error._
 import database.mappings.ExclusionMappings._
 import database.mappings.FileMappings._
 import database.mappings.SchedulingMappings._
 import database.mappings.TaskMappings._
-import database.repositories.exclusion.{ ExclusionRepository, ExclusionRepositoryImpl, FakeExclusionRepository }
-import database.repositories.scheduling.{ FakeSchedulingRepository, SchedulingRepository, SchedulingRepositoryImpl }
+import database.repositories.exclusion.{ExclusionRepository, ExclusionRepositoryImpl}
+import database.repositories.file.{FileRepository, FileRepositoryImpl}
+import database.repositories.scheduling.{SchedulingRepository, SchedulingRepositoryImpl}
+import database.repositories.task.{TaskRepository, TaskRepositoryImpl}
 import database.utils.DatabaseUtils.TEST_DB
+import executionengine.ExecutionManager
+import org.scalatest._
+import play.api.inject.guice.GuiceApplicationBuilder
 import slick.jdbc.H2Profile.api._
 
-import scala.concurrent.{ Await, ExecutionContext }
 import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext}
 
 class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with BeforeAndAfterEach with BeforeAndAfterAll {
 
