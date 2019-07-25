@@ -1,21 +1,21 @@
 package api.services
 
-import java.time.{Duration, LocalTime}
-import java.util.{Calendar, Date}
+import java.time.{ Duration, LocalDateTime, LocalTime, ZoneId }
+import java.util.{ Calendar, Date }
 
-import akka.actor.{ActorRef, ActorSystem, Props}
-import api.dtos.{ExclusionDTO, SchedulingDTO, TaskDTO}
+import akka.actor.{ ActorRef, ActorSystem, Props }
+import api.dtos.{ ExclusionDTO, SchedulingDTO, TaskDTO }
 import api.services.Criteria.Criteria
-import api.utils.DateUtils.{dateToDayTypeString, _}
+import api.utils.DateUtils.{ dateToDayTypeString, _ }
 import database.repositories.task.TaskRepository
 import database.repositories.file.FileRepository
-import executionengine.{ExecutionJob, ExecutionManager}
-import executionengine.ExecutionJob.{Cancel, Start}
-import javax.inject.{Inject, Singleton}
+import executionengine.{ ExecutionJob, ExecutionManager }
+import executionengine.ExecutionJob.{ Cancel, Start }
+import javax.inject.{ Inject, Singleton }
 
 import scala.collection._
 import scala.collection.mutable.ListBuffer
-import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor}
+import scala.concurrent.{ Await, ExecutionContext, ExecutionContextExecutor }
 
 /**
  * Object that contains all methods for the task scheduling related to the service layer.
@@ -122,13 +122,13 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
         iterCalendar.setTime(startCalendar.getTime)
         iterCalendar.add(Calendar.DAY_OF_MONTH, -1)
         var list = ListBuffer[Date]()
-
+        //TODO: Fix exclusions that aren't just exclusionDates (and exclude an entire day and not a day and time only) with LocalDate (LocalDateTime.ofInstant(iterCalendar.getTime.toInstant, ZoneId.systemDefault()).toLocalDate)
         exclusion match {
           case ExclusionDTO(_, _, Some(date), None, None, None, None, None, None) => if (isDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
           case ExclusionDTO(_, _, None, Some(day), None, None, None, None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day) returnList = LocalTime.iterCalendar.getTime() :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day) returnList = iterCalendar.getTime :: returnList
             }
 
           case ExclusionDTO(_, _, None, None, Some(dayOfWeek), None, None, None, None) =>
