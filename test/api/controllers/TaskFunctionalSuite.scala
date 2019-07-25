@@ -3,9 +3,9 @@ package api.controllers
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
-import api.dtos.{FileDTO, TaskDTO}
-import api.services.{PeriodType, SchedulingType}
+import akka.stream.{ ActorMaterializer, Materializer }
+import api.dtos.{ FileDTO, TaskDTO }
+import api.services.{ PeriodType, SchedulingType }
 import api.utils.DateUtils._
 import api.utils.UUIDGenerator
 import api.validators.Error._
@@ -13,13 +13,13 @@ import database.mappings.ExclusionMappings._
 import database.mappings.FileMappings._
 import database.mappings.SchedulingMappings._
 import database.mappings.TaskMappings._
-import database.repositories.exclusion.{ExclusionRepository, ExclusionRepositoryImpl}
-import database.repositories.file.{FileRepository, FileRepositoryImpl}
-import database.repositories.scheduling.{SchedulingRepository, SchedulingRepositoryImpl}
-import database.repositories.task.{TaskRepository, TaskRepositoryImpl}
+import database.repositories.exclusion.{ ExclusionRepository, ExclusionRepositoryImpl }
+import database.repositories.file.{ FileRepository, FileRepositoryImpl }
+import database.repositories.scheduling.{ SchedulingRepository, SchedulingRepositoryImpl }
+import database.repositories.task.{ TaskRepository, TaskRepositoryImpl }
 import database.utils.DatabaseUtils._
 import executionengine.ExecutionManager
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -29,7 +29,7 @@ import play.api.test.Helpers._
 import slick.jdbc.H2Profile.api._
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{ Await, ExecutionContext }
 
 class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll with BeforeAndAfterEach {
 
@@ -62,7 +62,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
   private val file2 = FileDTO(fileUUID2, "test2", getCurrentDateTimestamp)
   private val file3 = FileDTO(fileUUID3, "test3", getCurrentDateTimestamp)
   private val file4 = FileDTO(fileUUID4, "test4", getCurrentDateTimestamp)
-  private val seqFiles = Seq(file1,file2,file3,file4)
+  private val seqFiles = Seq(file1, file2, file3, file4)
 
   private val id = uuidGen.generateUUID
 
@@ -157,13 +157,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       println(bodyText)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
@@ -179,13 +179,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       println(bodyText)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
 
     }
@@ -202,13 +202,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       println(bodyText)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
@@ -224,13 +224,13 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       println(bodyText)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
@@ -247,12 +247,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (task <- taskRepo.selectTask(id)) yield {
         task.isDefined mustBe true
@@ -272,12 +272,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidFileName).toString + "]"
     }
 
@@ -293,12 +293,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidStartDateFormat).toString + "]"
     }
 
@@ -314,12 +314,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidStartDateFormat).toString + "]"
     }
 
@@ -335,12 +335,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidStartDateFormat).toString + "]"
     }
 
@@ -356,12 +356,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidStartDateValue).toString + "]"
     }
 
@@ -380,12 +380,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
@@ -404,12 +404,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
@@ -428,12 +428,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
@@ -452,12 +452,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
@@ -476,12 +476,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
@@ -500,12 +500,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
@@ -524,12 +524,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
@@ -548,12 +548,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
@@ -572,12 +572,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
@@ -596,12 +596,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
     }
 
@@ -621,12 +621,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (task <- taskRepo.selectTask(id)) yield {
         task.isDefined mustBe true
@@ -647,12 +647,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidCreateTaskFormat).toString + "]"
     }
 
@@ -668,12 +668,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidCreateTaskFormat).toString + "," + Json.toJsObject(invalidTaskType).toString + "]"
     }
 
@@ -692,12 +692,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidPeriod).toString + "]"
     }
 
@@ -716,12 +716,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidEndDateFormat).toString + "]"
     }
 
@@ -740,12 +740,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidEndDateValue).toString + "]"
     }
 
@@ -764,12 +764,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidEndDateValue).toString + "]"
     }
 
@@ -788,12 +788,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidOccurrences).toString + "]"
     }
 
@@ -811,12 +811,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidCreateTaskFormat).toString + "]"
     }
 
@@ -834,12 +834,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidCreateTaskFormat).toString + "]"
     }
 
@@ -857,12 +857,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidCreateTaskFormat).toString + "]"
     }
 
@@ -886,12 +886,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -919,12 +919,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -952,12 +952,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -985,12 +985,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1018,12 +1018,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1051,12 +1051,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1085,12 +1085,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1120,12 +1120,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1155,12 +1155,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1190,12 +1190,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1225,12 +1225,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1260,12 +1260,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1295,12 +1295,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1330,12 +1330,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1365,12 +1365,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1400,12 +1400,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1436,12 +1436,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1473,12 +1473,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1510,12 +1510,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1547,12 +1547,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1584,12 +1584,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1621,12 +1621,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1659,12 +1659,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1698,12 +1698,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1737,12 +1737,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1776,12 +1776,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1815,12 +1815,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1856,12 +1856,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1894,12 +1894,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1929,12 +1929,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1964,12 +1964,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -1999,12 +1999,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2034,12 +2034,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2070,12 +2070,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2108,12 +2108,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2145,12 +2145,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2182,12 +2182,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2219,12 +2219,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2256,12 +2256,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2293,12 +2293,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2330,12 +2330,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2367,12 +2367,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2404,12 +2404,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2442,12 +2442,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2481,12 +2481,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2520,12 +2520,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2559,12 +2559,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2598,12 +2598,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2637,12 +2637,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2677,12 +2677,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2718,12 +2718,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2759,12 +2759,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2800,12 +2800,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2841,12 +2841,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2883,12 +2883,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe OK
+      status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield {
         exclusion.isDefined mustBe true
@@ -2920,12 +2920,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
       for (exclusion <- exclusionRepo.selectExclusion(id)) yield exclusion.isDefined mustBe false
     }
@@ -2950,12 +2950,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -2980,12 +2980,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3010,12 +3010,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3041,12 +3041,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3072,12 +3072,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3103,12 +3103,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3134,12 +3134,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3165,12 +3165,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3195,12 +3195,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionFormat) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3225,12 +3225,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDateFormat) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3255,12 +3255,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDateValue) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3285,12 +3285,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDateValue) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3315,12 +3315,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayValue) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3345,12 +3345,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayValue) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3376,12 +3376,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayValue) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3407,12 +3407,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayValue) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3439,12 +3439,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayValue) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3469,12 +3469,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayOfWeekValue) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3499,12 +3499,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayOfWeekValue) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3530,12 +3530,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayOfWeekValue) + "," + Json.toJsObject(invalidExclusionDayTypeValue) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3561,12 +3561,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayOfWeekValue) + "," + Json.toJsObject(invalidExclusionDayTypeValue) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3591,12 +3591,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayTypeValue) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3622,12 +3622,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayOfWeekValue) + "," + Json.toJsObject(invalidExclusionDayTypeValue) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3653,12 +3653,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionDayOfWeekValue) + "," + Json.toJsObject(invalidExclusionDayTypeValue) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3683,12 +3683,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionMonthValue) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3713,12 +3713,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionMonthValue) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3743,12 +3743,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionYearValue) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -3773,12 +3773,12 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         """))
       val route_ = route(app, fakeRequest).get
       val result = for {
-        routeResult <- routeOption.get
+        routeResult <- route_
         selectResult <- exclusionRepo.selectAllExclusions
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(routeOption.get)
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
-      status(routeOption.get) mustBe BAD_REQUEST
+      status(route_) mustBe BAD_REQUEST
       bodyText mustBe "[" + Json.toJsObject(invalidExclusionYearValue) + "]"
       for (scheduling <- schedulingRepo.selectScheduling(id)) yield scheduling.isDefined mustBe false
     }
@@ -4688,7 +4688,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         routeResult <- route_
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
-      val bodyText = contentAsString(route_)route_
+      val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
       status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
@@ -6218,7 +6218,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
             "periodType": "Minutely",
             "period": 5,
             "schedulings": [
-              {route_
+              {
                 "schedulingDate": "2029-12-25 00:00:00"
               }
             ]
