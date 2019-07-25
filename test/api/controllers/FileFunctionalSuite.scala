@@ -44,12 +44,18 @@ class FileFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
   private val fileUUID3: String = UUID.randomUUID().toString
   private val fileUUID4: String = UUID.randomUUID().toString
 
+  private val file1 = FileDTO(fileUUID1, "test1", stringToDateFormat("01-01-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))
+  private val file2 = FileDTO(fileUUID2, "test2", stringToDateFormat("01-02-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))
+  private val file3 = FileDTO(fileUUID3, "test3", stringToDateFormat("01-03-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))
+  private val file4 = FileDTO(fileUUID4, "test4", stringToDateFormat("01-04-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))
+  private val seqFiles = Seq(file1, file2, file3, file4)
+
   override def beforeAll: Unit = {
     Await.result(dtbase.run(createFilesTableAction), Duration.Inf)
-    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", stringToDateFormat("01-01-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))), Duration.Inf)
-    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID2, "test2", stringToDateFormat("01-02-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))), Duration.Inf)
-    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID3, "test3", stringToDateFormat("01-03-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))), Duration.Inf)
-    Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID4, "test4", stringToDateFormat("01-04-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(file1), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(file2), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(file3), Duration.Inf)
+    Await.result(fileRepo.insertInFilesTable(file4), Duration.Inf)
   }
 
   override def afterAll: Unit = {
@@ -60,58 +66,50 @@ class FileFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
     "receive a GET request" in {
       val fakeRequest = FakeRequest(GET, s"/file")
         .withHeaders(HOST -> "localhost:9000")
-      val result = route(app, fakeRequest)
-      val bodyText = contentAsString(result.get)
-      status(result.get) mustBe OK
-      bodyText mustBe """[{"fileId":""" + "\"" + fileUUID1 + "\"" +
-        ""","fileName":"test1","uploadDate":"Mon Jan 01 12:00:00 GMT 2018"},{"fileId":""" + "\"" + fileUUID2 + "\"" +
-        ""","fileName":"test2","uploadDate":"Thu Feb 01 12:00:00 GMT 2018"},{"fileId":""" + "\"" + fileUUID3 + "\"" +
-        ""","fileName":"test3","uploadDate":"Thu Mar 01 12:00:00 GMT 2018"},{"fileId":""" + "\"" + fileUUID4 + "\"" + ""","fileName":"test4","uploadDate":"Sun Apr 01 12:00:00 BST 2018"}]"""
+      val result = route(app, fakeRequest).get
+
+      status(result) mustBe OK
+      contentAsJson(result) mustBe Json.toJson(seqFiles)
     }
   }
 
   "FileController#GETfileWithId" should {
     "receive a GET request with a valid id" in {
-      val toGet = fileUUID2
-      val fakeRequest = FakeRequest(GET, s"/file/" + toGet)
+      val fakeRequest = FakeRequest(GET, s"/file/$fileUUID2")
         .withHeaders(HOST -> "localhost:9000")
-      val result = route(app, fakeRequest)
-      val bodyText = contentAsString(result.get)
-      status(result.get) mustBe OK
-      bodyText mustBe """{"fileId":""" + "\"" + toGet + "\"" + ""","fileName":"test2","uploadDate":"Thu Feb 01 12:00:00 GMT 2018"}"""
+      val result = route(app, fakeRequest).get
+
+      status(result) mustBe OK
+      contentAsJson(result) mustBe Json.toJson(file2)
     }
 
     "receive a GET request with an invalid id" in {
-      val toGet = "asd"
-      val fakeRequest = FakeRequest(GET, s"/file/" + toGet)
+      val fakeRequest = FakeRequest(GET, s"/file/asd")
         .withHeaders(HOST -> "localhost:9000")
-      val result = route(app, fakeRequest)
-      val bodyText = contentAsString(result.get)
-      status(result.get) mustBe BAD_REQUEST
-      bodyText mustBe Json.toJsObject(invalidFileName).toString
+      val result = route(app, fakeRequest).get
+      val bodyText = contentAsJson(result)
+
+      status(result) mustBe BAD_REQUEST
+      bodyText mustBe Json.toJsObject(invalidFileName)
     }
   }
 
   "FileController#DELETEfileWithId" should {
     "receive a DELETE request with a valid id" in {
-      val toDelete = fileUUID4
-      val fakeRequest = FakeRequest(DELETE, s"/file/" + toDelete)
+      val fakeRequest = FakeRequest(DELETE, s"/file/$fileUUID4")
         .withHeaders(HOST -> "localhost:9000")
-      val result = route(app, fakeRequest)
-      val bodyText = contentAsString(result.get)
-      status(result.get) mustBe NO_CONTENT
-      bodyText mustBe ""
-      Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID4, "test4", stringToDateFormat("01-04-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))), Duration.Inf)
+      val result = route(app, fakeRequest).get
+
+      status(result) mustBe NO_CONTENT
     }
 
     "receive a DELETE request with an invalid id" in {
-      val toDelete = "asd1"
-      val fakeRequest = FakeRequest(DELETE, s"/file/" + toDelete)
+      val fakeRequest = FakeRequest(DELETE, s"/file/asd1")
         .withHeaders(HOST -> "localhost:9000")
-      val result = route(app, fakeRequest)
-      val bodyText = contentAsString(result.get)
-      status(result.get) mustBe BAD_REQUEST
-      bodyText mustBe Json.toJsObject(invalidEndpointId).toString
+      val result = route(app, fakeRequest).get
+
+      status(result) mustBe BAD_REQUEST
+      contentAsJson(result) mustBe Json.toJsObject(invalidEndpointId)
     }
   }
 }
