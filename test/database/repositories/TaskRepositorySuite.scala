@@ -70,7 +70,6 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
 
   "DBTasksTable#drop/createTasksTable" should {
     "create and then drop the Tasks table on the database." in {
-      println(Await.result(dtbase.run(MTable.getTables), Duration.Inf))
       for {
         _ <- dtbase.run(MTable.getTables).map(item => assert(item.head.name.name.equals("exclusions") && item.tail.head.name.name.equals("files") && item.tail.tail.head.name.name.equals("schedulings") && item.tail.tail.tail.head.name.name.equals("tasks") && item.size == 4))
         _ <- dtbase.run(dropTasksTableAction)

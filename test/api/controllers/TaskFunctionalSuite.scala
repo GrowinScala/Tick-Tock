@@ -138,7 +138,6 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
-      println(bodyText)
       result.map(tuple => tuple._2.size mustBe 1)
       status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
@@ -161,7 +160,6 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
-      println(bodyText)
       result.map(tuple => tuple._2.size mustBe 1)
       status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
@@ -183,7 +181,6 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
-      println(bodyText)
       result.map(tuple => tuple._2.size mustBe 1)
       status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
@@ -206,7 +203,6 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
-      println(bodyText)
       result.map(tuple => tuple._2.size mustBe 1)
       status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
@@ -228,7 +224,6 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         selectResult <- taskRepo.selectAllTasks
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
-      println(bodyText)
       result.map(tuple => tuple._2.size mustBe 1)
       status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
@@ -6986,7 +6981,6 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         res <- taskRepo.selectTask(id)
       } yield res
       val bodyText = contentAsString(route_)
-      println(bodyText)
       status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map { elem =>
@@ -7060,7 +7054,6 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         res <- taskRepo.selectTask(id)
       } yield res
       val bodyText = contentAsString(route_)
-      println(bodyText)
       status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map { elem =>
@@ -7234,7 +7227,6 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         res <- taskRepo.selectTask(id)
       } yield res
       val bodyText = contentAsString(route_)
-      println(bodyText)
       status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map { elem =>
@@ -7304,7 +7296,6 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
         res <- taskRepo.selectTask(id)
       } yield res
       val bodyText = contentAsString(route_)
-      println(bodyText)
       status(route_) mustBe OK
       bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
       task.map { elem =>

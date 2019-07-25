@@ -3,9 +3,9 @@ package executionengine
 import java.text.SimpleDateFormat
 import java.time.Duration
 import java.time.Duration._
-import java.util.{ Calendar, Date }
+import java.util.{Calendar, Date}
 
-import akka.actor.{ Actor, PoisonPill, Timers }
+import akka.actor.{Actor, PoisonPill, Timers}
 import api.services.SchedulingType._
 import api.utils.DateUtils._
 import database.repositories.file.FileRepository
@@ -13,8 +13,8 @@ import database.repositories.task.TaskRepository
 import executionengine.ExecutionJob._
 import javax.inject.Inject
 import executionengine.ExecutionStatus._
+import play.api.Logger
 
-import scala.collection._
 import scala.concurrent.ExecutionContext
 
 object ExecutionJob {
@@ -59,6 +59,8 @@ class ExecutionJob @Inject() (
   var latency: Long = 0
   var nextDateMillis: Long = startDate.getOrElse(getCurrentDate).getTime
 
+  val logger: Logger = Logger(this.getClass())
+
   /**
    * Actor method that defined how to act when it receives a task.
    * +
@@ -85,9 +87,9 @@ class ExecutionJob @Inject() (
    */
   def start(): Unit = {
     val delay = calculateDelay(startDate, timezone)
-    println(delay.getSeconds)
     if (delay.getSeconds > MAX_DELAY_SECONDS) {
       status = ExecutionStatus.Delaying
+      logger.debug("status: " + status)
       timers.startSingleTimer("delayKey", Start, Duration.ofSeconds(MAX_DELAY_SECONDS))
     } else {
       if (delay.getSeconds > 0) {
@@ -95,12 +97,15 @@ class ExecutionJob @Inject() (
         schedulingType match {
           case RunOnce =>
             status = ExecutionStatus.RunOnceWaiting
+            logger.debug("status: " + status)
             timers.startSingleTimer("runOnceExecutionKey", ExecuteRunOnce, delay.minusMillis(2500))
           case Periodic =>
             status = ExecutionStatus.PeriodicWaiting
+            logger.debug("status: " + status)
             timers.startSingleTimer("periodicExecutionKey", ExecutePeriodic, delay)
           case Personalized =>
             status = ExecutionStatus.PersonalizedWaiting
+            logger.debug("status: " + status)
             if (schedulings.nonEmpty) {
               val nextDateDelay = calculateDelay(Some(schedulings.head), timezone)
               schedulings = schedulings.tail
@@ -125,16 +130,12 @@ class ExecutionJob @Inject() (
           executionManager.runFile(fileId)
           status = ExecutionStatus.PeriodicRunning
           val currentDate = new Date()
-          //println("current date: " + dateToStringFormat(currentDate, "yyyy-MM-dd HH:mm:ss.SSS"))
-          //println("planned date: " + dateToStringFormat(new Date(nextDateMillis), "yyyy-MM-dd HH:mm:ss.SSS"))
+
           latency = calculateLatency(currentDate.getTime, nextDateMillis)
           nextDateMillis = calculateNextDateMillis(nextDateMillis)
-          //println("calculated latency: " + latency)
-          //println("next date: " + dateToStringFormat(new Date(nextDateMillis), "yyyy-MM-dd HH:mm:ss.SSS"))
-          //println("-------------------")
-          //println("interval: " + interval.get.getSeconds)
-          //println("latency: " + latency)
+
           printExecutionMessage()
+
           timers.startSingleTimer("periodicExecutionKey", ExecutePeriodic, interval.get.minusMillis(latency))
         } else self ! PoisonPill
       } else {
@@ -144,12 +145,10 @@ class ExecutionJob @Inject() (
             executionManager.runFile(fileId)
             status = ExecutionStatus.PeriodicRunning
             val currentDate = new Date()
-            //println("current date: " + dateToStringFormat(currentDate, "yyyy-MM-dd HH:mm:ss.SSS"))
-            //println("planned date: " + dateToStringFormat(new Date(nextDateMillis), "yyyy-MM-dd HH:mm:ss.SSS"))
+
             latency = calculateLatency(currentDate.getTime, nextDateMillis)
             nextDateMillis = calculateNextDateMillis(nextDateMillis)
-            //println("calculated latency: " + latency)
-            //println("next date: " + dateToStringFormat(new Date(nextDateMillis), "yyyy-MM-dd HH:mm:ss.SSS"))
+
             printExecutionMessage()
             timers.startSingleTimer("periodicExecutionKey", ExecutePeriodic, interval.get.minusMillis(latency))
           } else self ! PoisonPill
@@ -169,13 +168,30 @@ class ExecutionJob @Inject() (
   }
 
   def printExecutionMessage(): Unit = {
-    if (startDate.isDefined) println("[" + getCurrentDate + "] Ran file " + fileId + " scheduled to run at " + dateToStringFormat(getCurrentDate, "yyyy-MM-dd HH:mm:ss.SSS") + ".")
-    else println("[" + getCurrentDate + "] Ran file " + fileId + " scheduled to run immediately.")
+
+    val hasStartDate = "[" + getCurrentDate + "] Ran file " + fileId + " scheduled to run at " + dateToStringFormat(getCurrentDate, "yyyy-MM-dd HH:mm:ss.SSS") + "."
+    val noStartDate = "[" + getCurrentDate + "] Ran file " + fileId + " scheduled to run immediately."
+
+    if (startDate.isDefined){
+      logger.debug(hasStartDate)
+      println(hasStartDate)
+    }
+    else
+      logger.debug(noStartDate)
+      println(noStartDate)
   }
 
-  def printDelayMessage(): Unit = println(getCurrentDate + " Received delayed task with storageName: " + fileId)
+  def printDelayMessage(): Unit = {
+    val delayMessage = getCurrentDate + " Received delayed task with storageName: " + fileId
+    logger.debug(delayMessage)
+    println(delayMessage)
+  }
 
-  def cancel(): Unit = status = ExecutionStatus.Canceled; timers.cancelAll()
+  def cancel(): Unit = {
+    status = ExecutionStatus.Canceled
+    logger.debug("status: " + status)
+    timers.cancelAll()
+  }
 
   /**
    * Calculated the delay between the current date and time with the given date and time.

@@ -89,7 +89,6 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
       val result = for {
         validation <- validator.updateValidator(taskUUID1, dto)
       } yield validation
-      result.foreach(println(_))
       result.map(_ mustBe Right(TaskDTO(taskUUID4, "test4", SchedulingType.RunOnce)))
     }
 
@@ -173,7 +172,6 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
         Some(List(UpdateExclusionDTO(Some(exclusionUUID1), Some(taskUUID4), Some("2030-01-01 12:10:00")))))
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
       val exclusionDate = stringToDateFormat("2030-01-01 12:10:00", "yyyy-MM-dd HH:mm:ss")
-      println(dto)
       for {
         validation <- validator.updateValidator(taskUUID2, dto)
       } yield validation mustBe Right(TaskDTO(taskUUID4, "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Minutely), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("asd1", taskUUID4, Some(exclusionDate))))))
