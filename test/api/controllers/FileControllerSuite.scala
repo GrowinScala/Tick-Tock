@@ -22,7 +22,6 @@ import play.api.test._
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-//TODO implements missing tests
 class FileControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite with BeforeAndAfterAll with BeforeAndAfterEach with MustMatchers with MockitoSugar {
 
   private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()

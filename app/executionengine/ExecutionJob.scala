@@ -85,13 +85,11 @@ class ExecutionJob @Inject() (
    */
   def start(): Unit = {
     val delay = calculateDelay(startDate, timezone)
-    println(delay.getSeconds)
     if (delay.getSeconds > MAX_DELAY_SECONDS) {
       status = ExecutionStatus.Delaying
       timers.startSingleTimer("delayKey", Start, Duration.ofSeconds(MAX_DELAY_SECONDS))
     } else {
       if (delay.getSeconds > 0) {
-        println(schedulingType)
         schedulingType match {
           case RunOnce =>
             status = ExecutionStatus.RunOnceWaiting
@@ -125,15 +123,8 @@ class ExecutionJob @Inject() (
           executionManager.runFile(fileId)
           status = ExecutionStatus.PeriodicRunning
           val currentDate = new Date()
-          //println("current date: " + dateToStringFormat(currentDate, "yyyy-MM-dd HH:mm:ss.SSS"))
-          //println("planned date: " + dateToStringFormat(new Date(nextDateMillis), "yyyy-MM-dd HH:mm:ss.SSS"))
           latency = calculateLatency(currentDate.getTime, nextDateMillis)
           nextDateMillis = calculateNextDateMillis(nextDateMillis)
-          //println("calculated latency: " + latency)
-          //println("next date: " + dateToStringFormat(new Date(nextDateMillis), "yyyy-MM-dd HH:mm:ss.SSS"))
-          //println("-------------------")
-          //println("interval: " + interval.get.getSeconds)
-          //println("latency: " + latency)
           printExecutionMessage()
           timers.startSingleTimer("periodicExecutionKey", ExecutePeriodic, interval.get.minusMillis(latency))
         } else self ! PoisonPill
@@ -144,18 +135,21 @@ class ExecutionJob @Inject() (
             executionManager.runFile(fileId)
             status = ExecutionStatus.PeriodicRunning
             val currentDate = new Date()
-            //println("current date: " + dateToStringFormat(currentDate, "yyyy-MM-dd HH:mm:ss.SSS"))
-            //println("planned date: " + dateToStringFormat(new Date(nextDateMillis), "yyyy-MM-dd HH:mm:ss.SSS"))
             latency = calculateLatency(currentDate.getTime, nextDateMillis)
             nextDateMillis = calculateNextDateMillis(nextDateMillis)
-            //println("calculated latency: " + latency)
-            //println("next date: " + dateToStringFormat(new Date(nextDateMillis), "yyyy-MM-dd HH:mm:ss.SSS"))
             printExecutionMessage()
             timers.startSingleTimer("periodicExecutionKey", ExecutePeriodic, interval.get.minusMillis(latency))
           } else self ! PoisonPill
         }
       }
+    } else {
+      status = ExecutionStatus.PeriodicRunning
+      val currentDate = new Date()
+      latency = calculateLatency(currentDate.getTime, nextDateMillis)
+      nextDateMillis = calculateNextDateMillis(nextDateMillis)
+      timers.startSingleTimer("periodicExecutionKey", ExecutePeriodic, interval.get.minusMillis(latency))
     }
+
   }
 
   def executePersonalized(): Unit = {
