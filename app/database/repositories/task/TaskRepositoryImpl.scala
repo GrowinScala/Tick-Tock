@@ -104,8 +104,13 @@ class TaskRepositoryImpl @Inject() (dtbase: Database, exclusionRepo: ExclusionRe
    *
    * @return
    */
-  def selectAllTasks: Future[Seq[TaskDTO]] = {
-    dtbase.run(selectAllFromTasksTable.result).flatMap { seq =>
+  def selectAllTasks(offset: Option[Int] = None, limit: Option[Int] = None): Future[Seq[TaskDTO]] = {
+
+    val tasks = if (offset.isDefined && limit.isDefined)
+      selectAllFromTasksTable.drop(offset.get).take(limit.get)
+    else selectAllFromTasksTable
+
+    dtbase.run(tasks.result).flatMap { seq =>
       Future.sequence {
         seq.map(elem => taskRowToTaskDTO(Some(elem)))
       }.map(elem => elem.flatten)

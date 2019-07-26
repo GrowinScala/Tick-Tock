@@ -3,9 +3,9 @@ package executionengine
 import java.text.SimpleDateFormat
 import java.time.Duration
 import java.time.Duration._
-import java.util.{Calendar, Date}
+import java.util.{ Calendar, Date }
 
-import akka.actor.{Actor, PoisonPill, Timers}
+import akka.actor.{ Actor, PoisonPill, Timers }
 import api.services.SchedulingType._
 import api.utils.DateUtils._
 import database.repositories.file.FileRepository
@@ -172,13 +172,12 @@ class ExecutionJob @Inject() (
     val hasStartDate = "[" + getCurrentDate + "] Ran file " + fileId + " scheduled to run at " + dateToStringFormat(getCurrentDate, "yyyy-MM-dd HH:mm:ss.SSS") + "."
     val noStartDate = "[" + getCurrentDate + "] Ran file " + fileId + " scheduled to run immediately."
 
-    if (startDate.isDefined){
+    if (startDate.isDefined) {
       logger.debug(hasStartDate)
       println(hasStartDate)
-    }
-    else
+    } else
       logger.debug(noStartDate)
-      println(noStartDate)
+    println(noStartDate)
   }
 
   def printDelayMessage(): Unit = {

@@ -113,7 +113,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
 
       val bodyText = contentAsString(route_)
@@ -135,7 +135,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
@@ -157,7 +157,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
@@ -178,7 +178,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
@@ -200,7 +200,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
@@ -221,7 +221,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
@@ -243,7 +243,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
@@ -268,7 +268,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -289,7 +289,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -310,7 +310,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -331,7 +331,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -352,7 +352,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -376,7 +376,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
@@ -400,7 +400,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
@@ -424,7 +424,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
@@ -448,7 +448,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
@@ -472,7 +472,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
@@ -496,7 +496,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
@@ -520,7 +520,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
@@ -544,7 +544,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
@@ -568,7 +568,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
@@ -592,7 +592,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
@@ -617,7 +617,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 1)
@@ -643,7 +643,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -664,7 +664,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -688,7 +688,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -712,7 +712,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -736,7 +736,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -760,7 +760,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -784,7 +784,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -807,7 +807,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -830,7 +830,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -853,7 +853,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -3830,7 +3830,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -3863,7 +3863,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -3896,7 +3896,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -3929,7 +3929,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -3962,7 +3962,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -3995,7 +3995,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4029,7 +4029,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4064,7 +4064,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4099,7 +4099,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4134,7 +4134,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4169,7 +4169,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4204,7 +4204,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4239,7 +4239,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4274,7 +4274,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4309,7 +4309,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4344,7 +4344,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4380,7 +4380,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4417,7 +4417,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4454,7 +4454,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4491,7 +4491,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4528,7 +4528,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4565,7 +4565,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4603,7 +4603,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4642,7 +4642,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4681,7 +4681,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4720,7 +4720,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4759,7 +4759,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4799,7 +4799,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4837,7 +4837,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4872,7 +4872,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4907,7 +4907,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4942,7 +4942,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -4977,7 +4977,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5013,7 +5013,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5050,7 +5050,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5087,7 +5087,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5124,7 +5124,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5161,7 +5161,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5198,7 +5198,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5235,7 +5235,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5272,7 +5272,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5309,7 +5309,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5346,7 +5346,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5384,7 +5384,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5423,7 +5423,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5462,7 +5462,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5501,7 +5501,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5540,7 +5540,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5579,7 +5579,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5619,7 +5619,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5660,7 +5660,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5701,7 +5701,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5742,7 +5742,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5783,7 +5783,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5825,7 +5825,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5858,7 +5858,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5887,7 +5887,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5917,7 +5917,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5947,7 +5947,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -5977,7 +5977,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -6008,7 +6008,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -6039,7 +6039,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -6070,7 +6070,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -6101,7 +6101,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -6132,7 +6132,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -6162,7 +6162,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val result = for {
         routeResult <- route_
-        selectResult <- taskRepo.selectAllTasks
+        selectResult <- taskRepo.selectAllTasks()
       } yield (routeResult, selectResult)
       val bodyText = contentAsString(route_)
       result.map(tuple => tuple._2.size mustBe 0)
@@ -7573,7 +7573,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
     "receive a PUT request with a non-existing id" in {
       val dto1 = TaskDTO("asd1", "test1", SchedulingType.RunOnce)
       Await.result(taskRepo.insertInTasksTable(dto1), Duration.Inf)
-      val initialResult = Await.result(taskRepo.selectAllTasks, Duration.Inf)
+      val initialResult = Await.result(taskRepo.selectAllTasks(), Duration.Inf)
       initialResult.size mustBe 1
       val id = "asd2"
       val fakeRequest = FakeRequest(DELETE, "/task/" + id)
@@ -7581,7 +7581,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val tasks = for {
         _ <- route_
-        res <- taskRepo.selectAllTasks
+        res <- taskRepo.selectAllTasks()
       } yield res
       val bodyText = contentAsString(route_)
       status(route_) mustBe BAD_REQUEST
@@ -7592,7 +7592,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
     "receive a DELETE request to delete a task with the given id." in {
       val dto1 = TaskDTO("asd1", "test1", SchedulingType.RunOnce)
       Await.result(taskRepo.insertInTasksTable(dto1), Duration.Inf)
-      val initialResult = Await.result(taskRepo.selectAllTasks, Duration.Inf)
+      val initialResult = Await.result(taskRepo.selectAllTasks(), Duration.Inf)
       initialResult.size mustBe 1
       val id = "asd1"
       val fakeRequest = FakeRequest(DELETE, "/task/" + id)
@@ -7600,7 +7600,7 @@ class TaskFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
       val route_ = route(app, fakeRequest).get
       val tasks = for {
         _ <- route_
-        res <- taskRepo.selectAllTasks
+        res <- taskRepo.selectAllTasks()
       } yield res
       val bodyText = contentAsString(route_)
       status(route_) mustBe NO_CONTENT

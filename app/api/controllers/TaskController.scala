@@ -70,8 +70,8 @@ class TaskController @Inject() (cc: ControllerComponents)(implicit exec: Executi
    *
    * @return HTTP Response OK with all the scheduled tasks
    */
-  def getSchedule: Action[AnyContent] = Action.async {
-    taskRepo.selectAllTasks.map { seq =>
+  def getSchedule(offset: Option[Int], limit: Option[Int]): Action[AnyContent] = Action.async {
+    taskRepo.selectAllTasks(offset, limit).map { seq =>
       val result = JsArray(seq.map(tr => Json.toJson(tr)))
       Ok(result)
     }

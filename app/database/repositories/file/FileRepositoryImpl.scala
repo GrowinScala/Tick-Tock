@@ -22,10 +22,16 @@ class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository {
    * Selects all rows from the files table on the database.
    * @return
    */
-  def selectAllFiles: Future[Seq[FileDTO]] = {
-    dtbase.run(selectAllFromFilesTable.result).map { seq =>
+  def selectAllFiles(offset: Option[Int] = None, limit: Option[Int] = None): Future[Seq[FileDTO]] = {
+
+    val files = if (offset.isDefined && limit.isDefined)
+      selectAllFromFilesTable.drop(offset.get).take(limit.get)
+    else selectAllFromFilesTable
+
+    dtbase.run(files.result).map { seq =>
       seq.map(elem => FileDTO(elem.fileId, elem.fileName, elem.uploadDate))
     }
+
   }
 
   def selectFileById(id: String): Future[Option[FileDTO]] = {
