@@ -116,6 +116,7 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
       system.stop(actorRef)
     }
     //TODO commented this test to integrate travis
+
 /*
     "execute a Personalized task and receive the expected message." in {
       val fileId = "test1"
