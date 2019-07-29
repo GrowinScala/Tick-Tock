@@ -56,7 +56,7 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
   when(schedulingRepo.insertInSchedulingsTable(any)).thenReturn(Future.successful(true))
 
   when(taskRepo.insertInTasksTable(any)).thenReturn(Future.successful(true))
-  when(taskRepo.selectAllTasks).thenReturn(Future.successful(seqTasks))
+  when(taskRepo.selectAllTasks(any, any)).thenReturn(Future.successful(seqTasks))
   when(taskRepo.selectTask(any)).thenReturn(Future.successful(Some(task1)))
   when(taskRepo.updateTaskById(any, any)).thenReturn(Future.successful(true))
   when(taskRepo.deleteTaskById(any)).thenReturn(Future.successful(1))
@@ -101,7 +101,7 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
       val fakeRequest = FakeRequest(GET, s"/task")
         .withHeaders(HOST -> LOCALHOST)
       val taskController = new TaskController(cc)
-      val result = taskController.getSchedule.apply(fakeRequest)
+      val result = taskController.getSchedule(None, None).apply(fakeRequest)
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(seqTasks)

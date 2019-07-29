@@ -16,7 +16,7 @@ class StartUpService @Inject() (dtbase: Database, implicit val fileRepo: FileRep
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
-  taskRepo.selectAllTasks.map { tasks =>
+  taskRepo.selectAllTasks().map { tasks =>
     val taskService = new TaskService
     tasks.foreach(task => taskService.scheduleTask(task))
   }

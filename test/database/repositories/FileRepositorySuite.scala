@@ -60,7 +60,7 @@ class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
-        resultSeq <- fileRepo.selectAllFiles
+        resultSeq <- fileRepo.selectAllFiles()
       } yield {
         resultSeq.size mustBe 3
         resultSeq.last.fileName mustBe "test3"
@@ -88,7 +88,7 @@ class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
         _ <- fileRepo.deleteAllFiles
-        result <- fileRepo.selectAllFiles
+        result <- fileRepo.selectAllFiles()
       } yield result.isEmpty mustBe true
     }
   }
@@ -99,11 +99,11 @@ class FileRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid1, "test1", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid2, "test2", getCurrentDateTimestamp))
         _ <- fileRepo.insertInFilesTable(FileDTO(uuid3, "test3", getCurrentDateTimestamp))
-        _ <- fileRepo.selectAllFiles.map(seq => assert(seq.size == 3 && seq.head.fileName.equals("test1")))
+        _ <- fileRepo.selectAllFiles().map(seq => assert(seq.size == 3 && seq.head.fileName.equals("test1")))
         _ <- fileRepo.deleteFileById(uuid2)
-        _ <- fileRepo.selectAllFiles.map(seq => assert(seq.size == 2 && seq.tail.head.fileName.equals("test3")))
+        _ <- fileRepo.selectAllFiles().map(seq => assert(seq.size == 2 && seq.tail.head.fileName.equals("test3")))
         _ <- fileRepo.deleteFileById(uuid1)
-        result <- fileRepo.selectAllFiles
+        result <- fileRepo.selectAllFiles()
       } yield {
         result.size mustBe 1
         result.head.fileName mustBe "test3"

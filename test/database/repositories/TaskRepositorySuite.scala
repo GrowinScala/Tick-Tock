@@ -30,8 +30,6 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
   private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
   private implicit val fileRepo: FileRepository = injector.instanceOf[FileRepository]
   private implicit val taskRepo: TaskRepository = injector.instanceOf[TaskRepository]
-  //private implicit val exclusionRepo: ExclusionRepository = injector.instanceOf[ExclusionRepository]
-  //private implicit val schedulingRepo: SchedulingRepository = injector.instanceOf[SchedulingRepository]
   private val dtbase: Database = injector.instanceOf[Database]
   private implicit val actorSystem: ActorSystem = ActorSystem()
   private implicit val mat: Materializer = ActorMaterializer()
@@ -70,7 +68,6 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
 
   "DBTasksTable#drop/createTasksTable" should {
     "create and then drop the Tasks table on the database." in {
-      println(Await.result(dtbase.run(MTable.getTables), Duration.Inf))
       for {
         _ <- dtbase.run(MTable.getTables).map(item => assert(item.head.name.name.equals("exclusions") && item.tail.head.name.name.equals("files") && item.tail.tail.head.name.name.equals("schedulings") && item.tail.tail.tail.head.name.name.equals("tasks") && item.size == 4))
         _ <- dtbase.run(dropTasksTableAction)
@@ -90,10 +87,10 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
   "DBTasksTable#insertInTasksTable,selectAllTasks" should {
     "insert rows into the Tasks table on the database and select all rows" in {
       for {
-        _ <- taskRepo.selectAllTasks.map(seq => assert(seq.isEmpty))
+        _ <- taskRepo.selectAllTasks().map(seq => assert(seq.isEmpty))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
-        resultSeq <- taskRepo.selectAllTasks
+        resultSeq <- taskRepo.selectAllTasks()
       } yield resultSeq.size mustBe 2
     }
   }
@@ -103,9 +100,9 @@ class TaskRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with Befo
       for {
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
         _ <- taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.RunOnce, Some(getCurrentDateTimestamp)))
-        _ <- taskRepo.selectAllTasks.map(seq => assert(seq.size == 2))
+        _ <- taskRepo.selectAllTasks().map(seq => assert(seq.size == 2))
         _ <- taskRepo.deleteAllTasks
-        resultSeq <- taskRepo.selectAllTasks
+        resultSeq <- taskRepo.selectAllTasks()
       } yield resultSeq.isEmpty mustBe true
     }
   }

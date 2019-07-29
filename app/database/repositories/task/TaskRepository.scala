@@ -15,7 +15,7 @@ trait TaskRepository {
    * Selects all rows from the tasks table on the database.
    * @return all tasks in the database
    */
-  def selectAllTasks: Future[Seq[TaskDTO]]
+  def selectAllTasks(offset: Option[Int] = None, limit: Option[Int] = None): Future[Seq[TaskDTO]]
 
   /**
    * Select a single task from the database by giving its id.

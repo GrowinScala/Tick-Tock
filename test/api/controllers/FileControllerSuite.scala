@@ -5,9 +5,9 @@ import akka.stream.{ ActorMaterializer, Materializer }
 import api.dtos.FileDTO
 import api.utils.DateUtils.stringToDateFormat
 import api.utils.{ FakeUUIDGenerator, UUIDGenerator }
-import api.validators.Error.{ invalidEndpointId, invalidFileName }
 import database.repositories.file.FileRepository
 import executionengine.{ ExecutionManager, FakeExecutionManager }
+import org.mockito.ArgumentMatchersSugar.any
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach, MustMatchers }
@@ -41,14 +41,14 @@ class FileControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
 
   val seqFiles: Seq[FileDTO] = Seq(file1, file2, file3)
 
-  when(fileRepo.selectAllFiles).thenReturn(Future.successful(seqFiles))
+  when(fileRepo.selectAllFiles(any, any)).thenReturn(Future.successful(seqFiles))
 
   "FileController#getAllFiles" should {
     "receive a GET request with several files" in {
       val fakeRequest = FakeRequest(GET, s"/file")
         .withHeaders(HOST -> "localhost:9000")
       val fileController = new FileController(cc)
-      val result = fileController.getAllFiles.apply(fakeRequest)
+      val result = fileController.getAllFiles(None, None).apply(fakeRequest)
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(seqFiles)
@@ -56,12 +56,12 @@ class FileControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
 
     "receive a GET request with no files" in {
       val emptySeq: Seq[FileDTO] = Seq()
-      when(fileRepo.selectAllFiles).thenReturn(Future.successful(emptySeq))
+      when(fileRepo.selectAllFiles(any, any)).thenReturn(Future.successful(emptySeq))
 
       val fakeRequest = FakeRequest(GET, s"/file")
         .withHeaders(HOST -> "localhost:9000")
       val fileController = new FileController(cc)
-      val result = fileController.getAllFiles.apply(fakeRequest)
+      val result = fileController.getAllFiles(None, None).apply(fakeRequest)
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(emptySeq)

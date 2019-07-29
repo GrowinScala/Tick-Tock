@@ -11,7 +11,7 @@ trait FileRepository {
    *
    * @return all files in the database
    */
-  def selectAllFiles: Future[Seq[FileDTO]]
+  def selectAllFiles(offset: Option[Int] = None, limit: Option[Int] = None): Future[Seq[FileDTO]]
 
   /**
    * Selects a file from the database given an id
