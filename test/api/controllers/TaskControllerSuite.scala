@@ -66,12 +66,12 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
       val fakeRequest = FakeRequest(POST, "/task")
         .withHeaders(HOST -> LOCALHOST, CONTENT_TYPE -> "application/json")
         .withBody(Json.parse("""
-          {
-            "startDateAndTime": "2020-07-01 00:00:00",
-            "fileName": "test1",
-            "taskType": "RunOnce"
-          }
-        """))
+          |{
+          |  "startDateAndTime": "2020-07-01 00:00:00",
+          |  "fileName": "test1",
+          |  "taskType": "RunOnce"
+          |}
+        """.stripMargin))
       val taskController = new TaskController(cc)
       val result = taskController.schedule.apply(fakeRequest)
 

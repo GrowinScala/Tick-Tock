@@ -15,25 +15,25 @@ class DateUtilsSuite extends AsyncWordSpec with MustMatchers {
     "convert a string in a certain format into a Date object. (yyyy-MM-dd HH:mm:ss format)" in {
       calendar.set(2019, 1 - 1, 1, 12, 0, 0)
       val date = calendar.getTime
-      stringToDateFormat("2019-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss").toString mustBe "Tue Jan 01 12:00:00 GMT 2019"
+      stringToDateFormat("2019-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss").toString mustBe date.toString
     }
 
     "convert a string in a certain format into a Date object. (dd-MM-yyyy HH:mm:ss format)" in {
       calendar.set(2019, 2 - 1, 1, 14, 30, 0)
       val date = calendar.getTime
-      stringToDateFormat("01-02-2019 14:30:00", "dd-MM-yyyy HH:mm:ss").toString mustBe "Fri Feb 01 14:30:00 GMT 2019"
+      stringToDateFormat("01-02-2019 14:30:00", "dd-MM-yyyy HH:mm:ss").toString mustBe date.toString
     }
 
     "convert a string in a certain format into a Date object. (yyyy/MM/dd HH:mm:ss format)" in {
       calendar.set(2020, 6 - 1, 15, 16, 15, 45)
       val date = calendar.getTime
-      stringToDateFormat("2020/06/15 16:15:45", "yyyy/MM/dd HH:mm:ss").toString mustBe "Mon Jun 15 16:15:45 BST 2020"
+      stringToDateFormat("2020/06/15 16:15:45", "yyyy/MM/dd HH:mm:ss").toString mustBe date.toString
     }
 
     "convert a string in a certain format into a Date object. (dd/MM/yyyy HH:mm:ss format)" in {
       calendar.set(2021, 12 - 1, 25, 20, 30, 40)
       val date = calendar.getTime
-      stringToDateFormat("25/12/2021 20:30:40", "dd/MM/yyyy HH:mm:ss").toString mustBe "Sat Dec 25 20:30:40 GMT 2021"
+      stringToDateFormat("25/12/2021 20:30:40", "dd/MM/yyyy HH:mm:ss").toString mustBe date.toString
     }
   }
 
@@ -132,11 +132,10 @@ class DateUtilsSuite extends AsyncWordSpec with MustMatchers {
   "DateUtils#removeTimeFromDate" should {
     "remove the time from a date." in {
       calendar.set(2019, 1 - 1, 1, 16, 0, 0)
-      val date1 = calendar.getTime
-      getTimeFromDate(date1).toString mustBe "Tue Jan 01 00:00:00 GMT 2019"
-      calendar.set(2020, 1 - 1, 1, 22, 0, 0)
-      val date2 = calendar.getTime
-      getTimeFromDate(date2).toString mustBe "Wed Jan 01 00:00:00 GMT 2020"
+      val date = calendar.getTime
+      calendar.set(2019, 1 - 1, 1, 0, 0, 0)
+      getTimeFromDate(date).toString mustBe calendar.getTime.toString
+
     }
   }
 
@@ -188,19 +187,27 @@ class DateUtilsSuite extends AsyncWordSpec with MustMatchers {
 
   "DateUtils#parseDate" should {
     "try to parse a correct date in string form and return it in Date form. (yyyy-MM-dd HH:mm:ss format)" in {
-      parseDate("2019-01-01 12:00:00").get.toString mustBe "Tue Jan 01 12:00:00 GMT 2019"
+      calendar.set(2019, 1 - 1, 1, 12, 0, 0)
+      val date = calendar.getTime
+      parseDate("2019-01-01 12:00:00").get.toString mustBe date.toString
     }
 
     "try to parse a correct date in string form and return it in Date form. (dd-MM-yyyy HH:mm:ss format)" in {
-      parseDate("01-02-2019 14:30:00").get.toString mustBe "Fri Feb 01 14:30:00 GMT 2019"
+      calendar.set(2019, 2 - 1, 1, 14, 30, 0)
+      val date = calendar.getTime
+      parseDate("01-02-2019 14:30:00").get.toString mustBe date.toString
     }
 
     "try to parse a correct date in string form and return it in Date form. (yyyy/MM/dd HH:mm:ss format)" in {
-      parseDate("2020/06/15 16:15:45").get.toString mustBe "Mon Jun 15 16:15:45 BST 2020"
+      calendar.set(2020, 6 - 1, 15, 16, 15, 45)
+      val date = calendar.getTime
+      parseDate("2020/06/15 16:15:45").get.toString mustBe date.toString
     }
 
     "try to parse a correct date in string form and return it in Date form. (dd/MM/yyyy HH:mm:ss format)" in {
-      parseDate("25/12/2021 20:30:40").get.toString mustBe "Sat Dec 25 20:30:40 GMT 2021"
+      calendar.set(2021, 12 - 1, 25, 20, 30, 40)
+      val date = calendar.getTime
+      parseDate("25/12/2021 20:30:40").get.toString mustBe date.toString
     }
 
     "try to parse an incorrect date in string form and return None." in {

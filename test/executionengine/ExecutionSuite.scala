@@ -116,7 +116,7 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
       system.stop(actorRef)
     }
     //TODO commented this test to integrate travis
-/*
+    /*
     "execute a Personalized task and receive the expected message." in {
       val fileId = "test1"
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
@@ -128,7 +128,6 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
       system.stop(actorRef)
     }*/
   }
-
 
   "ExecutionActor#Delay" should {
     "delay a task and receive the expected message." in {
