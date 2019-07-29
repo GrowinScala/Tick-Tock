@@ -126,9 +126,9 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
       actorRef ! GetStatus
       expectMsg(ExecutionStatus.PersonalizedRunning)
       system.stop(actorRef)
-    }
+    }*/
   }
-  */
+
 
   "ExecutionActor#Delay" should {
     "delay a task and receive the expected message." in {
