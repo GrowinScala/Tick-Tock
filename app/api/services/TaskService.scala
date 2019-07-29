@@ -1,6 +1,6 @@
 package api.services
 
-import java.time.Duration
+import java.time.{ Duration, LocalDateTime, LocalTime, ZoneId }
 import java.util.{ Calendar, Date }
 
 import akka.actor.{ ActorRef, ActorSystem, Props }
@@ -122,7 +122,7 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
         iterCalendar.setTime(startCalendar.getTime)
         iterCalendar.add(Calendar.DAY_OF_MONTH, -1)
         var list = ListBuffer[Date]()
-
+        //TODO: Fix exclusions that aren't just exclusionDates (and exclude an entire day and not a day and time only) with LocalDate (LocalDateTime.ofInstant(iterCalendar.getTime.toInstant, ZoneId.systemDefault()).toLocalDate)
         exclusion match {
           case ExclusionDTO(_, _, Some(date), None, None, None, None, None, None) => if (isDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
           case ExclusionDTO(_, _, None, Some(day), None, None, None, None, None) =>

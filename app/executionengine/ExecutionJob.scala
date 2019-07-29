@@ -93,7 +93,6 @@ class ExecutionJob @Inject() (
       timers.startSingleTimer("delayKey", Start, Duration.ofSeconds(MAX_DELAY_SECONDS))
     } else {
       if (delay.getSeconds > 0) {
-        println(schedulingType)
         schedulingType match {
           case RunOnce =>
             status = ExecutionStatus.RunOnceWaiting
@@ -110,7 +109,7 @@ class ExecutionJob @Inject() (
               val nextDateDelay = calculateDelay(Some(schedulings.head), timezone)
               schedulings = schedulings.tail
               timers.startSingleTimer("personalizedExecutionKey", ExecutePersonalized, nextDateDelay)
-            }
+            } else self ! PoisonPill
         }
       }
     }
@@ -130,12 +129,9 @@ class ExecutionJob @Inject() (
           executionManager.runFile(fileId)
           status = ExecutionStatus.PeriodicRunning
           val currentDate = new Date()
-
           latency = calculateLatency(currentDate.getTime, nextDateMillis)
           nextDateMillis = calculateNextDateMillis(nextDateMillis)
-
           printExecutionMessage()
-
           timers.startSingleTimer("periodicExecutionKey", ExecutePeriodic, interval.get.minusMillis(latency))
         } else self ! PoisonPill
       } else {
@@ -145,26 +141,67 @@ class ExecutionJob @Inject() (
             executionManager.runFile(fileId)
             status = ExecutionStatus.PeriodicRunning
             val currentDate = new Date()
-
             latency = calculateLatency(currentDate.getTime, nextDateMillis)
             nextDateMillis = calculateNextDateMillis(nextDateMillis)
-
             printExecutionMessage()
             timers.startSingleTimer("periodicExecutionKey", ExecutePeriodic, interval.get.minusMillis(latency))
           } else self ! PoisonPill
         }
       }
+    } else {
+      status = ExecutionStatus.PeriodicRunning
+      val currentDate = new Date()
+      latency = calculateLatency(currentDate.getTime, nextDateMillis)
+      nextDateMillis = calculateNextDateMillis(nextDateMillis)
+      timers.startSingleTimer("periodicExecutionKey", ExecutePeriodic, interval.get.minusMillis(latency))
     }
+
   }
 
   def executePersonalized(): Unit = {
+    if (!isExcluded(new Date(nextDateMillis))) {
+      if (endDate.isDefined) {
+        if (endDate.get.getTime - getCurrentDate.getTime >= MAX_VARIANCE) {
+          executionManager.runFile(fileId)
+          status = ExecutionStatus.PeriodicRunning
+          val currentDate = new Date()
+          latency = calculateLatency(currentDate.getTime, nextDateMillis)
+          nextDateMillis = calculateNextDateMillis(nextDateMillis)
+          printExecutionMessage()
+          runNextScheduling()
+        } else self ! PoisonPill
+      } else {
+        taskRepo.selectCurrentOccurrencesByTaskId(taskId).map { occurrences =>
+          if (occurrences.get != 0) {
+            taskRepo.decrementCurrentOccurrencesByTaskId(taskId)
+            executionManager.runFile(fileId)
+            status = ExecutionStatus.PeriodicRunning
+            val currentDate = new Date()
+            latency = calculateLatency(currentDate.getTime, nextDateMillis)
+            nextDateMillis = calculateNextDateMillis(nextDateMillis)
+            printExecutionMessage()
+            runNextScheduling()
+          } else self ! PoisonPill
+        }
+      }
+    } else {
+      status = ExecutionStatus.PeriodicRunning
+      val currentDate = new Date()
+      latency = calculateLatency(currentDate.getTime, nextDateMillis)
+      nextDateMillis = calculateNextDateMillis(nextDateMillis)
+      timers.startSingleTimer("periodicExecutionKey", ExecutePeriodic, interval.get.minusMillis(latency))
+    }
+    /*
     val currentDate = getTimeFromDate(new Date())
-    if (!isExcluded(currentDate)) {
-      executionManager.runFile(fileId)
+    if (!isExcluded(nextDateMillis)) {
       status = ExecutionStatus.PersonalizedRunning
+      val currentDate = new Date()
+      latency = calculateLatency(currentDate.getTime, nextDateMillis)
+      nextDateMillis = calculateNextDateMillis(nextDateMillis)
+      executionManager.runFile(fileId)
       printExecutionMessage()
     }
-    runNextScheduling()
+    runNextScheduling()*/
   }
 
   def printExecutionMessage(): Unit = {
@@ -245,7 +282,20 @@ class ExecutionJob @Inject() (
     } else self ! PoisonPill
   }
 
-  private def calculateNextDateMillis(date: Long): Long = date + interval.get.toMillis
+  private def calculateNextDateMillis(date: Long): Long = {
+    schedulingType match {
+      case Periodic =>
+        date + interval.get.toMillis
+      case Personalized =>
+        schedulings.headOption match {
+          case Some(nextDate) =>
+            date + calculateDelay(Some(nextDate), timezone).toMillis
+          case None =>
+            nextDateMillis
+        }
+
+    }
+  }
 
   private def calculateLatency(currentDateMillis: Long, plannedDateMillis: Long): Long = currentDateMillis - plannedDateMillis
 
