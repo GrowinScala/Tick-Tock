@@ -236,26 +236,37 @@ class DateUtilsSuite extends AsyncWordSpec with MustMatchers {
   "DateUtils#parseDateWithTimezone" should {
     "try to parse a valid date and an already validated timezone and return it in Date form. (yyyy-MM-dd HH:mm:ss format)" in {
       val date = parseDateWithTimezone("2019-01-01 12:00:00", "PST") // 8 hour difference with GMT
+
+      calendar.set(2019, 1 - 1, 1, 20, 0, 0)
+
       date.isDefined mustBe true
-      date.get.toString mustBe "Tue Jan 01 20:00:00 GMT 2019"
+      date.get.toString mustBe calendar.getTime.toString
     }
 
     "try to parse a valid date and an already validated timezone and return it in Date form. (dd-MM-yyyy HH:mm:ss format)" in {
       val date = parseDateWithTimezone("01-01-2019 12:00:00", "PST") // 8 hour difference with GMT
+      calendar.set(2019, 1 - 1, 1, 20, 0, 0)
+
       date.isDefined mustBe true
-      date.get.toString mustBe "Tue Jan 01 20:00:00 GMT 2019"
+      date.get.toString mustBe calendar.getTime.toString
     }
 
     "try to parse a valid date and an already validated timezone and return it in Date form. (yyyy/MM/dd HH:mm:ss format)" in {
       val date = parseDateWithTimezone("2019/01/01 12:00:00", "PST") // 8 hour difference with GMT
+
+      calendar.set(2019, 1 - 1, 1, 20, 0, 0)
+
       date.isDefined mustBe true
-      date.get.toString mustBe "Tue Jan 01 20:00:00 GMT 2019"
+      date.get.toString mustBe calendar.getTime.toString
     }
 
     "try to parse a valid date and an already validated timezone and return it in Date form. (dd/MM/yyyy HH:mm:ss format)" in {
       val date = parseDateWithTimezone("01/01/2019 12:00:00", "PST") // 8 hour difference with GMT
+
+      calendar.set(2019, 1 - 1, 1, 20, 0, 0)
+
       date.isDefined mustBe true
-      date.get.toString mustBe "Tue Jan 01 20:00:00 GMT 2019"
+      date.get.toString mustBe calendar.getTime.toString
     }
 
     "try to parse an invalid date and an already validated timezone and return None." in {
