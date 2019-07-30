@@ -1,12 +1,14 @@
 package database.mappings
 
 import java.sql.Timestamp
+import java.time.LocalDate
 import java.util.Date
 
 import api.services.Criteria.Criteria
 import api.services.DayType.DayType
 import api.services.{ Criteria, DayType }
 import play.api.libs.json.{ Json, OFormat }
+import api.utils.DateUtils._
 import slick.dbio.Effect
 import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._
@@ -20,7 +22,7 @@ object ExclusionMappings {
   case class ExclusionRow(
     exclusionId: String,
     taskId: String,
-    exclusionDate: Option[Date] = None,
+    exclusionDate: Option[LocalDate] = None,
     day: Option[Int] = None,
     dayOfWeek: Option[Int] = None,
     dayType: Option[DayType] = None,
@@ -37,7 +39,7 @@ object ExclusionMappings {
   class ExclusionsTable(tag: Tag) extends Table[ExclusionRow](tag, "exclusions") {
     def exclusionId = column[String]("exclusionId", O.PrimaryKey, O.Length(36))
     def taskId = column[String]("taskId", O.Length(36))
-    def exclusionDate = column[Option[Date]]("exclusionDate")
+    def exclusionDate = column[Option[LocalDate]]("exclusionDate")
     def day = column[Option[Int]]("day")
     def dayOfWeek = column[Option[Int]]("dayOfWeek")
     def dayType = column[Option[DayType]]("dayType")
@@ -52,9 +54,9 @@ object ExclusionMappings {
   //# FILES TABLE TYPE MAPPINGS
   //---------------------------------------------------------
 
-  implicit val dateColumnType: BaseColumnType[Date] = MappedColumnType.base[Date, Timestamp](dateToTimestamp, timestampToDate)
-  private def dateToTimestamp(date: Date): Timestamp = new Timestamp(date.getTime)
-  private def timestampToDate(timestamp: Timestamp): Date = new Date(timestamp.getTime)
+  implicit val dateColumnType: BaseColumnType[LocalDate] = MappedColumnType.base[LocalDate, Timestamp](localDateToTimestamp, timestampToLocalDate)
+  private def localDateToTimestamp(date: LocalDate): Timestamp = new Timestamp(localDateToDate(date).getTime)
+  private def timestampToLocalDate(timestamp: Timestamp): LocalDate = dateToLocalDate(new Date(timestamp.getTime))
 
   //---------------------------------------------------------
   //# QUERY EXTENSIONS
@@ -73,7 +75,7 @@ object ExclusionMappings {
     exclusionsTable.filter(_.taskId === taskId)
   }
 
-  def getExclusionByExclusionDate(exclusionDate: Date): Query[ExclusionsTable, ExclusionRow, Seq] = {
+  def getExclusionByExclusionDate(exclusionDate: LocalDate): Query[ExclusionsTable, ExclusionRow, Seq] = {
     exclusionsTable.filter(_.exclusionDate === exclusionDate)
   }
 
@@ -109,7 +111,7 @@ object ExclusionMappings {
     getExclusionByExclusionId(exclusionId).map(_.taskId).update(taskId)
   }
 
-  def updateExclusionByExclusionDate(exclusionId: String, exclusionDate: Date): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+  def updateExclusionByExclusionDate(exclusionId: String, exclusionDate: LocalDate): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     getExclusionByExclusionId(exclusionId).map(_.exclusionDate).update(Some(exclusionDate))
   }
 
@@ -145,7 +147,7 @@ object ExclusionMappings {
     getExclusionByTaskId(taskId).delete
   }
 
-  def deleteExclusionByExclusionDate(exclusionDate: Date): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+  def deleteExclusionByExclusionDate(exclusionDate: LocalDate): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     getExclusionByExclusionDate(exclusionDate).delete
   }
 

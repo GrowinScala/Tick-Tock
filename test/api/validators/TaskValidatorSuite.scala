@@ -130,7 +130,7 @@ class TaskValidatorSuite extends AsyncWordSpec with MustMatchers with MockitoSug
       val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(5), None, Some(24), None,
         Some(List(CreateExclusionDTO(Some("2030-01-01 12:10:00")))))
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
-      val exclusionDate = stringToDateFormat("2030-01-01 12:10:00", "yyyy-MM-dd HH:mm:ss")
+      val exclusionDate = stringToLocalDateFormat("2030-01-01", "yyyy-MM-dd")
       for {
         validation <- validator.scheduleValidator(dto)
       } yield validation mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Minutely), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("asd1", "asd1", Some(exclusionDate))))))
@@ -231,7 +231,7 @@ class TaskValidatorSuite extends AsyncWordSpec with MustMatchers with MockitoSug
       val dto = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Hourly), Some(5), None, Some(24), None,
         Some(List(CreateExclusionDTO(None, Some(13), Some(6), None, None, Some(2032)), CreateExclusionDTO(Some("2030-12-25 00:00:00")), CreateExclusionDTO(None, None, None, Some(DayType.Weekend), Some(8), None, Some(Criteria.First)))))
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
-      val exclusionDate = stringToDateFormat("2030-12-25 00:00:00", "yyyy-MM-dd HH:mm:ss")
+      val exclusionDate = stringToLocalDateFormat("2030-12-25", "yyyy-MM-dd")
       for {
         validation <- validator.scheduleValidator(dto)
       } yield validation mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Periodic, Some(startDate), Some(PeriodType.Hourly), Some(5), None, Some(24), Some(24), None, Some(List(ExclusionDTO("asd1", "asd1", None, None, None, Some(DayType.Weekend), Some(8), None, Some(Criteria.First)), ExclusionDTO("asd1", "asd1", Some(exclusionDate)), ExclusionDTO("asd1", "asd1", None, Some(13), Some(6), None, None, Some(2032))))))
@@ -241,7 +241,7 @@ class TaskValidatorSuite extends AsyncWordSpec with MustMatchers with MockitoSug
       val dto = CreateTaskDTO("test1", SchedulingType.Personalized, Some("2030-01-01 12:00:00"), Some(PeriodType.Monthly), Some(1), None, Some(24), None, None,
         Some(List(CreateSchedulingDTO(Some("2035-01-01 12:00:00")))))
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
-      val schedulingDate = stringToDateFormat("2035-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")
+      val schedulingDate = stringToLocalDateFormat("2035-01-01", "yyyy-MM-dd")
       for {
         validation <- validator.scheduleValidator(dto)
       } yield validation mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Personalized, Some(startDate), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), None, None, Some(List(SchedulingDTO("asd1", "asd1", Some(schedulingDate), None, None, None, None, None, None)))))
@@ -343,7 +343,7 @@ class TaskValidatorSuite extends AsyncWordSpec with MustMatchers with MockitoSug
       val startDatePST = stringToDateFormat("2030-01-01 20:00:00", "yyyy-MM-dd HH:mm:ss")
       for {
         validation <- validator.scheduleValidator(dto)
-      } yield validation mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Personalized, Some(startDatePST), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), Some("PST"), Some(List(ExclusionDTO("asd1", "asd1", Some(stringToDateFormat("2035-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss"))))), Some(List(SchedulingDTO("asd1", "asd1", None, None, None, None, None, Some(2038), Some(Criteria.Last))))))
+      } yield validation mustBe Right(TaskDTO("asd1", "test1", SchedulingType.Personalized, Some(startDatePST), Some(PeriodType.Monthly), Some(1), None, Some(24), Some(24), Some("PST"), Some(List(ExclusionDTO("asd1", "asd1", Some(stringToLocalDateFormat("2035-01-01", "yyyy-MM-dd"))))), Some(List(SchedulingDTO("asd1", "asd1", None, None, None, None, None, Some(2038), Some(Criteria.Last))))))
     }
 
     "receive an invalid CreateTaskDTO with missing fields. (Periodic task without any other fields)" in {

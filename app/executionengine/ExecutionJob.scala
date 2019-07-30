@@ -1,7 +1,7 @@
 package executionengine
 
 import java.text.SimpleDateFormat
-import java.time.Duration
+import java.time.{ Duration, LocalDate }
 import java.time.Duration._
 import java.util.{ Calendar, Date }
 
@@ -43,12 +43,8 @@ class ExecutionJob @Inject() (
   interval: Option[Duration] = Some(ZERO),
   endDate: Option[Date] = None,
   timezone: Option[String] = None,
-  var exclusions: List[Date] = Nil,
-  var schedulings: List[Date] = Nil)(
-  implicit
-  val fileRepo: FileRepository,
-  implicit val taskRepo: TaskRepository,
-  implicit val executionManager: ExecutionManager) extends Actor with Timers {
+  var exclusions: List[LocalDate] = Nil,
+  var schedulings: List[LocalDate] = Nil)(implicit val fileRepo: FileRepository, implicit val taskRepo: TaskRepository, implicit val executionManager: ExecutionManager) extends Actor with Timers {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
   private final val MAX_DELAY_SECONDS = 21474835 //max delay handled by the akka.actor.Actor system.
@@ -106,7 +102,7 @@ class ExecutionJob @Inject() (
             status = ExecutionStatus.PersonalizedWaiting
             logger.debug("status: " + status)
             if (schedulings.nonEmpty) {
-              val nextDateDelay = calculateDelay(Some(schedulings.head), timezone)
+              val nextDateDelay = calculateDelay(Some(localDateToDate(schedulings.head)), timezone)
               schedulings = schedulings.tail
               timers.startSingleTimer("personalizedExecutionKey", ExecutePersonalized, nextDateDelay)
             } else self ! PoisonPill
@@ -159,40 +155,43 @@ class ExecutionJob @Inject() (
   }
 
   def executePersonalized(): Unit = {
+    println("schedulings: " + schedulings)
     if (!isExcluded(new Date(nextDateMillis))) {
       if (endDate.isDefined) {
         if (endDate.get.getTime - getCurrentDate.getTime >= MAX_VARIANCE) {
-          executionManager.runFile(fileId)
-          status = ExecutionStatus.PeriodicRunning
-          val currentDate = new Date()
-          latency = calculateLatency(currentDate.getTime, nextDateMillis)
-          nextDateMillis = calculateNextDateMillis(nextDateMillis)
-          printExecutionMessage()
-          runNextScheduling()
-        } else self ! PoisonPill
-      } else {
-        taskRepo.selectCurrentOccurrencesByTaskId(taskId).map { occurrences =>
-          if (occurrences.get != 0) {
-            taskRepo.decrementCurrentOccurrencesByTaskId(taskId)
+          if (isScheduled(new Date(nextDateMillis))) {
             executionManager.runFile(fileId)
-            status = ExecutionStatus.PeriodicRunning
+            status = ExecutionStatus.PersonalizedRunning
             val currentDate = new Date()
             latency = calculateLatency(currentDate.getTime, nextDateMillis)
             nextDateMillis = calculateNextDateMillis(nextDateMillis)
             printExecutionMessage()
-            runNextScheduling()
+          }
+        } else self ! PoisonPill
+      } else {
+        taskRepo.selectCurrentOccurrencesByTaskId(taskId).map { occurrences =>
+          if (occurrences.get != 0) {
+            if (isScheduled(new Date(nextDateMillis))) {
+              taskRepo.decrementCurrentOccurrencesByTaskId(taskId)
+              executionManager.runFile(fileId)
+              status = ExecutionStatus.PersonalizedRunning
+              val currentDate = new Date()
+              latency = calculateLatency(currentDate.getTime, nextDateMillis)
+              nextDateMillis = calculateNextDateMillis(nextDateMillis)
+              printExecutionMessage()
+            }
           } else self ! PoisonPill
         }
       }
     } else {
-      status = ExecutionStatus.PeriodicRunning
+      status = ExecutionStatus.PersonalizedRunning
       val currentDate = new Date()
       latency = calculateLatency(currentDate.getTime, nextDateMillis)
       nextDateMillis = calculateNextDateMillis(nextDateMillis)
       timers.startSingleTimer("periodicExecutionKey", ExecutePeriodic, interval.get.minusMillis(latency))
     }
     /*
-    val currentDate = getTimeFromDate(new Date())
+    val currentDate = removeTimeFromDate(new Date())
     if (!isExcluded(nextDateMillis)) {
       status = ExecutionStatus.PersonalizedRunning
       val currentDate = new Date()
@@ -251,8 +250,8 @@ class ExecutionJob @Inject() (
     def iter: Boolean = {
       exclusions.headOption match {
         case Some(exclusion) =>
-          exclusion.compareTo(date) match {
-            case -1 =>
+          exclusion.compareTo(dateToLocalDate(date)) match {
+            case value if value < 0 =>
               exclusions.head
               exclusions = exclusions.tail
               iter
@@ -260,7 +259,7 @@ class ExecutionJob @Inject() (
               exclusions.head
               exclusions = exclusions.tail
               true
-            case 1 =>
+            case value if value > 0 =>
               false
           }
         case None => false
@@ -269,7 +268,29 @@ class ExecutionJob @Inject() (
     iter
   }
 
-  /**
+  def isScheduled(date: Date): Boolean = {
+    def iter: Boolean = {
+      schedulings.headOption match {
+        case Some(scheduling) =>
+          scheduling.compareTo(dateToLocalDate(date)) match {
+            case value if value < 0 =>
+              schedulings.head
+              schedulings = schedulings.tail
+              iter
+            case 0 =>
+              schedulings.head
+              schedulings = schedulings.tail
+              true
+            case value if value > 0 =>
+              false
+          }
+        case None => false
+      }
+    }
+    iter
+  }
+
+  /*/**
    * Checks if there are schedulings left to run (only applicable to Personalized tasks). If that's the case,
    * it calculates the delay for the next date and then schedules it.
    * @return
@@ -280,7 +301,7 @@ class ExecutionJob @Inject() (
       schedulings = schedulings.tail
       timers.startSingleTimer("personalizedExecutionKey", ExecutePersonalized, nextDateDelay)
     } else self ! PoisonPill
-  }
+  }*/
 
   private def calculateNextDateMillis(date: Long): Long = {
     schedulingType match {
@@ -289,11 +310,10 @@ class ExecutionJob @Inject() (
       case Personalized =>
         schedulings.headOption match {
           case Some(nextDate) =>
-            date + calculateDelay(Some(nextDate), timezone).toMillis
+            date + calculateDelay(Some(localDateToDate(nextDate)), timezone).toMillis
           case None =>
             nextDateMillis
         }
-
     }
   }
 
