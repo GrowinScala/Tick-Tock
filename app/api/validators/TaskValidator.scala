@@ -1,5 +1,6 @@
 package api.validators
 
+import java.time.LocalDate
 import java.util.{ Calendar, Date, TimeZone, UUID }
 
 import api.dtos._
@@ -286,8 +287,8 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
   }
 
   //TODO fix exclusionDates.tail
-  private def areValidUpdateExclusionFormats(exclusions: Option[List[UpdateExclusionDTO]], exclusionDates: Option[List[Option[Date]]], taskId: String): Option[List[ExclusionDTO]] = {
-    def iter(exclusions: List[UpdateExclusionDTO], exclusionDates: List[Option[Date]], toReturn: List[ExclusionDTO]): Option[List[ExclusionDTO]] = {
+  private def areValidUpdateExclusionFormats(exclusions: Option[List[UpdateExclusionDTO]], exclusionDates: Option[List[Option[LocalDate]]], taskId: String): Option[List[ExclusionDTO]] = {
+    def iter(exclusions: List[UpdateExclusionDTO], exclusionDates: List[Option[LocalDate]], toReturn: List[ExclusionDTO]): Option[List[ExclusionDTO]] = {
       if (exclusions.isEmpty) { if (toReturn.isEmpty) None else Some(toReturn) }
       else {
         val exclusion = exclusions.head
@@ -312,13 +313,13 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
     }
   }
 
-  private def areValidUpdateExclusionDateFormats(exclusions: Option[List[UpdateExclusionDTO]], startDate: Option[Date], endDate: Option[Date]): Option[List[Option[Date]]] = {
-    def iter(list: List[UpdateExclusionDTO], toReturn: List[Option[Date]]): Option[List[Option[Date]]] = {
+  private def areValidUpdateExclusionDateFormats(exclusions: Option[List[UpdateExclusionDTO]], startDate: Option[Date], endDate: Option[Date]): Option[List[Option[LocalDate]]] = {
+    def iter(list: List[UpdateExclusionDTO], toReturn: List[Option[LocalDate]]): Option[List[Option[LocalDate]]] = {
       if (list.nonEmpty) {
         val exclusion = list.head
         exclusion.exclusionDate match {
           case Some(date) =>
-            val parsedDate = parseDate(date)
+            val parsedDate = parseDate(date).map(dateToLocalDate)
             if (parsedDate.isDefined) iter(list.tail, parsedDate :: toReturn)
             else None
           case None => iter(list.tail, None :: toReturn)
@@ -368,8 +369,8 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
     }
   }
 
-  private def areValidExclusionFormats(exclusions: Option[List[CreateExclusionDTO]], exclusionDates: List[Option[Date]], taskId: String): Option[List[ExclusionDTO]] = {
-    def iter(list: List[CreateExclusionDTO], dateList: List[Option[Date]], toReturn: List[ExclusionDTO]): Option[List[ExclusionDTO]] = {
+  private def areValidExclusionFormats(exclusions: Option[List[CreateExclusionDTO]], exclusionDates: List[Option[LocalDate]], taskId: String): Option[List[ExclusionDTO]] = {
+    def iter(list: List[CreateExclusionDTO], dateList: List[Option[LocalDate]], toReturn: List[ExclusionDTO]): Option[List[ExclusionDTO]] = {
       if (list.isEmpty) Some(toReturn)
       else {
         val exclusion = list.head
@@ -392,13 +393,13 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
     }
   }
 
-  private def areValidExclusionDateFormats(exclusions: Option[List[CreateExclusionDTO]], startDate: Option[Date], endDate: Option[Date]): List[Option[Date]] = {
-    def iter(list: List[CreateExclusionDTO], toReturn: List[Option[Date]]): List[Option[Date]] = {
+  private def areValidExclusionDateFormats(exclusions: Option[List[CreateExclusionDTO]], startDate: Option[Date], endDate: Option[Date]): List[Option[LocalDate]] = {
+    def iter(list: List[CreateExclusionDTO], toReturn: List[Option[LocalDate]]): List[Option[LocalDate]] = {
       if (list.nonEmpty) {
         val exclusion = list.head
         exclusion.exclusionDate match {
           case Some(date) =>
-            val parsedDate = parseDate(date)
+            val parsedDate = parseDate(date).map(dateToLocalDate)
             if (parsedDate.isDefined) iter(list.tail, parsedDate :: toReturn)
             else Nil
           case None => iter(list.tail, None :: toReturn)
@@ -414,11 +415,11 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
       if (list.nonEmpty) {
         val exclusion = list.head
         if (exclusion.exclusionDate.isDefined) {
-          if (exclusion.exclusionDate.get.after(startCalendar.getTime)) {
-            if (endDate.isDefined)
-              if (endDate.get.compareTo(exclusion.exclusionDate.get) != -1) iter(list.tail)
+          if (exclusion.exclusionDate.get.compareTo(dateToLocalDate(startCalendar.getTime)) >= 0) {
+            if (endDate.isDefined) {
+              if (dateToLocalDate(endDate.get).compareTo(exclusion.exclusionDate.get) >= 0) iter(list.tail)
               else false
-            else iter(list.tail)
+            } else iter(list.tail)
           } else false
         } else iter(list.tail)
       } else true
@@ -563,8 +564,8 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
     }
   }
 
-  private def isValidSchedulingFormat(schedulings: Option[List[CreateSchedulingDTO]], schedulingDates: Option[List[Option[Date]]], taskId: String): Option[List[SchedulingDTO]] = {
-    def iter(list: List[CreateSchedulingDTO], dateList: Option[List[Option[Date]]], toReturn: List[SchedulingDTO]): Option[List[SchedulingDTO]] = {
+  private def isValidSchedulingFormat(schedulings: Option[List[CreateSchedulingDTO]], schedulingDates: Option[List[Option[LocalDate]]], taskId: String): Option[List[SchedulingDTO]] = {
+    def iter(list: List[CreateSchedulingDTO], dateList: Option[List[Option[LocalDate]]], toReturn: List[SchedulingDTO]): Option[List[SchedulingDTO]] = {
       if (list.isEmpty) Some(toReturn)
       else {
         val scheduling = list.head
@@ -587,8 +588,8 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
     }
   }
 
-  private def areValidUpdateSchedulingFormats(schedulings: Option[List[UpdateSchedulingDTO]], schedulingDates: Option[List[Option[Date]]], taskId: String): Option[List[SchedulingDTO]] = {
-    def iter(schedulings: List[UpdateSchedulingDTO], schedulingDates: Option[List[Option[Date]]], toReturn: List[SchedulingDTO]): Option[List[SchedulingDTO]] = {
+  private def areValidUpdateSchedulingFormats(schedulings: Option[List[UpdateSchedulingDTO]], schedulingDates: Option[List[Option[LocalDate]]], taskId: String): Option[List[SchedulingDTO]] = {
+    def iter(schedulings: List[UpdateSchedulingDTO], schedulingDates: Option[List[Option[LocalDate]]], toReturn: List[SchedulingDTO]): Option[List[SchedulingDTO]] = {
 
       if (schedulings.isEmpty) {
         if (toReturn.isEmpty) None else Some(toReturn)
@@ -617,14 +618,14 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
     }
   }
 
-  private def areValidUpdateSchedulingDateFormats(schedulings: Option[List[UpdateSchedulingDTO]], startDate: Option[Date], endDate: Option[Date]): Option[List[Option[Date]]] = {
-    def iter(list: List[UpdateSchedulingDTO], toReturn: List[Option[Date]]): Option[List[Option[Date]]] = {
+  private def areValidUpdateSchedulingDateFormats(schedulings: Option[List[UpdateSchedulingDTO]], startDate: Option[Date], endDate: Option[Date]): Option[List[Option[LocalDate]]] = {
+    def iter(list: List[UpdateSchedulingDTO], toReturn: List[Option[LocalDate]]): Option[List[Option[LocalDate]]] = {
       if (list.isEmpty) if (toReturn.isEmpty) None else Some(toReturn)
       else {
         val scheduling = list.head
         scheduling.schedulingDate match {
           case Some(date) =>
-            val parsedDate = parseDate(date)
+            val parsedDate = parseDate(date).map(dateToLocalDate)
             if (parsedDate.isDefined) iter(list.tail, parsedDate :: toReturn)
             else None
           case None => iter(list.tail, None :: toReturn)
@@ -672,8 +673,8 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
     }
   }
 
-  private def areValidSchedulingFormats(schedulings: Option[List[CreateSchedulingDTO]], schedulingDates: List[Option[Date]], taskId: String): Option[List[SchedulingDTO]] = {
-    def iter(list: List[CreateSchedulingDTO], dateList: List[Option[Date]], toReturn: List[SchedulingDTO]): Option[List[SchedulingDTO]] = {
+  private def areValidSchedulingFormats(schedulings: Option[List[CreateSchedulingDTO]], schedulingDates: List[Option[LocalDate]], taskId: String): Option[List[SchedulingDTO]] = {
+    def iter(list: List[CreateSchedulingDTO], dateList: List[Option[LocalDate]], toReturn: List[SchedulingDTO]): Option[List[SchedulingDTO]] = {
       if (list.isEmpty) Some(toReturn)
       else {
         val scheduling = list.head
@@ -696,13 +697,13 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
     }
   }
 
-  private def areValidSchedulingDateFormats(schedulings: Option[List[CreateSchedulingDTO]], startDate: Option[Date], endDate: Option[Date]): List[Option[Date]] = {
-    def iter(list: List[CreateSchedulingDTO], toReturn: List[Option[Date]]): List[Option[Date]] = {
+  private def areValidSchedulingDateFormats(schedulings: Option[List[CreateSchedulingDTO]], startDate: Option[Date], endDate: Option[Date]): List[Option[LocalDate]] = {
+    def iter(list: List[CreateSchedulingDTO], toReturn: List[Option[LocalDate]]): List[Option[LocalDate]] = {
       if (list.nonEmpty) {
         val scheduling = list.head
         scheduling.schedulingDate match {
           case Some(date) =>
-            val parsedDate = parseDate(date)
+            val parsedDate = parseDate(date).map(dateToLocalDate)
             if (parsedDate.isDefined) iter(list.tail, parsedDate :: toReturn)
             else Nil
           case None => iter(list.tail, None :: toReturn)
@@ -718,9 +719,9 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
       if (list.nonEmpty) {
         val scheduling = list.head
         if (scheduling.schedulingDate.isDefined) {
-          if (scheduling.schedulingDate.get.after(startCalendar.getTime)) {
+          if (scheduling.schedulingDate.get.compareTo(dateToLocalDate(startCalendar.getTime)) >= 0) {
             if (endDate.isDefined)
-              if (endDate.get.after(scheduling.schedulingDate.get)) iter(list.tail)
+              if (dateToLocalDate(endDate.get).compareTo(scheduling.schedulingDate.get) >= 0) iter(list.tail)
               else false
             else iter(list.tail)
           } else false

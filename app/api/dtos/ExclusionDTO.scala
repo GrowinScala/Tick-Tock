@@ -1,5 +1,6 @@
 package api.dtos
 
+import java.time.LocalDate
 import java.util.Date
 
 import api.services.Criteria.Criteria
@@ -11,7 +12,7 @@ import play.api.libs.json._
 case class ExclusionDTO(
   exclusionId: String,
   taskId: String,
-  exclusionDate: Option[Date] = None,
+  exclusionDate: Option[LocalDate] = None,
   day: Option[Int] = None,
   dayOfWeek: Option[Int] = None,
   dayType: Option[DayType] = None,
@@ -28,7 +29,7 @@ object ExclusionDTO {
   implicit val exclusionReads: Reads[ExclusionDTO] = (
     (JsPath \ "exclusionId").read[String] and
     (JsPath \ "taskId").read[String] and
-    (JsPath \ "exclusionDate").readNullable[Date] and
+    (JsPath \ "exclusionDate").readNullable[LocalDate] and
     (JsPath \ "day").readNullable[Int] and
     (JsPath \ "dayOfWeek").readNullable[Int] and
     (JsPath \ "dayType").readNullable[DayType] and

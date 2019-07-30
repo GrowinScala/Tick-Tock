@@ -1,12 +1,12 @@
 package api.services
 
-import java.time.{ Duration, LocalDateTime, LocalTime, ZoneId }
+import java.time.{ Duration, LocalDate, LocalDateTime, LocalTime, ZoneId }
 import java.util.{ Calendar, Date }
 
 import akka.actor.{ ActorRef, ActorSystem, Props }
 import api.dtos.{ ExclusionDTO, SchedulingDTO, TaskDTO }
 import api.services.Criteria.Criteria
-import api.utils.DateUtils.{ dateToDayTypeString, _ }
+import api.utils.DateUtils._
 import database.repositories.task.TaskRepository
 import database.repositories.file.FileRepository
 import executionengine.{ ExecutionJob, ExecutionManager }
@@ -94,7 +94,7 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
     scheduleTask(task)
   }
 
-  def calculateExclusions(task: TaskDTO): List[Date] = {
+  def calculateExclusions(task: TaskDTO): List[LocalDate] = {
     if (task.exclusions.isDefined) {
       val startCalendar = Calendar.getInstance
       val endCalendar = Calendar.getInstance
@@ -116,394 +116,394 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
       iterCalendar.setTime(startCalendar.getTime)
       iterCalendar.add(Calendar.DAY_OF_MONTH, -1)
       val dayDifference = getDifferenceInDays(startCalendar.getTimeInMillis, endCalendar.getTimeInMillis)
-      var returnList: List[Date] = Nil
+      var returnList: List[LocalDate] = Nil
       task.exclusions.get.foreach { exclusion =>
 
         iterCalendar.setTime(startCalendar.getTime)
         iterCalendar.add(Calendar.DAY_OF_MONTH, -1)
-        var list = ListBuffer[Date]()
+        var list = ListBuffer[LocalDate]()
         //TODO: Fix exclusions that aren't just exclusionDates (and exclude an entire day and not a day and time only) with LocalDate (LocalDateTime.ofInstant(iterCalendar.getTime.toInstant, ZoneId.systemDefault()).toLocalDate)
         exclusion match {
-          case ExclusionDTO(_, _, Some(date), None, None, None, None, None, None) => if (isDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
+          case ExclusionDTO(_, _, Some(date), None, None, None, None, None, None) => if (isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
           case ExclusionDTO(_, _, None, Some(day), None, None, None, None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, None, Some(dayOfWeek), None, None, None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, None, None, Some(dayType), None, None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) equals dayType) returnList = iterCalendar.getTime :: returnList
+              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) equals dayType) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, None, None, None, Some(month), None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.MONTH) == month) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.MONTH) == month) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, None, None, None, None, Some(year), None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.YEAR) == year) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.YEAR) == year) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), None, None, None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, Some(day), None, Some(dayType), None, None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, Some(day), None, None, Some(month), None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.MONTH) == month) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.MONTH) == month) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, Some(day), None, None, None, Some(year), None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.YEAR) == year) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.YEAR) == year) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), None, None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, None, Some(dayOfWeek), None, Some(month), None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.MONTH) == month) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.MONTH) == month) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, None, Some(dayOfWeek), None, None, Some(year), None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.YEAR) == year) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.YEAR) == year) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, None, None, Some(dayType), Some(month), None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) returnList = iterCalendar.getTime :: returnList
+              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, None, None, Some(dayType), None, Some(year), None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) returnList = iterCalendar.getTime :: returnList
+              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, None, None, None, Some(month), Some(year), None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), None, None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), None, Some(month), None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.MONTH) == month) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.MONTH) == month) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), None, None, Some(year), None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.YEAR) == year) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.YEAR) == year) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, Some(day), None, Some(dayType), Some(month), None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, Some(day), None, Some(dayType), None, Some(year), None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, Some(day), None, None, Some(month), Some(year), None) =>
-            val date = getDateFromCalendar(day, month, year, task.timezone)
-            if (isDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
+            val date = dateToLocalDate(getDateFromCalendar(day, month, year, task.timezone))
+            if (isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
 
           case ExclusionDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), Some(month), None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), None, Some(year), None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, None, None, Some(dayType), Some(month), Some(year), None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year) returnList = iterCalendar.getTime :: returnList
+              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), Some(month), None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), None, Some(year), None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), None, Some(month), Some(year), None) =>
-            val date = getDateFromCalendar(day, month, year, task.timezone)
-            if (dayOfWeek == dateToDayOfWeekInt(date) && isDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
+            val date = dateToLocalDate(getDateFromCalendar(day, month, year, task.timezone))
+            if (dayOfWeek == dateToDayOfWeekInt(date) && isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
 
           case ExclusionDTO(_, _, None, Some(day), None, Some(dayType), Some(month), Some(year), None) =>
-            val date = getDateFromCalendar(day, month, year, task.timezone)
-            if (dayType == dateToDayTypeString(date) && isDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
+            val date = dateToLocalDate(getDateFromCalendar(day, month, year, task.timezone))
+            if (dayType == dateToDayTypeString(date) && isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
 
           case ExclusionDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), Some(month), Some(year), None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), Some(month), Some(year), None) =>
-            val date = getDateFromCalendar(day, month, year, task.timezone)
-            if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date) && isDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
+            val date = dateToLocalDate(getDateFromCalendar(day, month, year, task.timezone))
+            if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date) && isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
 
           case ExclusionDTO(_, _, None, Some(day), None, None, None, None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, None, Some(dayOfWeek), None, None, None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, None, None, Some(dayType), None, None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) list += iterCalendar.getTime
+              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, None, None, None, Some(month), None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.MONTH) == month) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.MONTH) == month) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, None, None, None, None, Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.YEAR) == year) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.YEAR) == year) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), None, None, None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, Some(day), None, Some(dayType), None, None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, Some(day), None, None, Some(month), None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.MONTH) == month) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.MONTH) == month) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, Some(day), None, None, None, Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.YEAR) == year) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.YEAR) == year) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), None, None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, None, Some(dayOfWeek), None, Some(month), None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.MONTH) == month) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.MONTH) == month) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, None, Some(dayOfWeek), None, None, Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.YEAR) == year) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.YEAR) == year) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, None, None, Some(dayType), Some(month), None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) list += iterCalendar.getTime
+              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, None, None, Some(dayType), None, Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) list += iterCalendar.getTime
+              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, None, None, None, Some(month), Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), None, None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), None, Some(month), None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.MONTH) == month) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.MONTH) == month) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), None, None, Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.YEAR) == year) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.YEAR) == year) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, Some(day), None, Some(dayType), Some(month), None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, Some(day), None, Some(dayType), None, Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, Some(day), None, None, Some(month), Some(year), Some(criteria)) =>
-            val date = getDateFromCalendar(day, month, year, task.timezone)
-            if (isDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && criteria == Criteria.First) returnList = date :: returnList
+            val date = dateToLocalDate(getDateFromCalendar(day, month, year, task.timezone))
+            if (isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && criteria == Criteria.First) returnList = date :: returnList
 
           case ExclusionDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), Some(month), None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), None, Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, None, None, Some(dayType), Some(month), Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year) list += iterCalendar.getTime
+              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), Some(month), None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), None, Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), None, Some(month), Some(year), Some(criteria)) =>
-            val date = getDateFromCalendar(day, month, year, task.timezone)
-            if (dayOfWeek == dateToDayOfWeekInt(date) && isDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && criteria == Criteria.First) returnList = date :: returnList
+            val date = dateToLocalDate(getDateFromCalendar(day, month, year, task.timezone))
+            if (dayOfWeek == dateToDayOfWeekInt(date) && isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && criteria == Criteria.First) returnList = date :: returnList
 
           case ExclusionDTO(_, _, None, Some(day), None, Some(dayType), Some(month), Some(year), Some(criteria)) =>
-            val date = getDateFromCalendar(day, month, year, task.timezone)
-            if (dayType == dateToDayTypeString(date) && isDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && criteria == Criteria.First) returnList = date :: returnList
+            val date = dateToLocalDate(getDateFromCalendar(day, month, year, task.timezone))
+            if (dayType == dateToDayTypeString(date) && isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && criteria == Criteria.First) returnList = date :: returnList
 
           case ExclusionDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), Some(month), Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year && criteria == Criteria.First) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year && criteria == Criteria.First) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case ExclusionDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), Some(month), Some(year), Some(criteria)) =>
-            val date = getDateFromCalendar(day, month, year, task.timezone)
-            if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date) && isDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && criteria == Criteria.First) returnList = date :: returnList
+            val date = dateToLocalDate(getDateFromCalendar(day, month, year, task.timezone))
+            if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date) && isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && criteria == Criteria.First) returnList = date :: returnList
 
           case _ => println("Exclusion borked.")
 
         }
       }
-      returnList.sortBy(_.getTime)
+      returnList.distinct.sortBy(localDateToDate(_).getTime)
     } else Nil
   }
 
-  def calculateSchedulings(task: TaskDTO): List[Date] = {
+  def calculateSchedulings(task: TaskDTO): List[LocalDate] = {
     if (task.schedulings.isDefined) {
       val startCalendar = Calendar.getInstance
       val endCalendar = Calendar.getInstance
@@ -525,388 +525,389 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
       iterCalendar.setTime(startCalendar.getTime)
       iterCalendar.add(Calendar.DAY_OF_MONTH, -1)
       val dayDifference = getDifferenceInDays(startCalendar.getTimeInMillis, endCalendar.getTimeInMillis)
-      var returnList: List[Date] = Nil
+      var returnList: List[LocalDate] = Nil
       task.schedulings.get.foreach { exclusion =>
 
         iterCalendar.setTime(startCalendar.getTime)
         iterCalendar.add(Calendar.DAY_OF_MONTH, -1)
-        var list = ListBuffer[Date]()
+        var list = ListBuffer[LocalDate]()
 
         exclusion match {
-          case SchedulingDTO(_, _, Some(date), None, None, None, None, None, None) => if (isDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
+          case SchedulingDTO(_, _, Some(date), None, None, None, None, None, None) => if (isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
           case SchedulingDTO(_, _, None, Some(day), None, None, None, None, None) =>
+            if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, None, Some(dayOfWeek), None, None, None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, None, None, Some(dayType), None, None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) returnList = iterCalendar.getTime :: returnList
+              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, None, None, None, Some(month), None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.MONTH) == month) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.MONTH) == month) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, None, None, None, None, Some(year), None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.YEAR) == year) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.YEAR) == year) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), None, None, None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, Some(day), None, Some(dayType), None, None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, Some(day), None, None, Some(month), None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.MONTH) == month) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.MONTH) == month) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, Some(day), None, None, None, Some(year), None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.YEAR) == year) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.YEAR) == year) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), None, None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, None, Some(dayOfWeek), None, Some(month), None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.MONTH) == month) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.MONTH) == month) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, None, Some(dayOfWeek), None, None, Some(year), None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.YEAR) == year) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.YEAR) == year) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, None, None, Some(dayType), Some(month), None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) returnList = iterCalendar.getTime :: returnList
+              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, None, None, Some(dayType), None, Some(year), None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) returnList = iterCalendar.getTime :: returnList
+              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, None, None, None, Some(month), Some(year), None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), None, None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), None, Some(month), None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.MONTH) == month) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.MONTH) == month) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), None, None, Some(year), None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.YEAR) == year) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.YEAR) == year) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, Some(day), None, Some(dayType), Some(month), None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, Some(day), None, Some(dayType), None, Some(year), None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, Some(day), None, None, Some(month), Some(year), None) =>
-            returnList = getDateFromCalendar(day, month, year, task.timezone) :: returnList
+            returnList = dateToLocalDate(getDateFromCalendar(day, month, year, task.timezone)) :: returnList
 
           case SchedulingDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), Some(month), None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), None, Some(year), None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, None, None, Some(dayType), Some(month), Some(year), None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year) returnList = iterCalendar.getTime :: returnList
+              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), Some(month), None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), None, Some(year), None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), None, Some(month), Some(year), None) =>
-            val date = getDateFromCalendar(day, month, year, task.timezone)
-            if (dayOfWeek == dateToDayOfWeekInt(date) && isDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
+            val date = dateToLocalDate(getDateFromCalendar(day, month, year, task.timezone))
+            if (dayOfWeek == dateToDayOfWeekInt(date) && isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
 
           case SchedulingDTO(_, _, None, Some(day), None, Some(dayType), Some(month), Some(year), None) =>
-            val date = getDateFromCalendar(day, month, year, task.timezone)
-            if (dayType == dateToDayTypeString(date) && isDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
+            val date = dateToLocalDate(getDateFromCalendar(day, month, year, task.timezone))
+            if (dayType == dateToDayTypeString(date) && isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
 
           case SchedulingDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), Some(month), Some(year), None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year) returnList = iterCalendar.getTime :: returnList
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
 
           case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), Some(month), Some(year), None) =>
-            val date = getDateFromCalendar(day, month, year, task.timezone)
-            if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date) && isDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && isDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
+            val date = dateToLocalDate(getDateFromCalendar(day, month, year, task.timezone))
+            if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date) && isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
 
           case SchedulingDTO(_, _, None, Some(day), None, None, None, None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, None, Some(dayOfWeek), None, None, None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, None, None, Some(dayType), None, None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) list += iterCalendar.getTime
+              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, None, None, None, Some(month), None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.MONTH) == month) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.MONTH) == month) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, None, None, None, None, Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.YEAR) == year) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.YEAR) == year) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), None, None, None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, Some(day), None, Some(dayType), None, None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, Some(day), None, None, Some(month), None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.MONTH) == month) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.MONTH) == month) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, Some(day), None, None, None, Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.YEAR) == year) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.YEAR) == year) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), None, None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, None, Some(dayOfWeek), None, Some(month), None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.MONTH) == month) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.MONTH) == month) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, None, Some(dayOfWeek), None, None, Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.YEAR) == year) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.YEAR) == year) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, None, None, Some(dayType), Some(month), None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) list += iterCalendar.getTime
+              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, None, None, Some(dayType), None, Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) list += iterCalendar.getTime
+              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, None, None, None, Some(month), Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), None, None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), None, Some(month), None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.MONTH) == month) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.MONTH) == month) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), None, None, Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.YEAR) == year) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.YEAR) == year) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, Some(day), None, Some(dayType), Some(month), None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, Some(day), None, Some(dayType), None, Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, Some(day), None, None, Some(month), Some(year), Some(criteria)) =>
-            val date = getDateFromCalendar(day, month, year, task.timezone)
-            if (isDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && criteria == Criteria.First) returnList = date :: returnList
+            val date = dateToLocalDate(getDateFromCalendar(day, month, year, task.timezone))
+            if (isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && criteria == Criteria.First) returnList = date :: returnList
 
           case SchedulingDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), Some(month), None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), None, Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, None, None, Some(dayType), Some(month), Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year) list += iterCalendar.getTime
+              if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), Some(month), None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), None, Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_MONTH) == day && iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.YEAR) == year) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), None, Some(month), Some(year), Some(criteria)) =>
-            val date = getDateFromCalendar(day, month, year, task.timezone)
-            if (dayOfWeek == dateToDayOfWeekInt(date) && isDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && criteria == Criteria.First) returnList = date :: returnList
+            val date = dateToLocalDate(getDateFromCalendar(day, month, year, task.timezone))
+            if (dayOfWeek == dateToDayOfWeekInt(date) && isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && criteria == Criteria.First) returnList = date :: returnList
 
           case SchedulingDTO(_, _, None, Some(day), None, Some(dayType), Some(month), Some(year), Some(criteria)) =>
-            val date = getDateFromCalendar(day, month, year, task.timezone)
-            if (dayType == dateToDayTypeString(date) && isDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && criteria == Criteria.First) returnList = date :: returnList
+            val date = dateToLocalDate(getDateFromCalendar(day, month, year, task.timezone))
+            if (dayType == dateToDayTypeString(date) && isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && criteria == Criteria.First) returnList = date :: returnList
 
           case SchedulingDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), Some(month), Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
-              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year) list += iterCalendar.getTime
+              if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && iterCalendar.get(Calendar.MONTH) == month && iterCalendar.get(Calendar.YEAR) == year) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
 
           case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), Some(dayType), Some(month), Some(year), Some(criteria)) =>
-            val date = getDateFromCalendar(day, month, year, task.timezone)
-            if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date) && isDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && criteria == Criteria.First) returnList = date :: returnList
+            val date = dateToLocalDate(getDateFromCalendar(day, month, year, task.timezone))
+            if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date) && isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && criteria == Criteria.First) returnList = date :: returnList
 
           case _ => println("Exclusion borked.")
         }
       }
-      returnList.sortBy(_.getTime)
+      returnList.distinct.sortBy(localDateToDate(_).getTime)
     } else Nil
 
   }
@@ -928,7 +929,13 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
     (date == startDate || date.after(startDate)) && (date == endDate || date.before(endDate))
   }
 
-  private def getReturnListByCriteria(criteria: Criteria, dates: ListBuffer[Date], returnList: List[Date]): List[Date] = {
+  private def isLocalDateBetweenLimits(date: LocalDate, startDate: Date, endDate: Date): Boolean = {
+    val localStartDate = dateToLocalDate(startDate)
+    val localEndDate = dateToLocalDate(endDate)
+    (date == localStartDate || date.isAfter(localStartDate)) && (date == localEndDate || date.isBefore(localEndDate))
+  }
+
+  private def getReturnListByCriteria(criteria: Criteria, dates: ListBuffer[LocalDate], returnList: List[LocalDate]): List[LocalDate] = {
     criteria match {
       case first if first == Criteria.First && dates.nonEmpty => dates.head :: returnList
       case second if second == Criteria.Second && dates.size >= 2 => dates(1) :: returnList

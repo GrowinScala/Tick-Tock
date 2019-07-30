@@ -27,11 +27,12 @@ class SchedulingMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with 
   private val taskUUID2 = UUID.randomUUID().toString
   private val taskUUID3 = UUID.randomUUID().toString
 
-  private val timeFormat = "yyyy-MM-dd HH:mm:ss"
+  private val dateFormat = "yyyy-MM-dd HH:mm:ss"
+  private val localDateFormat = "yyyy-MM-dd"
 
   override def beforeAll(): Unit = {
     Await.result(dtbase.run(createSchedulingsTableAction), Duration.Inf)
-    Await.result(dtbase.run(insertScheduling(SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", timeFormat))))), Duration.Inf)
+    Await.result(dtbase.run(insertScheduling(SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToLocalDateFormat("2030-01-01", localDateFormat))))), Duration.Inf)
     Await.result(dtbase.run(insertScheduling(SchedulingRow(schedulingUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5)))), Duration.Inf)
     Await.result(dtbase.run(insertScheduling(SchedulingRow(schedulingUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
   }
@@ -48,7 +49,7 @@ class SchedulingMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with 
         result2 <- dtbase.run(getSchedulingBySchedulingId(schedulingUUID2).result)
       } yield {
         result1.size mustBe 1
-        result1.head mustBe SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", timeFormat)), None, None, None, None, None, None)
+        result1.head mustBe SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToLocalDateFormat("2030-01-01", localDateFormat)), None, None, None, None, None, None)
         result2.size mustBe 1
         result2.head mustBe SchedulingRow(schedulingUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None)
       }
@@ -63,7 +64,7 @@ class SchedulingMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with 
         result2 <- dtbase.run(getSchedulingByTaskId(taskUUID2).result)
       } yield {
         result1.size mustBe 1
-        result1.head mustBe SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", timeFormat)), None, None, None, None, None, None)
+        result1.head mustBe SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToLocalDateFormat("2030-01-01", localDateFormat)), None, None, None, None, None, None)
         result2.size mustBe 1
         result2.head mustBe SchedulingRow(schedulingUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None)
       }
@@ -74,10 +75,10 @@ class SchedulingMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with 
     "return the correct SchedulingRow when given an existing schedulingDate." in {
 
       for {
-        result1 <- dtbase.run(getSchedulingBySchedulingDate(stringToDateFormat("2030-01-01 00:00:00", timeFormat)).result)
+        result1 <- dtbase.run(getSchedulingBySchedulingDate(stringToLocalDateFormat("2030-01-01", localDateFormat)).result)
       } yield {
         result1.size mustBe 1
-        result1.head mustBe SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", timeFormat)), None, None, None, None, None, None)
+        result1.head mustBe SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToLocalDateFormat("2030-01-01", localDateFormat)), None, None, None, None, None, None)
       }
     }
   }
@@ -178,9 +179,9 @@ class SchedulingMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with 
         result4 <- dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result)
       } yield {
         result1 mustBe 1
-        result2.head mustBe SchedulingRow(schedulingUUID1, taskUUID3, Some(stringToDateFormat("2030-01-01 00:00:00", timeFormat)), None, None, None, None, None, None)
+        result2.head mustBe SchedulingRow(schedulingUUID1, taskUUID3, Some(stringToLocalDateFormat("2030-01-01", localDateFormat)), None, None, None, None, None, None)
         result3 mustBe 1
-        result4.head mustBe SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", timeFormat)), None, None, None, None, None, None)
+        result4.head mustBe SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToLocalDateFormat("2030-01-01 00:00:00", localDateFormat)), None, None, None, None, None, None)
       }
     }
   }
@@ -189,15 +190,15 @@ class SchedulingMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with 
     "update a SchedulingRow by giving the corresponding schedulingDate." in {
 
       for {
-        result1 <- dtbase.run(updateSchedulingBySchedulingDate(schedulingUUID1, stringToDateFormat("2035-01-01 00:00:00", timeFormat)))
+        result1 <- dtbase.run(updateSchedulingBySchedulingDate(schedulingUUID1, stringToLocalDateFormat("2035-01-01", localDateFormat)))
         result2 <- dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result)
-        result3 <- dtbase.run(updateSchedulingBySchedulingDate(schedulingUUID1, stringToDateFormat("2030-01-01 00:00:00", timeFormat)))
+        result3 <- dtbase.run(updateSchedulingBySchedulingDate(schedulingUUID1, stringToLocalDateFormat("2030-01-01", localDateFormat)))
         result4 <- dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result)
       } yield {
         result1 mustBe 1
-        result2.head mustBe SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToDateFormat("2035-01-01 00:00:00", timeFormat)), None, None, None, None, None, None)
+        result2.head mustBe SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToLocalDateFormat("2035-01-01", localDateFormat)), None, None, None, None, None, None)
         result3 mustBe 1
-        result4.head mustBe SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", timeFormat)), None, None, None, None, None, None)
+        result4.head mustBe SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToLocalDateFormat("2030-01-01", localDateFormat)), None, None, None, None, None, None)
       }
     }
   }
@@ -311,7 +312,7 @@ class SchedulingMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with 
         result1 <- dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result)
         result2 <- dtbase.run(deleteSchedulingBySchedulingId(schedulingUUID1))
         result3 <- dtbase.run(getSchedulingBySchedulingId(taskUUID1).result)
-        result4 <- dtbase.run(insertScheduling(SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", timeFormat)))))
+        result4 <- dtbase.run(insertScheduling(SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToLocalDateFormat("2030-01-01", localDateFormat)))))
       } yield {
         result1.nonEmpty mustBe true
         result2 mustBe 1
@@ -328,7 +329,7 @@ class SchedulingMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with 
         result1 <- dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result)
         result2 <- dtbase.run(deleteSchedulingByTaskId(taskUUID1))
         result3 <- dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result)
-        result4 <- dtbase.run(insertScheduling(SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", timeFormat)))))
+        result4 <- dtbase.run(insertScheduling(SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToLocalDateFormat("2030-01-01", localDateFormat)))))
       } yield {
         result1.nonEmpty mustBe true
         result2 mustBe 1
@@ -343,9 +344,9 @@ class SchedulingMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with 
 
       for {
         result1 <- dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result)
-        result2 <- dtbase.run(deleteSchedulingBySchedulingDate(stringToDateFormat("2030-01-01 00:00:00", timeFormat)))
+        result2 <- dtbase.run(deleteSchedulingBySchedulingDate(stringToLocalDateFormat("2030-01-01", localDateFormat)))
         result3 <- dtbase.run(getSchedulingBySchedulingId(schedulingUUID1).result)
-        result4 <- dtbase.run(insertScheduling(SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", timeFormat)))))
+        result4 <- dtbase.run(insertScheduling(SchedulingRow(schedulingUUID1, taskUUID1, Some(stringToLocalDateFormat("2030-01-01", localDateFormat)))))
       } yield {
         result1.nonEmpty mustBe true
         result2 mustBe 1

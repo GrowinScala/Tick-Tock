@@ -1,11 +1,13 @@
 package database.mappings
 
 import java.sql.Timestamp
+import java.time.LocalDate
 import java.util.Date
 
 import api.services.Criteria.Criteria
 import api.services.DayType.DayType
 import api.services.{ Criteria, DayType }
+import api.utils.DateUtils.{ dateToLocalDate, localDateToDate }
 import play.api.libs.json.{ Json, OFormat }
 import slick.jdbc.MySQLProfile
 import slick.jdbc.MySQLProfile.api._
@@ -19,7 +21,7 @@ object SchedulingMappings {
   case class SchedulingRow(
     schedulingId: String,
     taskId: String,
-    schedulingDate: Option[Date] = None,
+    schedulingDate: Option[LocalDate] = None,
     day: Option[Int] = None,
     dayOfWeek: Option[Int] = None,
     dayType: Option[DayType] = None,
@@ -36,7 +38,7 @@ object SchedulingMappings {
   class SchedulingsTable(tag: Tag) extends Table[SchedulingRow](tag, "schedulings") {
     def schedulingId = column[String]("schedulingId", O.PrimaryKey, O.Length(36))
     def taskId = column[String]("taskId", O.Length(36))
-    def schedulingDate = column[Option[Date]]("schedulingDate")
+    def schedulingDate = column[Option[LocalDate]]("schedulingDate")
     def day = column[Option[Int]]("day")
     def dayOfWeek = column[Option[Int]]("dayOfWeek")
     def dayType = column[Option[DayType]]("dayType")
@@ -50,9 +52,9 @@ object SchedulingMappings {
   //---------------------------------------------------------
   //# FILES TABLE TYPE MAPPINGS
   //---------------------------------------------------------
-  implicit val dateColumnType: BaseColumnType[Date] = MappedColumnType.base[Date, Timestamp](dateToTimestamp, timestampToDate)
-  private def dateToTimestamp(date: Date): Timestamp = new Timestamp(date.getTime)
-  private def timestampToDate(timestamp: Timestamp): Date = new Date(timestamp.getTime)
+  implicit val dateColumnType: BaseColumnType[LocalDate] = MappedColumnType.base[LocalDate, Timestamp](localDateToTimestamp, timestampToLocalDate)
+  private def localDateToTimestamp(date: LocalDate): Timestamp = new Timestamp(localDateToDate(date).getTime)
+  private def timestampToLocalDate(timestamp: Timestamp): LocalDate = dateToLocalDate(new Date(timestamp.getTime))
 
   //---------------------------------------------------------
   //# QUERY EXTENSIONS
@@ -71,7 +73,7 @@ object SchedulingMappings {
     schedulingsTable.filter(_.taskId === taskId)
   }
 
-  def getSchedulingBySchedulingDate(schedulingDate: Date): Query[SchedulingsTable, SchedulingRow, Seq] = {
+  def getSchedulingBySchedulingDate(schedulingDate: LocalDate): Query[SchedulingsTable, SchedulingRow, Seq] = {
     schedulingsTable.filter(_.schedulingDate === schedulingDate)
   }
 
@@ -107,7 +109,7 @@ object SchedulingMappings {
     getSchedulingBySchedulingId(schedulingId).map(_.taskId).update(taskId)
   }
 
-  def updateSchedulingBySchedulingDate(schedulingId: String, schedulingDate: Date): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+  def updateSchedulingBySchedulingDate(schedulingId: String, schedulingDate: LocalDate): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     getSchedulingBySchedulingId(schedulingId).map(_.schedulingDate).update(Some(schedulingDate))
   }
 
@@ -143,7 +145,7 @@ object SchedulingMappings {
     getSchedulingByTaskId(taskId).delete
   }
 
-  def deleteSchedulingBySchedulingDate(schedulingDate: Date): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
+  def deleteSchedulingBySchedulingDate(schedulingDate: LocalDate): MySQLProfile.ProfileAction[Int, NoStream, Effect.Write] = {
     getSchedulingBySchedulingDate(schedulingDate).delete
   }
 

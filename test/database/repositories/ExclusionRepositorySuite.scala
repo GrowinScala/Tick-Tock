@@ -47,14 +47,17 @@ class ExclusionRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with
   private val exclusionUUID3: String = UUID.randomUUID().toString
   private val exclusionUUID4: String = UUID.randomUUID().toString
 
+  private val dateFormat = "yyyy-MM-dd HH:mm:ss"
+  private val localDateFormat = "yyyy-MM-dd"
+
   override def beforeAll: Unit = {
     Await.result(dtbase.run(createFilesTableAction), Duration.Inf)
     Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", getCurrentDateTimestamp)), Duration.Inf)
     Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID2, "test2", getCurrentDateTimestamp)), Duration.Inf)
     Await.result(dtbase.run(createTasksTableAction), Duration.Inf)
-    Await.result(taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")))), Duration.Inf)
-    Await.result(taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.Periodic, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")), Some(PeriodType.Minutely), Some(2), Some(stringToDateFormat("01-01-2050 12:00:00", "dd-MM-yyyy HH:mm:ss")))), Duration.Inf)
-    Await.result(taskRepo.insertInTasksTable(TaskDTO(taskUUID3, "test3", SchedulingType.Periodic, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")), Some(PeriodType.Hourly), Some(1), None, Some(5), Some(5))), Duration.Inf)
+    Await.result(taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(stringToDateFormat("01-01-2030 12:00:00", dateFormat)))), Duration.Inf)
+    Await.result(taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.Periodic, Some(stringToDateFormat("01-01-2030 12:00:00", dateFormat)), Some(PeriodType.Minutely), Some(2), Some(stringToDateFormat("01-01-2050 12:00:00", dateFormat)))), Duration.Inf)
+    Await.result(taskRepo.insertInTasksTable(TaskDTO(taskUUID3, "test3", SchedulingType.Periodic, Some(stringToDateFormat("01-01-2030 12:00:00", dateFormat)), Some(PeriodType.Hourly), Some(1), None, Some(5), Some(5))), Duration.Inf)
     Await.result(dtbase.run(createExclusionsTableAction), Duration.Inf)
   }
 
@@ -89,7 +92,7 @@ class ExclusionRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with
     "insert rows into the Exclusions table on the database and select all rows" in {
       for {
         _ <- exclusionRepo.selectAllExclusions.map(seq => assert(seq.isEmpty))
-        _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID1, taskUUID3, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))
+        _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID1, taskUUID3, Some(stringToLocalDateFormat("2030-01-01", localDateFormat))))
         _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID2, taskUUID1, None, Some(10), None, Some(DayType.Weekday), None, Some(2030)))
         resultSeq <- exclusionRepo.selectAllExclusions
       } yield resultSeq.size mustBe 2
@@ -99,7 +102,7 @@ class ExclusionRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with
   "DBExclusionsTable#selectExclusion" should {
     "insert several rows and select a specific exclusion by giving its exclusionId" in {
       for {
-        _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID1, taskUUID3, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))
+        _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID1, taskUUID3, Some(stringToLocalDateFormat("2030-01-01 12:00:00", localDateFormat))))
         _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID2, taskUUID1, None, Some(10), None, Some(DayType.Weekday), None, Some(2030)))
         _ <- exclusionRepo.selectExclusion(exclusionUUID2).map(dto => assert(dto.get.day.contains(10)))
         exclusion <- exclusionRepo.selectExclusion(exclusionUUID1)
@@ -110,7 +113,7 @@ class ExclusionRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with
   "DBExclusionsTable#selectExclusionByTaskId" should {
     "insert several rows and select a specific exclusion by giving its taskId" in {
       for {
-        _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID1, taskUUID3, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))
+        _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID1, taskUUID3, Some(stringToLocalDateFormat("2030-01-01", localDateFormat))))
         _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID2, taskUUID1, None, Some(10), None, Some(DayType.Weekday), None, Some(2030)))
         _ <- exclusionRepo.selectExclusionsByTaskId(taskUUID3).map(elem => assert(elem.get.size == 1 && elem.get.head.exclusionId == exclusionUUID1))
         _ <- exclusionRepo.selectExclusionsByTaskId(taskUUID2).map(elem => assert(elem.isEmpty))
@@ -122,7 +125,7 @@ class ExclusionRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with
   "DBExclusionsTable#deleteAllExclusions" should {
     "insert several rows and then delete them all from the Exclusions table on the database." in {
       for {
-        _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID1, taskUUID3, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))
+        _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID1, taskUUID3, Some(stringToLocalDateFormat("2030-01-01", localDateFormat))))
         _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID2, taskUUID1, None, Some(10), None, Some(DayType.Weekday), None, Some(2030)))
         _ <- exclusionRepo.selectAllExclusions.map(seq => assert(seq.size == 2))
         _ <- exclusionRepo.deleteAllExclusions
@@ -134,7 +137,7 @@ class ExclusionRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll with
   "DBExclusionsTable#deleteExclusionById" should {
     "insert several rows and delete a specific exclusion by giving its exclusionId" in {
       for {
-        _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID1, taskUUID3, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))
+        _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID1, taskUUID3, Some(stringToLocalDateFormat("2030-01-01", localDateFormat))))
         _ <- exclusionRepo.insertInExclusionsTable(ExclusionDTO(exclusionUUID2, taskUUID1, None, Some(10), None, Some(DayType.Weekday), None, Some(2030)))
         _ <- exclusionRepo.deleteExclusionById(exclusionUUID2)
         resultSeq <- exclusionRepo.selectAllExclusions

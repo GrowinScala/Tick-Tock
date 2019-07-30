@@ -41,43 +41,43 @@ class DateUtilsSuite extends AsyncWordSpec with MustMatchers {
 
     "convert a date to its corresponding day of the week in integer form. (Monday => 1)" in {
       calendar.set(2019, 3 - 1, 3, 0, 0, 0)
-      val date = calendar.getTime
+      val date = dateToLocalDate(calendar.getTime)
       dateToDayOfWeekInt(date) mustBe 1
     }
 
     "convert a date to its corresponding day of the week in integer form. (Tuesday => 2)" in {
       calendar.set(2019, 3 - 1, 4, 0, 0, 0)
-      val date = calendar.getTime
+      val date = dateToLocalDate(calendar.getTime)
       dateToDayOfWeekInt(date) mustBe 2
     }
 
     "convert a date to its corresponding day of the week in integer form. (Wednesday => 3)" in {
       calendar.set(2019, 3 - 1, 5, 0, 0, 0)
-      val date = calendar.getTime
+      val date = dateToLocalDate(calendar.getTime)
       dateToDayOfWeekInt(date) mustBe 3
     }
 
     "convert a date to its corresponding day of the week in integer form. (Thursday => 4)" in {
       calendar.set(2019, 3 - 1, 6, 0, 0, 0)
-      val date = calendar.getTime
+      val date = dateToLocalDate(calendar.getTime)
       dateToDayOfWeekInt(date) mustBe 4
     }
 
     "convert a date to its corresponding day of the week in integer form. (Friday => 5)" in {
       calendar.set(2019, 3 - 1, 7, 0, 0, 0)
-      val date = calendar.getTime
+      val date = dateToLocalDate(calendar.getTime)
       dateToDayOfWeekInt(date) mustBe 5
     }
 
     "convert a date to its corresponding day of the week in integer form. (Saturday => 6)" in {
       calendar.set(2019, 3 - 1, 8, 0, 0, 0)
-      val date = calendar.getTime
+      val date = dateToLocalDate(calendar.getTime)
       dateToDayOfWeekInt(date) mustBe 6
     }
 
     "convert a date to its corresponding day of the week in integer form. (Sunday => 7)" in {
       calendar.set(2019, 3 - 1, 9, 0, 0, 0)
-      val date = calendar.getTime
+      val date = dateToLocalDate(calendar.getTime)
       dateToDayOfWeekInt(date) mustBe 7
     }
 
@@ -87,43 +87,43 @@ class DateUtilsSuite extends AsyncWordSpec with MustMatchers {
 
     "convert a date to its corresponding day type. (Monday => Weekday)" in {
       calendar.set(2019, 3 - 1, 4, 0, 0, 0)
-      val date = calendar.getTime
+      val date = dateToLocalDate(calendar.getTime)
       dateToDayTypeString(date) mustBe DayType.Weekday
     }
 
     "convert a date to its corresponding day type. (Tuesday => Weekday)" in {
       calendar.set(2019, 3 - 1, 5, 0, 0, 0)
-      val date = calendar.getTime
+      val date = dateToLocalDate(calendar.getTime)
       dateToDayTypeString(date) mustBe DayType.Weekday
     }
 
     "convert a date to its corresponding day type. (Wednesday => Weekday)" in {
       calendar.set(2019, 3 - 1, 6, 0, 0, 0)
-      val date = calendar.getTime
+      val date = dateToLocalDate(calendar.getTime)
       dateToDayTypeString(date) mustBe DayType.Weekday
     }
 
     "convert a date to its corresponding day type. (Thursday => Weekday)" in {
       calendar.set(2019, 3 - 1, 7, 0, 0, 0)
-      val date = calendar.getTime
+      val date = dateToLocalDate(calendar.getTime)
       dateToDayTypeString(date) mustBe DayType.Weekday
     }
 
     "convert a date to its corresponding day type. (Friday => Weekday)" in {
       calendar.set(2019, 3 - 1, 8, 0, 0, 0)
-      val date = calendar.getTime
+      val date = dateToLocalDate(calendar.getTime)
       dateToDayTypeString(date) mustBe DayType.Weekday
     }
 
     "convert a date to its corresponding day type. (Saturday => Weekend)" in {
       calendar.set(2019, 3 - 1, 9, 0, 0, 0)
-      val date = calendar.getTime
+      val date = dateToLocalDate(calendar.getTime)
       dateToDayTypeString(date) mustBe DayType.Weekend
     }
 
     "convert a date to its corresponding day type. (Sunday => Weekend)" in {
       calendar.set(2019, 3 - 1, 10, 0, 0, 0)
-      val date = calendar.getTime
+      val date = dateToLocalDate(calendar.getTime)
       dateToDayTypeString(date) mustBe DayType.Weekend
     }
 
@@ -132,9 +132,10 @@ class DateUtilsSuite extends AsyncWordSpec with MustMatchers {
   "DateUtils#removeTimeFromDate" should {
     "remove the time from a date." in {
       calendar.set(2019, 1 - 1, 1, 16, 0, 0)
+
       val date = calendar.getTime
       calendar.set(2019, 1 - 1, 1, 0, 0, 0)
-      getTimeFromDate(date).toString mustBe calendar.getTime.toString
+      removeTimeFromDate(date).toString mustBe calendar.getTime.toString
 
     }
   }
