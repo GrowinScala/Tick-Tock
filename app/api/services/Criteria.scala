@@ -12,3 +12,4 @@ object Criteria extends Enumeration {
 
   val criteriaList: List[Criteria] = List(First, Second, Third, Fourth, Last)
 }
+

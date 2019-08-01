@@ -94,10 +94,9 @@ class ExecutionSuite extends TestKit(ActorSystem("TestSystem")) with ImplicitSen
     }*/
   }
 
-
   "ExecutionActor#Execute" should {
     //TODO commented this test to integrate travis
-/*
+    /*
     "execute a RunOnce task and receive the expected message." in {
       val fileId = "test1"
       val startDate = stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss")

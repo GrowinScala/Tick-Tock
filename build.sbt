@@ -1,3 +1,4 @@
+
 name := """Tick-Tock"""
 
 version := "1.0-SNAPSHOT"
@@ -18,5 +19,9 @@ libraryDependencies ++= Seq(
    "mysql" % "mysql-connector-java" % "8.0.13",
    "org.flywaydb" % "flyway-core" % "5.2.1",
    "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test,
-   "org.mockito" %% "mockito-scala" % "1.5.11" % Test
+   "org.mockito" %% "mockito-scala" % "1.5.11" % Test,
+   "org.scalacheck" %% "scalacheck" % "1.14.0" % Test
 )
+
+coverageMinimum := 80
+coverageFailOnMinimum := true

@@ -59,7 +59,6 @@ class UpdateTaskValidatorSuite extends AsyncWordSpec with MustMatchers with Befo
   private val exclusionUUID3: String = UUID.randomUUID().toString
 
   private val schedulingUUID1: String = UUID.randomUUID().toString
-  private val schedulingUUID2: String = UUID.randomUUID().toString
 
   override def beforeAll: Unit = {
     Await.result(dtbase.run(createFilesTableAction), Duration.Inf)

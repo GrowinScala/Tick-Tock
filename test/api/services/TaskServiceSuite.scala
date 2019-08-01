@@ -538,7 +538,7 @@ class TaskServiceSuite extends AsyncWordSpec with MustMatchers with MockitoSugar
       taskService.calculateSchedulings(dto) mustBe List(stringToLocalDateFormat("2030-01-05 00:00:00", "yyyy-MM-dd HH:mm:ss"))
     } //new
     //TODO commented only to pass in travis
-/*
+    /*
     "receive a valid TaskDTO with a scheduling and return a Queue with the corresponding Date(s) for that scheduling. (with day) (Personalized weekly with occurrences)" in {
       val dto = TaskDTO("asd", "asd", SchedulingType.Personalized, Some(stringToDateFormat("2030-01-01 00:00:00", "yyyy-MM-dd HH:mm:ss")), Some(PeriodType.Weekly), Some(5), None, Some(4), Some(4), None, None, Some(List(SchedulingDTO("asd", "asd", None, Some(16)))))
       taskService.calculateSchedulings(dto) mustBe List(stringToLocalDateFormat("2030-01-16 00:00:00", "yyyy-MM-dd HH:mm:ss"), stringToLocalDateFormat("2030-02-16 00:00:00", "yyyy-MM-dd HH:mm:ss"), stringToLocalDateFormat("2030-03-16 00:00:00", "yyyy-MM-dd HH:mm:ss"))
