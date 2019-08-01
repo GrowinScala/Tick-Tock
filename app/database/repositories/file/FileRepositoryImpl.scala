@@ -87,7 +87,7 @@ class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository {
       .result
       .headOption
       .map(row =>
-        row.getOrElse(FileRow("", "", DateUtils.getTimeFromDate(new Date())))))
+        row.getOrElse(FileRow("", "", DateUtils.removeTimeFromDate(new Date())))))
       .map(_.fileId)
   }
 
@@ -100,7 +100,7 @@ class FileRepositoryImpl @Inject() (dtbase: Database) extends FileRepository {
       .result
       .headOption
       .map(row =>
-        row.getOrElse(FileRow("", "", DateUtils.getTimeFromDate(new Date())))))
+        row.getOrElse(FileRow("", "", DateUtils.removeTimeFromDate(new Date())))))
       .map(_.fileName)
   }
 

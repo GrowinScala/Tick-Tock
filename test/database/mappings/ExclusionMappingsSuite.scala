@@ -5,7 +5,7 @@ import java.util.UUID
 import api.services.Criteria._
 import api.services.DayType._
 import api.services.{ Criteria, DayType }
-import api.utils.DateUtils.stringToDateFormat
+import api.utils.DateUtils._
 import database.mappings.ExclusionMappings._
 import org.scalatest.Matchers._
 import org.scalatest._
@@ -30,11 +30,12 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
   private val taskUUID2 = UUID.randomUUID().toString
   private val taskUUID3 = UUID.randomUUID().toString
 
-  private val timeFormat = "yyyy-MM-dd HH:mm:ss"
+  private val dateFormat = "yyyy-MM-dd HH:mm:ss"
+  private val localDateFormat = "yyyy-MM-dd"
 
   override def beforeAll(): Unit = {
     Await.result(dtbase.run(createExclusionsTableAction), Duration.Inf)
-    Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", timeFormat))))), Duration.Inf)
+    Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToLocalDateFormat("2030-01-01", localDateFormat))))), Duration.Inf)
     Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5)))), Duration.Inf)
     Await.result(dtbase.run(insertExclusion(ExclusionRow(exclusionUUID3, taskUUID3, None, None, None, Some(DayType.Weekday), None, Some(2030), Some(Criteria.First)))), Duration.Inf)
   }
@@ -50,7 +51,7 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
         result2 <- dtbase.run(getExclusionByExclusionId(exclusionUUID2).result)
       } yield {
         result1.size mustBe 1
-        result1.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", timeFormat)), None, None, None, None, None, None)
+        result1.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToLocalDateFormat("2030-01-01", localDateFormat)), None, None, None, None, None, None)
         result2.size mustBe 1
         result2.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None)
       }
@@ -64,7 +65,7 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
         result2 <- dtbase.run(getExclusionByTaskId(taskUUID2).result)
       } yield {
         result1.size mustBe 1
-        result1.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", timeFormat)), None, None, None, None, None, None)
+        result1.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToLocalDateFormat("2030-01-01", localDateFormat)), None, None, None, None, None, None)
         result2.size mustBe 1
         result2.head mustBe ExclusionRow(exclusionUUID2, taskUUID2, None, Some(15), Some(3), None, Some(5), None, None)
       }
@@ -74,10 +75,10 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
   "ExclusionMappings#selectExclusionBySchedulingDate" should {
     "return the correct ExclusionRow when given an existing schedulingDate." in {
       for {
-        result <- dtbase.run(getExclusionByExclusionDate(stringToDateFormat("2030-01-01 00:00:00", timeFormat)).result)
+        result <- dtbase.run(getExclusionByExclusionDate(stringToLocalDateFormat("2030-01-01", localDateFormat)).result)
       } yield {
         result.size mustBe 1
-        result.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", timeFormat)), None, None, None, None, None, None)
+        result.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToLocalDateFormat("2030-01-01", localDateFormat)), None, None, None, None, None, None)
       }
     }
   }
@@ -170,9 +171,9 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
         result4 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
       } yield {
         result1 mustBe 1
-        result2.head mustBe ExclusionRow(exclusionUUID1, taskUUID2, Some(stringToDateFormat("2030-01-01 00:00:00", timeFormat)), None, None, None, None, None, None)
+        result2.head mustBe ExclusionRow(exclusionUUID1, taskUUID2, Some(stringToLocalDateFormat("2030-01-01", localDateFormat)), None, None, None, None, None, None)
         result3 mustBe 1
-        result4.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", timeFormat)), None, None, None, None, None, None)
+        result4.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToLocalDateFormat("2030-01-01", localDateFormat)), None, None, None, None, None, None)
       }
     }
   }
@@ -180,15 +181,15 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
   "ExclusionMappings#updateExclusionByExclusionDate" should {
     "update a ExclusionRow by giving the corresponding schedulingDate." in {
       for {
-        result1 <- dtbase.run(updateExclusionByExclusionDate(exclusionUUID1, stringToDateFormat("2035-01-01 00:00:00", timeFormat)))
+        result1 <- dtbase.run(updateExclusionByExclusionDate(exclusionUUID1, stringToLocalDateFormat("2035-01-01", localDateFormat)))
         result2 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
-        result3 <- dtbase.run(updateExclusionByExclusionDate(exclusionUUID1, stringToDateFormat("2030-01-01 00:00:00", timeFormat)))
+        result3 <- dtbase.run(updateExclusionByExclusionDate(exclusionUUID1, stringToLocalDateFormat("2030-01-01", localDateFormat)))
         result4 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
       } yield {
         result1 mustBe 1
-        result2.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2035-01-01 00:00:00", timeFormat)), None, None, None, None, None, None)
+        result2.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToLocalDateFormat("2035-01-01 00:00:00", localDateFormat)), None, None, None, None, None, None)
         result3 mustBe 1
-        result4.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", timeFormat)), None, None, None, None, None, None)
+        result4.head mustBe ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToLocalDateFormat("2030-01-01 00:00:00", localDateFormat)), None, None, None, None, None, None)
       }
     }
   }
@@ -299,7 +300,7 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
         result1 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
         result2 <- dtbase.run(deleteExclusionByExclusionId(exclusionUUID1))
         result3 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
-        _ <- dtbase.run(insertExclusion(ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", timeFormat)))))
+        _ <- dtbase.run(insertExclusion(ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToLocalDateFormat("2030-01-01", localDateFormat)))))
       } yield {
         result1.nonEmpty mustBe true
         result2 mustBe 1
@@ -314,7 +315,7 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
         result1 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
         result2 <- dtbase.run(deleteExclusionByTaskId(taskUUID1))
         result3 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
-        result4 <- dtbase.run(insertExclusion(ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", timeFormat)))))
+        result4 <- dtbase.run(insertExclusion(ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToLocalDateFormat("2030-01-01", localDateFormat)))))
       } yield {
         result1.nonEmpty mustBe true
         result2 mustBe 1
@@ -329,9 +330,9 @@ class ExclusionMappingsSuite extends AsyncWordSpec with BeforeAndAfterAll with B
 
       for {
         result1 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
-        result2 <- dtbase.run(deleteExclusionByExclusionDate(stringToDateFormat("2030-01-01 00:00:00", timeFormat)))
+        result2 <- dtbase.run(deleteExclusionByExclusionDate(stringToLocalDateFormat("2030-01-01", localDateFormat)))
         result3 <- dtbase.run(getExclusionByExclusionId(exclusionUUID1).result)
-        result4 <- dtbase.run(insertExclusion(ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToDateFormat("2030-01-01 00:00:00", timeFormat)))))
+        result4 <- dtbase.run(insertExclusion(ExclusionRow(exclusionUUID1, taskUUID1, Some(stringToLocalDateFormat("2030-01-01", localDateFormat)))))
       } yield {
         result1.nonEmpty mustBe true
         result2 mustBe 1

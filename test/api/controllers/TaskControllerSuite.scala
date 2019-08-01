@@ -11,6 +11,7 @@ import database.repositories.file.FileRepository
 import database.repositories.scheduling.SchedulingRepository
 import database.repositories.task.TaskRepository
 import executionengine.{ ExecutionManager, FakeExecutionManager }
+import generators.Generator
 import org.mockito.ArgumentMatchersSugar.any
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
@@ -25,7 +26,6 @@ import play.api.test._
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-//TODO implements missing tests
 class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite with MockitoSugar {
 
   private lazy val appBuilder: GuiceApplicationBuilder = new GuiceApplicationBuilder()
@@ -43,13 +43,23 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
 
   private val LOCALHOST = "localhost:9000"
 
-  private val task1 = TaskDTO("asd1", "test1", SchedulingType.RunOnce, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")))
-  private val task2 = TaskDTO("asd2", "test2", SchedulingType.Periodic, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")), Some(PeriodType.Minutely), Some(2), Some(stringToDateFormat("01-01-2050 12:00:00", "dd-MM-yyyy HH:mm:ss")))
-  private val task3 = TaskDTO("asd3", "test3", SchedulingType.Periodic, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")), Some(PeriodType.Hourly), Some(1), None, Some(5), Some(5))
+  private val gen: Generator = new Generator
+
+  private val id1: String = gen.id
+  private val id2: String = gen.id
+  private val id3: String = gen.id
+
+  private val fileName1: String = gen.fileName
+  private val fileName2: String = gen.fileName
+  private val fileName3: String = gen.fileName
+
+  private val task1 = TaskDTO(id1, id2, SchedulingType.RunOnce, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")))
+  private val task2 = TaskDTO(id3, fileName1, SchedulingType.Periodic, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")), Some(PeriodType.Minutely), Some(2), Some(stringToDateFormat("01-01-2050 12:00:00", "dd-MM-yyyy HH:mm:ss")))
+  private val task3 = TaskDTO(fileName2, fileName3, SchedulingType.Periodic, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")), Some(PeriodType.Hourly), Some(1), None, Some(5), Some(5))
   private val seqTasks = Seq(task1, task2, task3)
 
-  when(fileRepo.existsCorrespondingFileName("test1")).thenReturn(Future.successful(true))
-  when(fileRepo.selectFileIdFromFileName("test1")).thenReturn(Future.successful("asd1"))
+  when(fileRepo.existsCorrespondingFileName(fileName1)).thenReturn(Future.successful(true))
+  when(fileRepo.selectFileIdFromFileName(fileName1)).thenReturn(Future.successful(id1))
 
   when(exclusionRepo.insertInExclusionsTable(any)).thenReturn(Future.successful(true))
 
@@ -65,10 +75,10 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
     "be valid in" in {
       val fakeRequest = FakeRequest(POST, "/task")
         .withHeaders(HOST -> LOCALHOST, CONTENT_TYPE -> "application/json")
-        .withBody(Json.parse("""
+        .withBody(Json.parse(s"""
           |{
           |  "startDateAndTime": "2020-07-01 00:00:00",
-          |  "fileName": "test1",
+          |  "fileName": "$fileName1",
           |  "taskType": "RunOnce"
           |}
         """.stripMargin))
@@ -76,6 +86,8 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
       val result = taskController.schedule.apply(fakeRequest)
 
       status(result) mustBe OK
+
+      //Fake UUID always returns "asd1"
       contentAsString(result) mustBe "Task received => http://" + LOCALHOST + "/task/asd1"
     }
 
@@ -108,13 +120,13 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
     }
   }
 
+  //TODO hmmm
   "TaskController#getScheduleById (GET /task/:id)" should {
     "be valid in" in {
-      val id = "asd1"
-      val fakeRequest = FakeRequest(GET, s"/task/asd1" + id)
+      val fakeRequest = FakeRequest(GET, s"/task/$id1")
         .withHeaders(HOST -> LOCALHOST)
       val taskController = new TaskController(cc)
-      val result = taskController.getScheduleById(id).apply(fakeRequest)
+      val result = taskController.getScheduleById(id1).apply(fakeRequest)
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(task1)
@@ -123,26 +135,24 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
 
   "TaskController#updateTask (PATCH /task/:id)" should {
     "be valid in" in {
-      val id = "asd1"
-      val fakeRequest = FakeRequest(PATCH, s"/task/$id")
+      val fakeRequest = FakeRequest(PATCH, s"/task/$id1")
         .withHeaders(HOST -> LOCALHOST, CONTENT_TYPE -> "application/json")
-        .withBody(Json.parse("""
+        .withBody(Json.parse(s"""
           {
             "toDelete": [],
             "startDateAndTime": "2020-07-01 00:00:00",
-            "fileName": "test1",
+            "fileName": "$fileName1",
             "taskType": "RunOnce"
           }
         """))
       val taskController = new TaskController(cc)
-      val result = taskController.updateTask(id).apply(fakeRequest)
+      val result = taskController.updateTask(id1).apply(fakeRequest)
       val bodyText = contentAsString(result)
-      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      bodyText mustBe "Task received => http://" + LOCALHOST + "/task/" + id1
     }
 
     "be invalid in" in {
-      val id = "asd1"
-      val fakeRequest = FakeRequest(PATCH, s"/task/$id")
+      val fakeRequest = FakeRequest(PATCH, s"/task/$id1")
         .withHeaders(HOST -> LOCALHOST, CONTENT_TYPE -> "application/json")
         .withBody(Json.parse("""
           {
@@ -150,7 +160,7 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
           }
         """))
       val taskController = new TaskController(cc)
-      val result = taskController.updateTask(id).apply(fakeRequest)
+      val result = taskController.updateTask(id1).apply(fakeRequest)
 
       status(result) mustBe BAD_REQUEST
       contentAsString(result) mustBe "Error replacing scheduled task : \nList((/toDelete,List(JsonValidationError(List(error.path.missing),WrappedArray()))))"
@@ -159,10 +169,9 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
 
   "TaskController#deleteTask (DELETE /task/:id)" should {
     "be valid in" in {
-      val id = "asd1"
-      val fakeRequest = FakeRequest(DELETE, s"/task/$id")
+      val fakeRequest = FakeRequest(DELETE, s"/task/$id1")
       val taskController = new TaskController(cc)
-      val result = taskController.deleteTask(id).apply(fakeRequest)
+      val result = taskController.deleteTask(id1).apply(fakeRequest)
 
       status(result) mustBe NO_CONTENT
     }
@@ -170,26 +179,24 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
 
   "TaskController#replaceTask (PUT /task/:id)" should {
     "be valid in" in {
-      val id = "asd1"
-      val fakeRequest = FakeRequest(PUT, s"/task/$id")
+      val fakeRequest = FakeRequest(PUT, s"/task/$id1")
         .withHeaders(HOST -> LOCALHOST)
-        .withBody(Json.parse("""
+        .withBody(Json.parse(s"""
           {
             "startDateAndTime": "2020-07-01 00:00:00",
-            "fileName": "test1",
+            "fileName": "$fileName1",
             "taskType": "RunOnce"
           }
         """))
       val taskController = new TaskController(cc)
-      val result = taskController.replaceTask(id).apply(fakeRequest)
+      val result = taskController.replaceTask(id1).apply(fakeRequest)
 
       status(result) mustBe OK
-      contentAsString(result) mustBe "Task received => http://" + LOCALHOST + "/task/" + id
+      contentAsString(result) mustBe "Task received => http://" + LOCALHOST + "/task/" + id1
     }
 
     "be invalid in" in {
-      val id = "asd1"
-      val fakeRequest = FakeRequest(PUT, s"/task/$id")
+      val fakeRequest = FakeRequest(PUT, s"/task/$id1")
         .withHeaders(HOST -> LOCALHOST)
         .withBody(Json.parse("""
           {
@@ -197,7 +204,7 @@ class TaskControllerSuite extends PlaySpec with Results with GuiceOneAppPerSuite
           }
         """))
       val taskController = new TaskController(cc)
-      val result = taskController.replaceTask(id).apply(fakeRequest)
+      val result = taskController.replaceTask(id1).apply(fakeRequest)
 
       status(result) mustBe BAD_REQUEST
       contentAsString(result) mustBe "{\"status\":\"Error:\",\"message\":{\"obj.taskType\":[{\"msg\":[\"error.path.missing\"],\"args\":[]}],\"obj.fileName\":[{\"msg\":[\"error.path.missing\"],\"args\":[]}]}}"

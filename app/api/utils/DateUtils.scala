@@ -2,6 +2,7 @@ package api.utils
 
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
+import java.time.{ LocalDate, ZoneId }
 import java.util.concurrent.TimeUnit
 import java.util.{ Calendar, Date, TimeZone }
 
@@ -54,31 +55,44 @@ object DateUtils {
     sdf.parse(date)
   }
 
+  def stringToLocalDateFormat(date: String, format: String): LocalDate = {
+    dateToLocalDate(stringToDateFormat(date, format))
+  }
+
   def dayOfWeekToDayTypeString(dayOfWeek: Int): DayType = {
     if ((2 to 6).contains(dayOfWeek)) DayType.Weekday
     else DayType.Weekend
   }
 
-  def dateToDayOfWeekInt(date: Date): Int = {
+  def dateToDayOfWeekInt(date: LocalDate): Int = {
     val calendar = Calendar.getInstance()
-    calendar.setTime(date)
+    calendar.setTime(localDateToDate(date))
     calendar.get(Calendar.DAY_OF_WEEK)
   }
 
-  def dateToDayTypeString(date: Date): DayType = {
+  def dateToDayTypeString(date: LocalDate): DayType = {
     val dayOfWeek = dateToDayOfWeekInt(date)
     if (dayOfWeek == 1 || dayOfWeek == 7) DayType.Weekend
     else DayType.Weekday
   }
 
-  def getTimeFromDate(date: Date): Date = {
+  def removeTimeFromDate(date: Date): Date = {
     val sdf = new SimpleDateFormat("yyyy-MM-dd")
     val string = sdf.format(date)
     sdf.parse(string)
   }
 
+  def dateToLocalDate(date: Date): LocalDate = {
+    date.toInstant.atZone(ZoneId.systemDefault()).toLocalDate
+  }
+
+  def localDateToDate(localDate: LocalDate): Date = {
+    localDate.isLeapYear
+    java.sql.Date.valueOf(localDate)
+  }
+
   def isLeapYear(year: Option[Int]): Boolean = {
-    if (year.isDefined) year.get % 4 == 0
+    if (year.isDefined) (year.get % 4 == 0 || year.get % 400 == 0) && year.get % 100 != 0
     else false
   }
 
@@ -93,10 +107,8 @@ object DateUtils {
     sdf.format(date)
   }
 
-  def removeTimeFromDate(date: Date): Date = {
-    val sdf = new SimpleDateFormat("yyyy-MM-dd")
-    val string = sdf.format(date)
-    sdf.parse(string)
+  def localDateToStringFormat(date: LocalDate, format: String): String = {
+    dateToStringFormat(localDateToDate(date), format)
   }
 
   def getDateWithAddedSeconds(date: Date, seconds: Int): Date = {

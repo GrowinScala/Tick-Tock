@@ -48,13 +48,16 @@ class SchedulingRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll wit
   private val schedulingUUID3: String = UUID.randomUUID().toString
   private val schedulingUUID4: String = UUID.randomUUID().toString
 
+  private val dateFormat = "yyyy-MM-dd HH:mm:ss"
+  private val localDateFormat = "yyyy-MM-dd"
+
   override def beforeAll: Unit = {
     Await.result(dtbase.run(createFilesTableAction), Duration.Inf)
     Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID1, "test1", getCurrentDateTimestamp)), Duration.Inf)
     Await.result(fileRepo.insertInFilesTable(FileDTO(fileUUID2, "test2", getCurrentDateTimestamp)), Duration.Inf)
     Await.result(dtbase.run(createTasksTableAction), Duration.Inf)
     Await.result(taskRepo.insertInTasksTable(TaskDTO(taskUUID1, "test1", SchedulingType.RunOnce, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")))), Duration.Inf)
-    Await.result(taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.Periodic, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")), Some(PeriodType.Minutely), Some(2), Some(stringToDateFormat("01-01-2050 12:00:00", "dd-MM-yyyy HH:mm:ss")))), Duration.Inf)
+    Await.result(taskRepo.insertInTasksTable(TaskDTO(taskUUID2, "test2", SchedulingType.Periodic, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")), Some(PeriodType.Minutely), Some(2), Some(stringToDateFormat("01-01-2050 12:00:00", dateFormat)))), Duration.Inf)
     Await.result(taskRepo.insertInTasksTable(TaskDTO(taskUUID3, "test3", SchedulingType.Periodic, Some(stringToDateFormat("01-01-2030 12:00:00", "dd-MM-yyyy HH:mm:ss")), Some(PeriodType.Hourly), Some(1), None, Some(5), Some(5))), Duration.Inf)
     Await.result(dtbase.run(createSchedulingsTableAction), Duration.Inf)
   }
@@ -89,7 +92,7 @@ class SchedulingRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll wit
     "insert rows into the Scheduling table on the database and select all rows" in {
       for {
         _ <- schedulingRepo.selectAllSchedulings.map(seq => assert(seq.isEmpty))
-        _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID1, taskUUID3, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))
+        _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID1, taskUUID3, Some(stringToLocalDateFormat("2030-01-01", localDateFormat))))
         _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID2, taskUUID1, None, Some(10), None, Some(DayType.Weekday), None, Some(2030)))
         resultSeq <- schedulingRepo.selectAllSchedulings
       } yield resultSeq.size mustBe 2
@@ -99,7 +102,7 @@ class SchedulingRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll wit
   "DBSchedulingsTable#selectSchedulingsBySchedulingId" should {
     "insert several rows and select a specific scheduling by giving its schedulingId" in {
       for {
-        _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID1, taskUUID3, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))
+        _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID1, taskUUID3, Some(stringToLocalDateFormat("2030-01-01", localDateFormat))))
         _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID2, taskUUID1, None, Some(10), None, Some(DayType.Weekday), None, Some(2030)))
         _ <- schedulingRepo.selectScheduling(schedulingUUID2).map(dto => assert(dto.get.day.contains(10)))
         task <- schedulingRepo.selectScheduling(schedulingUUID1)
@@ -108,9 +111,9 @@ class SchedulingRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll wit
   }
 
   "DBSchedulingTable#selectSchedulingsByTaskId" should {
-    "insert several rows and select a specific schedulingg by giving it taskId" in {
+    "insert several rows and select a specific scheduling by giving it taskId" in {
       for {
-        _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID1, taskUUID3, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))
+        _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID1, taskUUID3, Some(stringToLocalDateFormat("2030-01-01", localDateFormat))))
         _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID2, taskUUID1, None, Some(10), None, Some(DayType.Weekday), None, Some(2030)))
         _ <- schedulingRepo.selectSchedulingsByTaskId(taskUUID3).map(elem => assert(elem.get.size == 1 && elem.get.head.schedulingId == schedulingUUID1))
         _ <- schedulingRepo.selectSchedulingsByTaskId(taskUUID1).map(elem => assert(elem.get.size == 1 && elem.get.head.dayType.contains(DayType.Weekday)))
@@ -123,7 +126,7 @@ class SchedulingRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll wit
   "DBSchedulingsTable#deleteAllSchedulings" should {
     "insert several rows and then delete them all from the Schedulings table on the database." in {
       for {
-        _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID1, taskUUID3, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))
+        _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID1, taskUUID3, Some(stringToLocalDateFormat("2030-01-01 12:00:00", localDateFormat))))
         _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID2, taskUUID1, None, Some(10), None, Some(DayType.Weekday), None, Some(2030)))
         _ <- schedulingRepo.selectAllSchedulings.map(seq => assert(seq.size == 2))
         _ <- schedulingRepo.deleteAllSchedulings
@@ -135,7 +138,7 @@ class SchedulingRepositorySuite extends AsyncWordSpec with BeforeAndAfterAll wit
   "DBSchedulingsTable#deleteSchedulingById" should {
     "insert several rows and delete a specific scheduling by giving its schedulingId" in {
       for {
-        _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID1, taskUUID3, Some(stringToDateFormat("2030-01-01 12:00:00", "yyyy-MM-dd HH:mm:ss"))))
+        _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID1, taskUUID3, Some(stringToLocalDateFormat("2030-01-01 12:00:00", localDateFormat))))
         _ <- schedulingRepo.insertInSchedulingsTable(SchedulingDTO(schedulingUUID2, taskUUID1, None, Some(10), None, Some(DayType.Weekday), None, Some(2030)))
         _ <- schedulingRepo.deleteSchedulingById(schedulingUUID2)
         resultSeq <- schedulingRepo.selectAllSchedulings

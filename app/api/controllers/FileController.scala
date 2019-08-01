@@ -52,7 +52,6 @@ class FileController @Inject() (cc: ControllerComponents)(implicit exec: Executi
    * @return a list containing all the files in the database
    */
   def getAllFiles(offset: Option[Int], limit: Option[Int]): Action[AnyContent] = Action.async {
-
     fileRepo.selectAllFiles(offset, limit).map { seq =>
       val result = JsArray(seq.map(tr => Json.toJson(tr)))
       Ok(result)

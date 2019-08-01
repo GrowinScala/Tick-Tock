@@ -12,6 +12,7 @@ import database.mappings.FileMappings._
 import database.repositories.file.FileRepository
 import database.repositories.task.TaskRepository
 import executionengine.ExecutionManager
+import generators.Generator
 import org.scalatest.{ BeforeAndAfterAll, BeforeAndAfterEach }
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -39,15 +40,22 @@ class FileFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
 
   private val LOCALHOST = "localhost:9000"
 
-  private val fileUUID1: String = UUID.randomUUID().toString
-  private val fileUUID2: String = UUID.randomUUID().toString
-  private val fileUUID3: String = UUID.randomUUID().toString
-  private val fileUUID4: String = UUID.randomUUID().toString
+  private val gen: Generator = new Generator
 
-  private val file1 = FileDTO(fileUUID1, "test1", stringToDateFormat("01-01-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))
-  private val file2 = FileDTO(fileUUID2, "test2", stringToDateFormat("01-02-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))
-  private val file3 = FileDTO(fileUUID3, "test3", stringToDateFormat("01-03-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))
-  private val file4 = FileDTO(fileUUID4, "test4", stringToDateFormat("01-04-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))
+  private val fileUUID1: String = gen.id
+  private val fileUUID2: String = gen.id
+  private val fileUUID3: String = gen.id
+  private val fileUUID4: String = gen.id
+
+  private val fileName1: String = gen.fileName
+  private val fileName2: String = gen.fileName
+  private val fileName3: String = gen.fileName
+  private val fileName4: String = gen.fileName
+
+  private val file1 = FileDTO(fileUUID1, fileName1, stringToDateFormat("01-01-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))
+  private val file2 = FileDTO(fileUUID2, fileName2, stringToDateFormat("01-02-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))
+  private val file3 = FileDTO(fileUUID3, fileName3, stringToDateFormat("01-03-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))
+  private val file4 = FileDTO(fileUUID4, fileName4, stringToDateFormat("01-04-2018 12:00:00", "dd-MM-yyyy HH:mm:ss"))
   private val seqFiles = Seq(file1, file2, file3, file4)
 
   override def beforeAll: Unit = {
@@ -84,7 +92,7 @@ class FileFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
     }
 
     "receive a GET request with an invalid id" in {
-      val fakeRequest = FakeRequest(GET, s"/file/asd")
+      val fakeRequest = FakeRequest(GET, s"/file/" + gen.id)
         .withHeaders(HOST -> "localhost:9000")
       val result = route(app, fakeRequest).get
       val bodyText = contentAsJson(result)
@@ -104,7 +112,7 @@ class FileFunctionalSuite extends PlaySpec with GuiceOneAppPerSuite with BeforeA
     }
 
     "receive a DELETE request with an invalid id" in {
-      val fakeRequest = FakeRequest(DELETE, s"/file/asd1")
+      val fakeRequest = FakeRequest(DELETE, s"/file/" + gen.id)
         .withHeaders(HOST -> "localhost:9000")
       val result = route(app, fakeRequest).get
 
