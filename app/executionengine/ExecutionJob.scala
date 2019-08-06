@@ -93,7 +93,7 @@ class ExecutionJob @Inject() (
           case RunOnce =>
             status = ExecutionStatus.RunOnceWaiting
             logger.debug("status: " + status)
-            timers.startSingleTimer("runOnceExecutionKey", ExecuteRunOnce, delay.minusMillis(2500))
+            timers.startSingleTimer("runOnceExecutionKey", ExecuteRunOnce, delay)
           case Periodic =>
             status = ExecutionStatus.PeriodicWaiting
             logger.debug("status: " + status)
@@ -190,17 +190,6 @@ class ExecutionJob @Inject() (
       nextDateMillis = calculateNextDateMillis(nextDateMillis)
       timers.startSingleTimer("periodicExecutionKey", ExecutePeriodic, interval.get.minusMillis(latency))
     }
-    /*
-    val currentDate = removeTimeFromDate(new Date())
-    if (!isExcluded(nextDateMillis)) {
-      status = ExecutionStatus.PersonalizedRunning
-      val currentDate = new Date()
-      latency = calculateLatency(currentDate.getTime, nextDateMillis)
-      nextDateMillis = calculateNextDateMillis(nextDateMillis)
-      executionManager.runFile(fileId)
-      printExecutionMessage()
-    }
-    runNextScheduling()*/
   }
 
   def printExecutionMessage(): Unit = {
@@ -257,7 +246,7 @@ class ExecutionJob @Inject() (
               iter
             case 0 =>
               exclusions.head
-              exclusions = exclusions.tail
+              if (dateToLocalDate(new Date(nextDateMillis)).compareTo(exclusions.head) != 0) exclusions = exclusions.tail
               true
             case value if value > 0 =>
               false
@@ -279,7 +268,7 @@ class ExecutionJob @Inject() (
               iter
             case 0 =>
               schedulings.head
-              schedulings = schedulings.tail
+              if (dateToLocalDate(new Date(nextDateMillis)).compareTo(exclusions.head) != 0) schedulings = schedulings.tail
               true
             case value if value > 0 =>
               false

@@ -126,6 +126,11 @@ object DateUtils {
     cal.getTime
   }
 
+  def getDifferenceInDays(startDateMillis: Long, endDateMillis: Long): Int = {
+    val time: Double = endDateMillis - startDateMillis
+    Math.ceil(time / (1000 * 60 * 60 * 24)).toInt
+  }
+
   /**
    * Tries do parse a String and convert it into a Date with a valid format. (see dateFormatsList above)
    * @param date String specifying the date to be parsed.
