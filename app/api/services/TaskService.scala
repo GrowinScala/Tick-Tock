@@ -117,13 +117,14 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
       iterCalendar.add(Calendar.DAY_OF_MONTH, -1)
       val dayDifference = getDifferenceInDays(startCalendar.getTimeInMillis, endCalendar.getTimeInMillis)
       var returnList: List[LocalDate] = Nil
-      println("dayDifference: " + dayDifference)
-      println("exclusions: " + task.exclusions.getOrElse("list is null"))
+      //println("dayDifference: " + dayDifference)
+      //println("exclusions: " + task.exclusions.getOrElse("list is null"))
       task.exclusions.get.foreach { exclusion =>
-        println("entrou")
         var list = ListBuffer[LocalDate]()
         exclusion match {
-          case ExclusionDTO(_, _, Some(date), None, None, None, None, None, None) => if (isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
+          case ExclusionDTO(_, _, Some(date), None, None, None, None, None, None) =>
+            if (isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
+            println(returnList + " FIRSTCASE")
           case ExclusionDTO(_, _, None, Some(day), None, None, None, None, None) =>
             for (_ <- 0 to dayDifference) {
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
@@ -141,6 +142,7 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
               iterCalendar.add(Calendar.DAY_OF_MONTH, 1)
               if (dayOfWeekToDayTypeString(iterCalendar.get(Calendar.DAY_OF_WEEK)) == dayType && isLocalDateBetweenLimits(dateToLocalDate(iterCalendar.getTime), startCalendar.getTime, endCalendar.getTime)) returnList = dateToLocalDate(iterCalendar.getTime) :: returnList
             }
+            println(returnList + " DAYTYPE")
 
           case ExclusionDTO(_, _, None, None, None, None, Some(month), None, None) =>
             for (_ <- 0 to dayDifference) {
@@ -431,7 +433,7 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
 
           case ExclusionDTO(_, _, None, Some(day), None, None, Some(month), Some(year), Some(criteria)) =>
             val date = dateToLocalDate(getDateFromCalendar(day, month, year, task.timezone))
-            if (isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && criteria == Criteria.First && isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
+            if (isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && criteria == Criteria.First) returnList = date :: returnList
 
           case ExclusionDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), Some(month), None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
@@ -446,6 +448,7 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
               if (iterCalendar.get(Calendar.DAY_OF_WEEK) == dayOfWeek && iterCalendar.get(Calendar.YEAR) == year && isLocalDateBetweenLimits(dateToLocalDate(iterCalendar.getTime), startCalendar.getTime, endCalendar.getTime)) list += dateToLocalDate(iterCalendar.getTime)
             }
             returnList = getReturnListByCriteria(criteria, list, returnList)
+            println(returnList + " DAYWEEK YEAR CRITERIA")
 
           case ExclusionDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), None, Some(year), Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
@@ -494,13 +497,15 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
             val date = dateToLocalDate(getDateFromCalendar(day, month, year, task.timezone))
             if (dayOfWeek == dateToDayOfWeekInt(date) && dayType == dateToDayTypeString(date) && isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && criteria == Criteria.First && isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
 
-          case _ => println("Exclusion borked.")
+          case _ =>
+            println(exclusion)
+            println("Exclusion borked.")
 
         }
       }
-      val exclusionList = returnList.distinct.sortBy(localDateToDate(_).getTime)
-      println(exclusionList)
-      exclusionList
+      val cena = returnList.distinct.sortBy(localDateToDate(_).getTime)
+      //println(cena)
+      cena
     } else Nil
   }
 
@@ -527,13 +532,9 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
       iterCalendar.add(Calendar.DAY_OF_MONTH, -1)
       val dayDifference = getDifferenceInDays(startCalendar.getTimeInMillis, endCalendar.getTimeInMillis)
       var returnList: List[LocalDate] = Nil
-      task.schedulings.get.foreach { exclusion =>
-
-        iterCalendar.setTime(startCalendar.getTime)
-        iterCalendar.add(Calendar.DAY_OF_MONTH, -1)
+      task.schedulings.get.foreach { scheduling =>
         var list = ListBuffer[LocalDate]()
-
-        exclusion match {
+        scheduling match {
           case SchedulingDTO(_, _, Some(date), None, None, None, None, None, None) => if (isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
           case SchedulingDTO(_, _, None, Some(day), None, None, None, None, None) =>
             for (_ <- 0 to dayDifference) {
@@ -690,11 +691,11 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
 
           case SchedulingDTO(_, _, None, Some(day), Some(dayOfWeek), None, Some(month), Some(year), None) =>
             val date = dateToLocalDate(getDateFromCalendar(day, month, year, task.timezone))
-            if (dayOfWeek == dateToDayOfWeekInt(date) && isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && isLocalDateBetweenLimits(dateToLocalDate(iterCalendar.getTime), startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
+            if (dayOfWeek == dateToDayOfWeekInt(date) && isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
 
           case SchedulingDTO(_, _, None, Some(day), None, Some(dayType), Some(month), Some(year), None) =>
             val date = dateToLocalDate(getDateFromCalendar(day, month, year, task.timezone))
-            if (dayType == dateToDayTypeString(date) && isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && isLocalDateBetweenLimits(dateToLocalDate(iterCalendar.getTime), startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
+            if (dayType == dateToDayTypeString(date) && isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
 
           case SchedulingDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), Some(month), Some(year), None) =>
             for (_ <- 0 to dayDifference) {
@@ -848,7 +849,7 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
 
           case SchedulingDTO(_, _, None, Some(day), None, None, Some(month), Some(year), Some(criteria)) =>
             val date = dateToLocalDate(getDateFromCalendar(day, month, year, task.timezone))
-            if (isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && criteria == Criteria.First && isLocalDateBetweenLimits(dateToLocalDate(iterCalendar.getTime), startCalendar.getTime, endCalendar.getTime)) returnList = date :: returnList
+            if (isLocalDateBetweenLimits(date, startCalendar.getTime, endCalendar.getTime) && criteria == Criteria.First) returnList = date :: returnList
 
           case SchedulingDTO(_, _, None, None, Some(dayOfWeek), Some(dayType), Some(month), None, Some(criteria)) =>
             for (_ <- 0 to dayDifference) {
@@ -917,7 +918,7 @@ class TaskService @Inject() (implicit val fileRepo: FileRepository, implicit val
     val dateCalendar = Calendar.getInstance
     if (timezone.isDefined) dateCalendar.setTimeZone(parseTimezone(timezone.get).get)
     dateCalendar.set(year, month, day)
-    removeTimeFromDate(dateCalendar.getTime)
+    dateCalendar.getTime
   }
 
   private def isDateBetweenLimits(date: Date, startDate: Date, endDate: Date): Boolean = {

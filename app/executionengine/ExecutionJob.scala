@@ -155,7 +155,6 @@ class ExecutionJob @Inject() (
   }
 
   def executePersonalized(): Unit = {
-    println("schedulings: " + schedulings)
     if (!isExcluded(new Date(nextDateMillis))) {
       if (endDate.isDefined) {
         if (endDate.get.getTime - getCurrentDate.getTime >= MAX_VARIANCE) {
