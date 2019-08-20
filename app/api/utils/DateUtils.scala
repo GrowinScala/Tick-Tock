@@ -28,6 +28,12 @@ object DateUtils {
     new SimpleDateFormat("yyyy/MM/dd HH:mm:ss"),
     new SimpleDateFormat("dd/MM/yyyy HH:mm:ss"))
 
+  final val localDateFormatsList: List[SimpleDateFormat] = List(
+    new SimpleDateFormat("yyyy-MM-dd"),
+    new SimpleDateFormat("dd-MM-yyyy"),
+    new SimpleDateFormat("yyyy/MM/dd"),
+    new SimpleDateFormat("dd/MM/yyyy"))
+
   //---------------------------------------------------------
   //# AUXILIARY
   //---------------------------------------------------------
@@ -142,6 +148,14 @@ object DateUtils {
       format.setTimeZone(TimeZone.getDefault)
       Try(Some(format.parse(date))).getOrElse(None)
     }.headOption
+  }
+
+  def parseLocalDate(date: String): Option[LocalDate] = {
+    localDateFormatsList.flatMap { format =>
+      format.setLenient(false)
+      format.setTimeZone(TimeZone.getDefault)
+      Try(Some(format.parse(date))).getOrElse(None)
+    }.headOption.map(dateToLocalDate)
   }
 
   def parseTimezone(string: String): Option[TimeZone] = {

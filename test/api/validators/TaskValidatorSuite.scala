@@ -441,24 +441,18 @@ class TaskValidatorSuite extends AsyncWordSpec with MustMatchers with MockitoSug
     }
 
     "receive an invalid CreateTaskDTO with invalid endDate format." in {
-      val dto1 = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Daily), Some(1), Some("2040|01|01 12/00/00"))
-      val dto2 = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Daily), Some(3), Some("2040-14-01 12:00:00"))
-      val dto3 = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Daily), Some(3), Some("2040-01-32 12:00:00"))
-      val dto4 = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Daily), Some(3), Some("2040-01-01 25:00:00"))
-      val dto5 = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Daily), Some(3), Some("2040-01-01 12:61:00"))
+      val dto1 = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Daily), Some(1), Some("2040|01|01"))
+      val dto2 = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Daily), Some(3), Some("2040-14-01"))
+      val dto3 = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Daily), Some(3), Some("2040-01-32"))
 
       for {
         validation1 <- validator.scheduleValidator(dto1)
         validation2 <- validator.scheduleValidator(dto2)
         validation3 <- validator.scheduleValidator(dto3)
-        validation4 <- validator.scheduleValidator(dto4)
-        validation5 <- validator.scheduleValidator(dto5)
       } yield {
         validation1 mustBe Left(List(invalidEndDateFormat))
         validation2 mustBe Left(List(invalidEndDateFormat))
         validation3 mustBe Left(List(invalidEndDateFormat))
-        validation4 mustBe Left(List(invalidEndDateFormat))
-        validation5 mustBe Left(List(invalidEndDateFormat))
       }
     }
 
@@ -506,24 +500,18 @@ class TaskValidatorSuite extends AsyncWordSpec with MustMatchers with MockitoSug
 
     //TODO this
     "receive an invalid CreateTaskDTO with invalid exclusions. (invalid exclusionDate format)" in {
-      val dto1 = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(CreateExclusionDTO(Some("2035|01|01 00/00/00")))))
-      val dto2 = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(CreateExclusionDTO(Some("2035-14-01 00:00:00")))))
-      val dto3 = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(CreateExclusionDTO(Some("2035-01-32 00:00:00")))))
-      val dto4 = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(CreateExclusionDTO(Some("2035-01-01 25:00:00")))))
-      val dto5 = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(CreateExclusionDTO(Some("2035-01-01 00:61:00")))))
+      val dto1 = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(CreateExclusionDTO(Some("2035|01|01")))))
+      val dto2 = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(CreateExclusionDTO(Some("2035-14-01")))))
+      val dto3 = CreateTaskDTO("test1", SchedulingType.Periodic, Some("2030-01-01 12:00:00"), Some(PeriodType.Minutely), Some(10), Some("2040-01-01 00:00:00"), None, None, Some(List(CreateExclusionDTO(Some("2035-01-32")))))
 
       for {
         validation1 <- validator.scheduleValidator(dto1)
         validation2 <- validator.scheduleValidator(dto2)
         validation3 <- validator.scheduleValidator(dto3)
-        validation4 <- validator.scheduleValidator(dto4)
-        validation5 <- validator.scheduleValidator(dto5)
       } yield {
         validation1 mustBe Left(List(invalidExclusionDateFormat))
         validation2 mustBe Left(List(invalidExclusionDateFormat))
         validation3 mustBe Left(List(invalidExclusionDateFormat))
-        validation4 mustBe Left(List(invalidExclusionDateFormat))
-        validation5 mustBe Left(List(invalidExclusionDateFormat))
       }
     }
 

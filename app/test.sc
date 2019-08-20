@@ -8,6 +8,10 @@ import java.time.Duration
 
 import play.api.libs.json.Json
 
-val dateCalendar = Calendar.getInstance
-dateCalendar.set(2030, 4, 1)
-dateToLocalDate(dateCalendar.getTime)
+val one = dayOfWeekToDayTypeString(1)
+val two = dayOfWeekToDayTypeString(2)
+val three = dayOfWeekToDayTypeString(3)
+val four = dayOfWeekToDayTypeString(4)
+val five = dayOfWeekToDayTypeString(5)
+val six = dayOfWeekToDayTypeString(6)
+val seven = dayOfWeekToDayTypeString(7)

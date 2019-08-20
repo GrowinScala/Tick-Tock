@@ -399,7 +399,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
         val exclusion = list.head
         exclusion.exclusionDate match {
           case Some(date) =>
-            val parsedDate = parseDate(date).map(dateToLocalDate)
+            val parsedDate = parseLocalDate(date)
             if (parsedDate.isDefined) iter(list.tail, parsedDate :: toReturn)
             else Nil
           case None => iter(list.tail, None :: toReturn)
@@ -625,7 +625,7 @@ class TaskValidator @Inject() (implicit val fileRepo: FileRepository, implicit v
         val scheduling = list.head
         scheduling.schedulingDate match {
           case Some(date) =>
-            val parsedDate = parseDate(date).map(dateToLocalDate)
+            val parsedDate = parseLocalDate(date)
             if (parsedDate.isDefined) iter(list.tail, parsedDate :: toReturn)
             else None
           case None => iter(list.tail, None :: toReturn)

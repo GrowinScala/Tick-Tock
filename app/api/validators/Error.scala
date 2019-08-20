@@ -170,7 +170,7 @@ object Error {
 
   lazy val invalidExclusionDateFormat = Error(
     errorCode = "error-17",
-    message = s"exclusionDate has an incorrect format. It must to follow one of the following formats: yyyy-MM-dd HH:mm:ss ; dd-MM-yyyy HH:mm:ss ; yyyy/MM/dd HH:mm:ss ; dd/MM/yyyy HH:mm:ss.",
+    message = s"exclusionDate has an incorrect format. It must to follow one of the following formats: yyyy-MM-dd ; dd-MM-yyyy ; yyyy/MM/dd ; dd/MM/yyyy.",
     reason = Error.invalid,
     locationType = Some("exclusions/exclusionDate"),
     location = body)
@@ -249,7 +249,7 @@ object Error {
 
   lazy val invalidSchedulingDateFormat = Error(
     errorCode = "error-28",
-    message = s"schedulingDate has an incorrect format. It must to follow one of the following formats: yyyy-MM-dd HH:mm:ss ; dd-MM-yyyy HH:mm:ss ; yyyy/MM/dd HH:mm:ss ; dd/MM/yyyy HH:mm:ss.",
+    message = s"schedulingDate has an incorrect format. It must to follow one of the following formats: yyyy-MM-dd ; dd-MM-yyyy ; yyyy/MM/dd ; dd/MM/yyyy.",
     reason = Error.invalid,
     locationType = Some("schedulings/schedulingDate"),
     location = body)
